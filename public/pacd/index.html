@@ -1,0 +1,1407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SSS Toledo — PACD Dashboard</title>
+  <link rel="stylesheet" href="/assets/css/styles.css">
+  <style>
+    body { display: flex; flex-direction: column; min-height: 100vh; background: var(--bg); }
+    .dashboard-body { display: grid; grid-template-columns: 1fr 360px; flex: 1; height: calc(100vh - 60px); overflow: hidden; }
+    .queue-panel { padding: 20px; overflow-y: auto; }
+    .action-panel { background: #fff; border-left: 1px solid var(--border); padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 16px; }
+    .active-member { background: linear-gradient(135deg, #d97706, #b45309); border-radius: var(--radius-lg); padding: 20px; color: #fff; }
+    .active-member-label { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; opacity: 0.8; }
+    .active-member-name  { font-size: 1.3rem; font-weight: 800; margin: 4px 0; }
+    .active-member-sss   { font-size: 0.82rem; opacity: 0.8; font-family: monospace; }
+    .timer { font-size: 1.2rem; font-weight: 800; margin-top: 12px; font-variant-numeric: tabular-nums; }
+    .action-title { font-size: 0.78rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
+    /* ── Login Screen ── */
+    .login-screen {
+      flex: 1; display: flex; align-items: center; justify-content: center;
+      min-height: 100vh; padding: 20px;
+      background: linear-gradient(145deg, #071e4a 0%, #0a2f7c 50%, #0038a8 100%);
+    }
+    .login-card {
+      background: #fff; border-radius: 16px; padding: 44px 40px;
+      width: 100%; max-width: 440px;
+      box-shadow: 0 24px 64px rgba(0,0,0,0.35);
+      border: 1px solid rgba(255,255,255,0.2);
+    }
+    .login-brand { display: flex; align-items: center; gap: 14px; margin-bottom: 24px; }
+    .login-logo {
+      width: 48px; height: 48px; border-radius: 10px; background: #fff; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.15); padding: 4px;
+    }
+    .login-brand-text .brand-title { font-size: 0.95rem; font-weight: 800; color: #071e4a; line-height: 1.2; }
+    .login-brand-text .brand-sub   { font-size: 0.72rem; color: #64748b; margin-top: 2px; }
+    .login-divider { height: 1px; background: #e2e8f0; margin-bottom: 24px; }
+    .login-heading { font-size: 1.35rem; font-weight: 800; color: #071e4a; margin-bottom: 4px; }
+    .login-sub     { font-size: 0.82rem; color: #64748b; margin-bottom: 24px; }
+
+    /* Form fields */
+    .login-field { margin-bottom: 16px; position: relative; }
+    .login-label { display: block; font-size: 0.78rem; font-weight: 700; color: #334155; margin-bottom: 6px; }
+    .login-input {
+      width: 100%; padding: 11px 14px; border: 1.5px solid #cbd5e1;
+      border-radius: 8px; font-size: 0.92rem; font-family: inherit;
+      color: #0f172a; background: #fff; outline: none; box-sizing: border-box;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .login-input:focus { border-color: #0038A8; box-shadow: 0 0 0 3px rgba(0,56,168,0.12); }
+    .login-input::placeholder { color: #94a3b8; }
+    .pw-wrap { position: relative; }
+    .pw-wrap .login-input { padding-right: 44px; }
+    .pw-toggle {
+      position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+      background: none; border: none; cursor: pointer; color: #94a3b8;
+      padding: 4px; display: flex; align-items: center;
+    }
+    .pw-toggle:hover { color: #0038A8; }
+
+    /* Autocomplete dropdown */
+    .ac-dropdown {
+      position: absolute; top: 100%; left: 0; right: 0; z-index: 200;
+      background: #fff; border: 1.5px solid #cbd5e1; border-top: none;
+      border-radius: 0 0 8px 8px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+      max-height: 220px; overflow-y: auto; display: none;
+    }
+    .ac-option { display: flex; align-items: center; gap: 12px; padding: 10px 14px; cursor: pointer; }
+    .ac-option:hover, .ac-option.ac-active { background: #eff6ff; }
+    .ac-avatar {
+      width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0;
+      background: #dbeafe; color: #0038A8;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 0.75rem;
+    }
+    .ac-option:hover .ac-avatar, .ac-option.ac-active .ac-avatar { background: #0038A8; color: #fff; }
+    .ac-name    { font-size: 0.88rem; font-weight: 600; color: #0f172a; }
+    .ac-counter { font-size: 0.72rem; color: #64748b; }
+
+    .login-btn {
+      width: 100%; padding: 12px; border: none; border-radius: 8px;
+      background: #0038A8; color: #fff; font-size: 0.95rem; font-weight: 700;
+      font-family: inherit; cursor: pointer; transition: background 0.15s, transform 0.1s;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      margin-top: 8px;
+    }
+    .login-btn:hover { background: #002d87; }
+    .login-btn:active { transform: scale(0.98); }
+    .login-btn:disabled { background: #93c5fd; cursor: not-allowed; }
+    .login-error-box {
+      background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px;
+      padding: 10px 14px; color: #991b1b; font-size: 0.82rem; font-weight: 600;
+      margin-top: 14px; display: none;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ── LOGIN SCREEN ── -->
+  <div class="login-screen" id="pacd-login">
+    <div class="login-card">
+
+      <div class="login-brand">
+        <div class="login-logo">
+          <img src="/assets/logo.png" alt="SSS" style="width:100%;height:100%;object-fit:contain;">
+        </div>
+        <div class="login-brand-text">
+          <div style="font-size:0.62rem;font-weight:700;color:#94a3b8;letter-spacing:0.08em;text-transform:uppercase;">Republic of the Philippines</div>
+          <div class="brand-title">Social Security System</div>
+          <div class="brand-sub">Toledo Branch • PACD Portal</div>
+        </div>
+      </div>
+
+      <div class="login-divider"></div>
+
+      <div class="login-heading">PACD Officer Sign In</div>
+      <p class="login-sub">Enter your staff credentials to access the PACD desk.</p>
+
+      <!-- Name autocomplete -->
+      <div class="login-field" id="name-field-wrap">
+        <label class="login-label" for="login-name">Officer Name</label>
+        <input
+          type="text" id="login-name" class="login-input"
+          placeholder="Type or select your name…"
+          autocomplete="off"
+          oninput="filterDropdown()"
+          onkeydown="dropdownKeyNav(event)"
+          onfocus="filterDropdown()"
+        >
+        <div class="ac-dropdown" id="ac-dropdown"></div>
+      </div>
+
+      <!-- Password field -->
+      <div class="login-field">
+        <label class="login-label" for="login-password">Password</label>
+        <div class="pw-wrap">
+          <input
+            type="password" id="login-password" class="login-input"
+            placeholder="Enter your password"
+            autocomplete="current-password"
+            onkeydown="if(event.key==='Enter') submitLogin()"
+          >
+          <button type="button" class="pw-toggle" id="pw-toggle" onclick="togglePasswordVisibility()" tabindex="-1" title="Show/hide password">
+            <svg id="pw-eye-show" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            <svg id="pw-eye-hide" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none;"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Sign In button -->
+      <button class="login-btn" id="login-btn" onclick="submitLogin()">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+        Sign In
+      </button>
+
+      <div class="login-error-box" id="login-error"></div>
+
+    </div>
+  </div>
+
+  <!-- ── PACD DASHBOARD ── -->
+  <div id="pacd-app" class="hidden" style="display:none;flex-direction:column;min-height:100vh;">
+    <nav class="topbar">
+      <div class="topbar-brand">
+        <div class="topbar-logo" style="width:38px;height:38px;background:#fff;border-radius:8px;padding:3px;box-shadow:0 1px 4px rgba(0,0,0,0.2);">
+          <img src="/assets/logo.png" alt="SSS Toledo" style="width:100%;height:100%;object-fit:contain;">
+        </div>
+        <div class="topbar-gov-title">
+          <div class="topbar-gov-republic">REPUBLIC OF THE PHILIPPINES</div>
+          <div class="topbar-title" style="font-weight:800;letter-spacing:-0.01em;">SOCIAL SECURITY SYSTEM</div>
+          <div class="topbar-subtitle" id="pacd-subtitle" style="font-size:0.72rem;color:#cbd5e1;font-weight:500;">Toledo Branch • <span style="color:#fcd34d;font-weight:700;">PACD COUNTER (Series 001–999)</span></div>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <div class="topbar-clock" id="dash-clock"></div>
+        <span class="badge badge-green" style="background:#059669;color:#fff;border:none;">● Online</span>
+        <button class="btn btn-ghost btn-sm" onclick="openMyTasks()" style="background:rgba(245,158,11,0.2);color:#fde68a;border-color:rgba(245,158,11,0.4);margin-left:8px;" title="Assigned MSS Tasks">
+          <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+          Tasks <span id="my-task-badge" style="background:#dc2626;color:#fff;font-size:0.65rem;font-weight:800;padding:1px 6px;border-radius:999px;margin-left:4px;display:none;">0</span>
+        </button>
+        <button class="btn btn-ghost btn-sm" onclick="openServiceLog()" style="background:rgba(255,255,255,0.1);color:#fff;border-color:rgba(255,255,255,0.2);margin-left:8px;" title="Today's Service Log">
+          <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="13" y2="16"/></svg>
+          Service Log
+        </button>
+        <button id="btn-logout" class="btn btn-ghost btn-sm" onclick="logout()" style="background:rgba(239,68,68,0.2);color:#fca5a5;border-color:rgba(239,68,68,0.4);margin-left:8px;">
+          <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          Sign Out
+        </button>
+      </div>
+    </nav>
+
+    <!-- ── MY TASKS OVERLAY ────────────────────────────────────────────────── -->
+    <div class="log-overlay" id="tasks-overlay" onclick="if(event.target===this) closeMyTasks()">
+      <div class="log-panel" style="max-width:680px;">
+        <div class="log-header" style="background:#071e4a;color:#fff;">
+          <div>
+            <h2 style="color:#fff;display:flex;align-items:center;gap:8px;">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+              My MSS Assignments &amp; Deadlines
+            </h2>
+            <p id="tasks-header-sub" style="color:#cbd5e1;font-size:0.8rem;">Internal task assignments from MSS Supervisor</p>
+          </div>
+          <button class="btn btn-ghost btn-sm" onclick="closeMyTasks()" style="color:#fff;border-color:rgba(255,255,255,0.3);">Close</button>
+        </div>
+
+        <div class="log-body" style="padding:20px;">
+          <div id="my-tasks-list" style="display:flex;flex-direction:column;gap:12px;">
+            <div style="text-align:center;color:#64748b;padding:32px;">Loading tasks...</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Task Complete Modal -->
+    <div class="modal-overlay hidden" id="task-complete-modal" style="z-index:1100;">
+      <div class="modal" style="max-width:440px;">
+        <div class="modal-header">
+          <h3 style="display:flex;align-items:center;gap:8px;color:#15803d;">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+            Mark Assignment Completed
+          </h3>
+          <button class="btn btn-ghost btn-sm" onclick="document.getElementById('task-complete-modal').classList.add('hidden')">✕</button>
+        </div>
+        <div class="modal-body">
+          <p style="font-size:0.85rem;margin:0 0 12px 0;">Record accomplishment notes for: <strong id="complete-task-title"></strong></p>
+          <div class="form-group">
+            <label class="form-label" style="font-size:0.8rem;font-weight:700;color:#374151;">Accomplishment Notes / Remarks *</label>
+            <textarea id="complete-task-notes" class="form-input" rows="3" placeholder="e.g. Completed PACD endorsement batch."></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-ghost" onclick="document.getElementById('task-complete-modal').classList.add('hidden')">Cancel</button>
+          <button class="btn btn-primary" onclick="submitCompleteTask()" style="background:#15803d;border-color:#15803d;">Submit Accomplishment</button>
+        </div>
+      </div>
+    </div>
+  
+    <!-- ── SERVICE LOG OVERLAY ──────────────────────────────────────────────── -->
+    <div class="log-overlay" id="log-overlay" onclick="closeLogIfBackdrop(event)">
+      <div class="log-panel">
+        <div class="log-header">
+          <div>
+            <h2>PACD Service Log</h2>
+            <p id="log-header-sub">Loading...</p>
+          </div>
+          <div style="display:flex;gap:8px;">
+            <button class="btn btn-ghost btn-sm no-print" onclick="closeServiceLog()" style="color:#6b7280;border-color:#d1d5db;">Close</button>
+          </div>
+        </div>
+        <div class="log-summary" id="log-summary"></div>
+        <div class="log-body">
+          <table class="log-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Queue</th>
+                <th>Name</th>
+                <th>SSS Number</th>
+                <th>Entry Type</th>
+                <th>Transaction Type</th>
+                <th>Check-in</th>
+                <th>Duration</th>
+                <th>Outcome</th>
+                <th>Satisfaction</th>
+                <th>Remarks</th>
+              </tr>
+            </thead>
+            <tbody id="log-tbody"></tbody>
+          </table>
+          <div id="log-empty" class="hidden" style="text-align:center;padding:60px 20px;color:#6b7280;">
+            <div style="margin-bottom:12px;display:flex;justify-content:center;"><svg class="icon icon-4xl" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="13" y2="16"/></svg></div>
+            <p>No PACD transactions recorded yet today.</p>
+          </div>
+        </div>
+        <div class="log-footer no-print">
+          <button class="btn btn-ghost" onclick="closeServiceLog()">Close</button>
+          <button class="btn btn-ghost" onclick="exportPacdLogToExcel()" style="border-color:#16a34a;color:#16a34a;gap:6px;display:flex;align-items:center;">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Export to Excel (.xlsx)
+          </button>
+          <button class="btn btn-primary" onclick="printServiceLog()">Print Daily Report</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Hidden print area -->
+    <div id="log-print-area"></div>
+
+    <div class="dashboard-body" id="pacd-dashboard" style="display:none;">
+    <div class="queue-panel">
+      <div class="section-header" style="margin-bottom:16px;">
+        <span class="section-header-icon"><svg class="icon icon-md" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="1"/><path d="M9 21V9h6v12"/><path d="M3 9h18"/></svg></span>
+        <span class="section-header-title">PACD — Waiting (001 Series)</span>
+        <span class="section-header-count" id="pacd-count">0</span>
+      </div>
+      <div class="member-list" id="pacd-list">
+        <div class="empty-state"><div class="empty-state-icon"><svg class="icon icon-2xl icon-muted" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="1"/><path d="M9 21V9h6v12"/><path d="M3 9h18"/></svg></div><p>No members waiting</p></div>
+      </div>
+
+      <div class="section-header" style="margin-top:20px;margin-bottom:16px;">
+        <span class="section-header-icon"><svg class="icon icon-md" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/><line x1="4" y1="4" x2="9" y2="9"/></svg></span>
+        <span class="section-header-title">Re-Routed Members (Call by Name)</span>
+        <span class="section-header-count" id="rerouted-count">0</span>
+      </div>
+      <div class="member-list" id="rerouted-list">
+        <div class="empty-state"><div class="empty-state-icon"><svg class="icon icon-2xl icon-muted" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/><line x1="4" y1="4" x2="9" y2="9"/></svg></div><p>No re-routed members</p></div>
+      </div>
+
+      <!-- Returning Members (For Verification - Same Day) -->
+      <div id="onhold-queue-section" style="margin-top:20px;">
+        <div class="section-header" style="background:#fef3c7;border-left:3px solid #f59e0b;margin-bottom:16px;">
+          <span class="section-header-icon"><svg class="icon icon-md" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg></span>
+          <span class="section-header-title" style="color:#92400e;">Returning Members</span>
+          <span class="section-header-count" id="onhold-count" style="background:#f59e0b;color:#fff;">0</span>
+        </div>
+        <div class="member-list" id="onhold-list">
+          <div class="empty-state"><div class="empty-state-icon"><svg class="icon icon-2xl icon-muted" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/></svg></div><p>No returning members</p></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="action-panel">
+      <!-- No active member -->
+      <div id="no-active" style="text-align:center;padding:40px 20px;color:var(--text-muted);">
+        <div style="margin-bottom:12px;opacity:0.3;display:flex;justify-content:center;">
+          <svg class="icon icon-3xl" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        </div>
+        <p style="font-size:0.875rem;">Click a member from the queue to begin serving</p>
+      </div>
+
+      <!-- Active member panel -->
+      <div id="active-panel" class="hidden">
+        <div class="active-member" id="active-member-card">
+          <div class="active-member-label">Currently Serving — PACD Desk</div>
+          <div class="active-member-name" id="am-name">—</div>
+          <div class="active-member-sss" id="am-sss">—</div>
+          <div class="active-member-meta">
+            <span class="active-chip" id="am-queue"></span>
+            <span class="active-chip" id="am-tx"></span>
+          </div>
+          <div class="timer" id="am-timer">00:00</div>
+        </div>
+
+        <!-- Member SSS Number Field (Editable) -->
+        <div class="action-section" style="background:#f8fafc;border:1.5px solid #cbd5e1;border-radius:10px;padding:12px 14px;">
+          <label style="font-size:0.75rem;font-weight:700;color:#071e4a;display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+            <span>Member SSS Number <span style="color:#64748b;font-weight:500;">(for Log &amp; Reports)</span></span>
+            <span id="sss-badge-status" style="font-size:0.68rem;font-weight:700;color:#059669;"></span>
+          </label>
+          <input type="text" id="active-sss-input" class="form-input" placeholder="e.g., 34-1234567-8" maxlength="15" style="font-weight:700;letter-spacing:0.04em;background:#fff;color:#071e4a;">
+        </div>
+
+        <!-- Transaction Type -->
+        <div class="action-section">
+          <div class="action-title">Transaction Type</div>
+          <!-- E-Logbook preview (read-only) -->
+          <div id="tx-logbook-preview" style="
+            display:flex;align-items:center;gap:8px;
+            background:#f8fafc;border:1px solid #e2e8f0;
+            border-radius:8px;padding:9px 12px;margin-bottom:10px;
+            font-size:0.8rem;
+          ">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#64748b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;">
+              <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
+              <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+            </svg>
+            <span style="color:#64748b;font-weight:500;">Member declared:</span>
+            <span id="tx-logbook-val" style="font-weight:700;color:#1e40af;">—</span>
+          </div>
+          <!-- Confirmed type -->
+          <label style="font-size:0.75rem;font-weight:600;color:#374151;display:block;margin-bottom:5px;">Confirmed Transaction Type <span style="color:var(--danger)">*</span></label>
+          <select class="form-select" id="tx-type-select" style="width:100%;font-size:0.85rem;">
+            <option value="">— Select Confirmed Transaction Type —</option>
+
+            <optgroup label="Inquiries &amp; Verifications (PACD Core)">
+              <option value="Annual Confirmation of Pensioners (ACOP)">Annual Confirmation of Pensioners (ACOP)</option>
+              <option value="Inquiry/Verification- Contribution">Inquiry/Verification- Contribution</option>
+              <option value="Inquiry/Verification- Loan Repayment">Inquiry/Verification- Loan Repayment</option>
+              <option value="Inquiry/ Verification- SOA">Inquiry/ Verification- SOA</option>
+              <option value="Inquiry/ Verifications- Loans">Inquiry/ Verifications- Loans</option>
+              <option value="Inquiry/ Verifications- Death">Inquiry/ Verifications- Death</option>
+              <option value="Inquiry/ Verifications- Disability">Inquiry/ Verifications- Disability</option>
+              <option value="Inquiry/ Verifications- Retirement">Inquiry/ Verifications- Retirement</option>
+              <option value="Inquiry/ Verifications- Sickness">Inquiry/ Verifications- Sickness</option>
+              <option value="Inquiry/Verifications - Maternity">Inquiry/Verifications - Maternity</option>
+              <option value="Inquiry/Verifications- Others/Members Data Update">Inquiry/Verifications- Others/Members Data Update</option>
+            </optgroup>
+
+            <optgroup label="E-4 &amp; Member Data Modifications">
+              <option value="E-4 (Correction of DOB/Name) SIMPLE &amp; COMPLEX">E-4 (Correction of DOB/Name) SIMPLE &amp; COMPLEX</option>
+              <option value="E-4 (Additional BENEF)">E-4 (Additional BENEF)</option>
+              <option value="Member Web Registration">Member Web Registration</option>
+              <option value="Member Web Password Reset">Member Web Password Reset</option>
+              <option value="Pensioners Data Change Update (PDCR)">Pensioners Data Change Update (PDCR)</option>
+              <option value="Cancellation of Multiple SS number">Cancellation of Multiple SS number</option>
+              <option value="Processing - Cancellation of SS Num">Processing - Cancellation of SS Num</option>
+              <option value="Encoding of T to P">Encoding of T to P</option>
+              <option value="DOC Encoding and Correction">DOC Encoding and Correction</option>
+              <option value="Manual Verification - DOC Change">Manual Verification - DOC Change</option>
+              <option value="Requests Membership Records/Micro">Requests Membership Records/Micro</option>
+            </optgroup>
+
+            <optgroup label="Employer &amp; Coverage (R-1, R1-A, R-8)">
+              <option value="R-1">R-1</option>
+              <option value="R1-A (Initial) ER">R1-A (Initial) ER</option>
+              <option value="R1-A (Initial) EE">R1-A (Initial) EE</option>
+              <option value="R1-A (Subsequent) ER">R1-A (Subsequent) ER</option>
+              <option value="R1-A (Subsequent) EE">R1-A (Subsequent) EE</option>
+              <option value="Processing of R-8 (SIMPLE AND COMPLEX)">Processing of R-8 (SIMPLE AND COMPLEX)</option>
+              <option value="Affidavit of Separated EE's (w/ loans)">Affidavit of Separated EE's (w/ loans)</option>
+            </optgroup>
+
+            <optgroup label="Contributions &amp; PRN">
+              <option value="Manual Verification - Contribution">Manual Verification - Contribution</option>
+              <option value="PRN Generation (contributions &amp; Loans)">PRN Generation (contributions &amp; Loans)</option>
+              <option value="PRN Issuance">PRN Issuance</option>
+              <option value="Auto Debit Arrangement (ADA)">Auto Debit Arrangement (ADA)</option>
+              <option value="PESO/Flexi Fund">PESO/Flexi Fund</option>
+              <option value="WISP">WISP</option>
+              <option value="LR Monitoring - Unpostables">LR Monitoring - Unpostables</option>
+            </optgroup>
+
+            <optgroup label="Loans &amp; Repayments">
+              <option value="Educational Loan (Initial &amp; Subsequent)">Educational Loan (Initial &amp; Subsequent)</option>
+              <option value="Manual Verification - Loan Repayments">Manual Verification - Loan Repayments</option>
+              <option value="Replacement of Check (Salary Loan)">Replacement of Check (Salary Loan)</option>
+            </optgroup>
+
+            <optgroup label="Benefits &amp; Claims (SS &amp; EC)">
+              <option value="Funeral- SS">Funeral- SS</option>
+              <option value="Funeral- EC">Funeral- EC</option>
+              <option value="Death Initial (SS)">Death Initial (SS)</option>
+              <option value="Death initial (EC)">Death initial (EC)</option>
+              <option value="Death Adjustment (SS)">Death Adjustment (SS)</option>
+              <option value="Death Adjustment (EC)">Death Adjustment (EC)</option>
+              <option value="Retirement Initial">Retirement Initial</option>
+              <option value="Retirement- Adjustment">Retirement- Adjustment</option>
+              <option value="Disability Initial (SS)">Disability Initial (SS)</option>
+              <option value="Disability Initial (EC)">Disability Initial (EC)</option>
+              <option value="Disability Adjustment (SS)">Disability Adjustment (SS)</option>
+              <option value="Disability Adjustment (EC)">Disability Adjustment (EC)</option>
+              <option value="EC Medical Reimbursement">EC Medical Reimbursement</option>
+              <option value="PE/Domiciliary Medical Services">PE/Domiciliary Medical Services</option>
+              <option value="Replacement of Check (Death)">Replacement of Check (Death)</option>
+              <option value="Replacement of Check (Disability)">Replacement of Check (Disability)</option>
+              <option value="Replacement of Check (Retirement)">Replacement of Check (Retirement)</option>
+              <option value="Replacement of Check (Sickness)">Replacement of Check (Sickness)</option>
+              <option value="Replacement of Check (Maternity)">Replacement of Check (Maternity)</option>
+            </optgroup>
+
+            <optgroup label="UMID, Cards &amp; Certifications">
+              <option value="Releasing of UMID">Releasing of UMID</option>
+              <option value="Blue Card">Blue Card</option>
+              <option value="Forms Issuance">Forms Issuance</option>
+              <option value="Special Certification/LOI">Special Certification/LOI</option>
+              <option value="L-501">L-501</option>
+            </optgroup>
+
+            <optgroup label="Reviews, Transmittals, Complaints &amp; Others">
+              <option value="DAEM Review">DAEM Review</option>
+              <option value="Transmittals">Transmittals</option>
+              <option value="Correspondences (all communications, req for investigaton, replies to emails, debit &amp; credit memo, all kinds of certifications, rejection &amp; denial letters etc)">Correspondences (all communications, req for investigaton, replies to emails, debit &amp; credit memo, all kinds of certifications, rejection &amp; denial letters etc)</option>
+              <option value="Complaints (all type of complaints on LR repayments, LR and contribution posting, all non-receipt complaints, delay, unsatisfaction and all other complaints)">Complaints (all type of complaints on LR repayments, LR and contribution posting, all non-receipt complaints, delay, unsatisfaction and all other complaints)</option>
+            </optgroup>
+          </select>
+        </div>
+
+        <!-- Transaction Outcome -->
+        <div class="action-section">
+          <div class="action-title">Transaction Outcome</div>
+          <div class="outcome-group">
+            <button class="outcome-btn" id="out-finished" onclick="selectOutcome('finished')">
+              <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> Finished
+            </button>
+            <button class="outcome-btn" id="out-rejected" onclick="selectOutcome('rejected')">
+              <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg> Rejected
+            </button>
+            <button class="outcome-btn" id="out-for-verification" onclick="selectOutcome('for-verification')">
+              <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg> For Verification
+            </button>
+            <button class="outcome-btn" id="out-for-appointment" onclick="selectOutcome('for-appointment')">
+              <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> For Appointment
+            </button>
+          </div>
+        </div>
+
+        <!-- Citizen Evaluation on Tablet -->
+        <div class="action-section" id="rating-section" style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:12px 14px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;">
+            <div style="font-size:0.78rem;font-weight:700;color:var(--text-dark);display:flex;align-items:center;gap:6px;">
+              <svg viewBox="0 0 20 20" width="15" height="15" fill="#0284c7"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+              Citizen CSAT Rating
+            </div>
+            <span class="badge" style="background:#e0f2fe;color:#0369a1;font-size:0.72rem;font-weight:700;">ARTA Compliant</span>
+          </div>
+          <p style="font-size:0.75rem;color:var(--text-muted);margin-top:4px;line-height:1.35;">
+            The member will rate this service directly on the PACD counter tablet screen upon conclusion.
+          </p>
+        </div>
+
+        <!-- Instructions for Member -->
+        <div class="action-section" id="instructions-section">
+          <div class="action-title">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px;margin-right:4px;color:#1a56db;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+            Instructions for Member
+          </div>
+          <div class="quick-tags" style="margin-bottom:7px;">
+            <button class="quick-tag" onclick="addInstruction('Return with complete documents')">+ Return w/ Documents</button>
+            <button class="quick-tag" onclick="addInstruction('Proceed to E-Center for My.SSS registration')">+ E-Center Reg</button>
+            <button class="quick-tag" onclick="addInstruction('For Branch Head signature / approval')">+ Branch Head Approval</button>
+            <button class="quick-tag" onclick="addInstruction('Bring Certificate of Separation / Form 2316')">+ Form 2316 / Cert</button>
+          </div>
+          <textarea class="form-textarea" id="instructions-input" maxlength="200" placeholder="Optional instructions printed on slip or viewed in history..." rows="2"></textarea>
+        </div>
+
+        <!-- Conclude Button -->
+        <button class="btn btn-success btn-full btn-lg" id="btn-conclude" onclick="concludeTransaction()">
+          <svg class="icon icon-md" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          Conclude Transaction
+        </button>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+          <button class="btn btn-ghost btn-sm" onclick="showRerouteModal()">
+            <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/><line x1="4" y1="4" x2="9" y2="9"/></svg>
+            Re-Route
+          </button>
+          <button class="btn btn-ghost btn-sm" onclick="showReferModal()">
+            <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg>
+            Refer
+          </button>
+        </div>
+      </div>
+
+      <div style="margin-top:auto;">
+        <button class="btn btn-ghost btn-full btn-sm" onclick="showWalkupModal()">
+          <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Add Walk-Up Member
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modals (Re-Route, Refer, Walk-Up) -->
+  <div class="modal-overlay hidden" id="reroute-modal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3><svg class="icon icon-md" style="vertical-align:-3px;margin-right:6px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/><line x1="4" y1="4" x2="9" y2="9"/></svg>Re-Route (Correction)</h3>
+        <button class="btn btn-ghost btn-sm" onclick="closeModal('reroute-modal')"><svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size:0.85rem;">Select the correct destination for this member:</p>
+        <select class="reroute-select" id="reroute-dest">
+          <option value="counter-pool">Main Counters (1–4 / Side)</option>
+          <option value="ecenter">E-Center</option>
+          <option value="portal-pool">Portal Pool</option>
+        </select>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" onclick="closeModal('reroute-modal')">Cancel</button>
+        <button class="btn btn-primary" onclick="submitReroute()">Re-Route Member</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay hidden" id="refer-modal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3><svg class="icon icon-md" style="vertical-align:-3px;margin-right:6px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg>Refer to Department</h3>
+        <button class="btn btn-ghost btn-sm" onclick="closeModal('refer-modal')"><svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size:0.85rem;">Member needs additional service after this transaction. They will get a new queue number from the guard.</p>
+        <select class="reroute-select" id="refer-dest">
+          <option value="counter-pool">Main Counters (1–4 / Side)</option>
+          <option value="ecenter">E-Center</option>
+        </select>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" onclick="closeModal('refer-modal')">Cancel</button>
+        <button class="btn btn-warning" onclick="submitRefer()">Print Referral Slip</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay hidden" id="walkup-modal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3><svg class="icon icon-md" style="vertical-align:-3px;margin-right:6px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add Walk-Up Member</h3>
+        <button class="btn btn-ghost btn-sm" onclick="closeModal('walkup-modal')"><svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group"><label class="form-label">Queue Number (001 Series)</label><input type="text" class="form-input" id="wu-queue" placeholder="e.g., 003"></div>
+        <div class="form-group"><label class="form-label">Full Name *</label><input type="text" class="form-input" id="wu-name"></div>
+        <div class="form-group"><label class="form-label">SSS Number</label><input type="text" class="form-input" id="wu-sss"></div>
+        <div class="form-group"><label class="form-label">Transaction Type *</label>
+          <select class="form-select" id="wu-tx">
+            <option value="">— Select —</option>
+            <option>Retirement Benefit</option><option>Sickness Benefit</option><option>Maternity Benefit</option>
+            <option>Disability Benefit</option><option>Death / Funeral Claim</option><option>SSS ID / UMID Application</option>
+            <option>Loan Application (Salary / Calamity)</option><option>Contribution Inquiry</option><option>E4 / Record Update</option><option>Others</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" onclick="closeModal('walkup-modal')">Cancel</button>
+        <button class="btn btn-primary" onclick="submitWalkup()">Add & Serve Now</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast-container" id="toast-container"></div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    // ── Service Log ──────────────────────────────────────────────────────────
+    async function openServiceLog() {
+      if (!PACD_CLERK) return;
+      document.getElementById('log-overlay').classList.add('open');
+      document.getElementById('log-header-sub').textContent = 'Loading...';
+      document.getElementById('log-tbody').innerHTML = '';
+      document.getElementById('log-summary').innerHTML = '';
+      document.getElementById('log-empty').classList.add('hidden');
+
+      const today = new Date().toISOString().split('T')[0];
+      const res = await fetch(`/api/reports/clerk/${PACD_CLERK.id}/today?date=${today}`);
+      const data = await res.json();
+
+      const dateLabel = new Date().toLocaleDateString('en-PH', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+      document.getElementById('log-header-sub').textContent = `${PACD_CLERK.name} — PACD Desk | ${dateLabel}`;
+
+      // Summary cards
+      const s = data.summary;
+      const satIcon = `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3H14z"/><path d="M7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg>`;
+      const neuIcon = `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/></svg>`;
+      const unsIcon = `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3H10z"/><path d="M17 2h2.67A2.31 2.31 0 0 1 22 4v7a2.31 2.31 0 0 1-2.33 2H17"/></svg>`;
+      document.getElementById('log-summary').innerHTML = `
+        <div class="log-stat"><div class="val">${s.total}</div><div class="lbl">Total Served</div></div>
+        <div class="log-stat"><div class="val" style="color:var(--success)">${s.finished}</div><div class="lbl">Finished</div></div>
+        <div class="log-stat"><div class="val" style="color:var(--warning)">${s.avg_duration ? parseFloat(s.avg_duration).toFixed(2) : '—'} min</div><div class="lbl">Avg Duration</div></div>
+        <div class="log-stat"><div class="val" style="display:flex;gap:8px;align-items:center;justify-content:center;font-size:0.9rem;">
+          <span style="display:flex;align-items:center;gap:3px;color:var(--success);font-weight:700;">${satIcon}${s.happy}</span>
+          <span style="display:flex;align-items:center;gap:3px;color:var(--warning);font-weight:700;">${neuIcon}${s.neutral}</span>
+          <span style="display:flex;align-items:center;gap:3px;color:var(--danger);font-weight:700;">${unsIcon}${s.sad}</span>
+        </div><div class="lbl">Satisfaction</div></div>`;
+
+      if (data.records.length === 0) {
+        document.getElementById('log-empty').classList.remove('hidden');
+        return;
+      }
+
+      const outcomeMap = {
+        'finished':         { label:'Finished',         bg:'#f0fdf4', color:'#15803d' },
+        'rejected':         { label:'Rejected',         bg:'#fef2f2', color:'#b91c1c' },
+        'for-appointment':  { label:'For Appointment',  bg:'#eff6ff', color:'#1d4ed8' },
+        'for-verification': { label:'For Verification', bg:'#fffbeb', color:'#b45309' },
+      };
+      const ratingMap = {
+        'happy':   { label:'Satisfied',   bg:'#f0fdf4', color:'#15803d' },
+        'neutral': { label:'Neutral',     bg:'#fffbeb', color:'#b45309' },
+        'sad':     { label:'Unsatisfied', bg:'#fef2f2', color:'#b91c1c' },
+      };
+      const chip = (cfg) => cfg
+        ? `<span style="display:inline-block;padding:2px 8px;border-radius:999px;font-size:0.72rem;font-weight:700;background:${cfg.bg};color:${cfg.color};">${cfg.label}</span>`
+        : '<span style="color:#9ca3af;font-size:0.78rem">—</span>';
+
+      const tbody = document.getElementById('log-tbody');
+      tbody.innerHTML = '';
+      data.records.forEach((r, i) => {
+        const checkIn = r.check_in_time ? new Date(r.check_in_time).toLocaleTimeString('en-PH', { hour:'2-digit', minute:'2-digit', hour12:true }) : '—';
+        const dur = r.duration_minutes ? `${parseFloat(r.duration_minutes).toFixed(1)} min` : '—';
+        const txType = r.confirmed_transaction_type || r.transaction_type || '—';
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td style="color:#9ca3af;font-size:0.75rem;">${i+1}</td>
+          <td><strong>${r.queue_number || '—'}</strong></td>
+          <td style="font-weight:600;">${r.name}</td>
+          <td style="font-family:monospace;font-size:0.78rem;">${r.sss_number || '<span style="color:#9ca3af;">None</span>'}</td>
+          <td><span class="badge badge-gray" style="font-size:0.68rem;">${r.entry_type || 'Walk-In'}</span></td>
+          <td>${txType}</td>
+          <td style="font-size:0.75rem;color:#6b7280;">${checkIn}</td>
+          <td style="font-size:0.75rem;">${dur}</td>
+          <td>${chip(outcomeMap[r.outcome])}</td>
+          <td>${chip(ratingMap[r.rating])}</td>
+          <td style="font-size:0.75rem;max-width:180px;">${r.feedback_reason ? `<span style="display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:999px;font-size:0.72rem;font-weight:700;background:#fff1f2;color:#e11d48;border:1px solid #fecdd3;"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> ${r.feedback_reason}</span>` : (r.remarks ? `<span style="color:#4b5563;">${r.remarks}</span>` : '<span style="color:#9ca3af">—</span>')}</td>`;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function closeServiceLog() {
+      document.getElementById('log-overlay').classList.remove('open');
+    }
+
+    function closeLogIfBackdrop(e) {
+      if (e.target.id === 'log-overlay') closeServiceLog();
+    }
+
+    function exportPacdLogToExcel() {
+      if (!PACD_CLERK) return;
+      const today = new Date().toISOString().split('T')[0];
+      window.location.href = `/api/reports/export/excel?clerk_id=${PACD_CLERK.id}&date=${today}`;
+    }
+
+    function printServiceLog() {
+      const today = new Date().toLocaleDateString('en-PH', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+      const rows = Array.from(document.querySelectorAll('#log-tbody tr')).map(tr => {
+        const cells = Array.from(tr.querySelectorAll('td')).map(td => td.innerText.trim());
+        return `<tr>${cells.map(c => `<td style="padding:6px 8px;border:1px solid #e5e7eb;font-size:9pt;">${c}</td>`).join('')}</tr>`;
+      }).join('');
+
+      const summaryHtml = document.getElementById('log-summary').innerHTML;
+
+      document.getElementById('log-print-area').innerHTML = `
+        <div style="text-align:center;margin-bottom:20px;">
+          <h2 style="font-size:14pt;margin:0 0 4px 0;color:#071e4a;">SOCIAL SECURITY SYSTEM — TOLEDO BRANCH</h2>
+          <h3 style="font-size:11pt;margin:0 0 4px 0;color:#4b5563;">PACD Daily Service Log</h3>
+          <p style="font-size:9pt;color:#6b7280;margin:0;">Officer: ${PACD_CLERK.name} | Date: ${today}</p>
+        </div>
+        <table style="width:100%;border-collapse:collapse;margin-top:16px;">
+          <thead>
+            <tr style="background:#f3f4f6;">
+              ${['#','Queue','Name','SSS No.','Type','Transaction','Check-in','Duration','Outcome','Satisfaction','Remarks'].map(h=>`<th style="padding:6px 8px;border:1px solid #e5e7eb;text-align:left;font-size:9pt;font-weight:700;">${h}</th>`).join('')}
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+        <div style="margin-top:28px;display:flex;justify-content:space-between;font-size:9pt;color:#374151;">
+          <div>Printed: ${new Date().toLocaleTimeString('en-PH')}</div>
+          <div>Officer Signature: ______________________</div>
+        </div>`;
+
+      window.print();
+    }
+  </script>
+  <script>
+    const socket = io();
+    let activeMember = null, activeTransactionId = null, timerInterval = null;
+    let selectedOutcome = null, selectedRating = null;
+    let PACD_CLERK = null;
+    let pacdPin = '', pacdSelectedId = null;
+
+    function updateClock() {
+      document.getElementById('dash-clock').textContent =
+        new Date().toLocaleTimeString('en-PH', { hour: '2-digit', minute: '2-digit', hour12: true });
+    }
+    setInterval(updateClock, 1000); updateClock();
+
+    // ── Autocomplete & Login ──────────────────────────────────────────────────
+    let allPacdClerks = [];
+    let selectedOfficerId = null;
+    let acActiveIdx = -1;
+
+    async function initLogin() {
+      try {
+        const r = await fetch('/api/clerks?all=true');
+        const all = await r.json();
+        allPacdClerks = all.filter(c => c.is_active && c.counter !== 'Admin');
+      } catch(e) { console.error('Failed to load clerks:', e); }
+    }
+    initLogin();
+
+    function filterDropdown() {
+      const input = document.getElementById('login-name');
+      const query = input.value.trim().toLowerCase();
+      const drop  = document.getElementById('ac-dropdown');
+      acActiveIdx = -1;
+
+      const filtered = query
+        ? allPacdClerks.filter(c => c.name.toLowerCase().includes(query))
+        : allPacdClerks;
+
+      if (filtered.length === 0) { drop.style.display = 'none'; drop.innerHTML = ''; return; }
+      drop.innerHTML = filtered.map((c) => {
+        const init = c.name.split(' ').slice(0,2).map(w => w[0]).join('').toUpperCase();
+        return `<div class="ac-option" data-id="${c.id}" data-name="${c.name}" onmousedown="selectOfficer(${c.id},'${c.name.replace(/'/g,'\\&apos;')}')">
+          <div class="ac-avatar">${init}</div>
+          <div><div class="ac-name">${c.name}</div><div class="ac-counter">Staff Account</div></div>
+        </div>`;
+      }).join('');
+      drop.style.display = 'block';
+    }
+
+    function selectOfficer(id, name, counter) {
+      selectedOfficerId = id;
+      document.getElementById('login-name').value = name;
+      document.getElementById('ac-dropdown').style.display = 'none';
+      document.getElementById('login-password').focus();
+    }
+
+    function dropdownKeyNav(e) {
+      const drop  = document.getElementById('ac-dropdown');
+      const items = drop.querySelectorAll('.ac-option');
+      if (!items.length) { if (e.key === 'Enter') submitLogin(); return; }
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        acActiveIdx = Math.min(acActiveIdx + 1, items.length - 1);
+        items.forEach((el, i) => el.classList.toggle('ac-active', i === acActiveIdx));
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        acActiveIdx = Math.max(acActiveIdx - 1, 0);
+        items.forEach((el, i) => el.classList.toggle('ac-active', i === acActiveIdx));
+      } else if (e.key === 'Enter') {
+        e.preventDefault();
+        if (acActiveIdx >= 0 && items[acActiveIdx]) {
+          const el = items[acActiveIdx];
+          selectOfficer(+el.dataset.id, el.dataset.name, el.dataset.counter);
+        } else {
+          submitLogin();
+        }
+      } else if (e.key === 'Escape') {
+        drop.style.display = 'none';
+      }
+    }
+
+    document.addEventListener('click', e => {
+      const wrap = document.getElementById('name-field-wrap');
+      if (wrap && !wrap.contains(e.target)) {
+        const d = document.getElementById('ac-dropdown');
+        if (d) d.style.display = 'none';
+      }
+    });
+
+    function togglePasswordVisibility() {
+      const input = document.getElementById('login-password');
+      const show  = document.getElementById('pw-eye-show');
+      const hide  = document.getElementById('pw-eye-hide');
+      if (input.type === 'password') {
+        input.type = 'text'; show.style.display = 'none'; hide.style.display = '';
+      } else {
+        input.type = 'password'; show.style.display = ''; hide.style.display = 'none';
+      }
+    }
+
+    function showLoginError(msg) {
+      const el = document.getElementById('login-error');
+      el.textContent = msg; el.style.display = 'block';
+      setTimeout(() => { el.style.display = 'none'; }, 4000);
+    }
+
+    async function submitLogin() {
+      const nameInput = document.getElementById('login-name').value.trim();
+      const password  = document.getElementById('login-password').value;
+      const btn       = document.getElementById('login-btn');
+
+      if (!selectedOfficerId) {
+        const match = allPacdClerks.find(c => c.name.toLowerCase() === nameInput.toLowerCase());
+        if (!match) { showLoginError('Officer not found. Please select your name from the list.'); return; }
+        selectedOfficerId = match.id;
+      }
+      if (!password) { showLoginError('Please enter your password.'); return; }
+
+      btn.disabled = true;
+      btn.innerHTML = `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" style="animation:spin 0.8s linear infinite"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg> Signing in…`;
+
+      try {
+        const res = await fetch('/api/clerks/login', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ clerk_id: selectedOfficerId, pin: password, station: 'PACD Desk', selected_counter: 'PACD' })
+        });
+        const data = await res.json();
+        if (data.success) {
+          sessionStorage.setItem('pacd_session', JSON.stringify(data.clerk));
+          activatePacd(data.clerk);
+        } else {
+          showLoginError(data.error || 'Incorrect password. Please try again.');
+          document.getElementById('login-password').value = '';
+          document.getElementById('login-password').focus();
+          selectedOfficerId = null;
+        }
+      } catch(e) {
+        showLoginError('Connection error. Please try again.');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg> Sign In`;
+      }
+    }
+
+    function activatePacd(clerkData) {
+      PACD_CLERK = clerkData;
+      document.getElementById('pacd-login').style.display = 'none';
+      document.getElementById('pacd-app').classList.remove('hidden');
+      document.getElementById('pacd-app').style.display = 'flex';
+      document.getElementById('pacd-dashboard').style.display = 'grid';
+      document.getElementById('pacd-subtitle').innerHTML = `Toledo Branch • <span style="color:#fcd34d;font-weight:700;">PACD (${clerkData.name})</span>`;
+      document.getElementById('btn-logout').style.display = 'inline-flex';
+      socket.emit('join:room', 'pacd');
+      socket.emit('join:room', 'admin');
+      socket.emit('station:login', { station: 'PACD Desk', clerkId: clerkData.id, clerkName: clerkData.name });
+      loadQueue(); loadOnHoldMember(); updateMyTaskBadge();
+      checkOngoingTransaction(); // restore ongoing transaction after refresh
+    }
+
+    async function checkOngoingTransaction() {
+      if (!PACD_CLERK) return;
+      try {
+        const res = await fetch(`/api/members/current-serving?clerk_id=${PACD_CLERK.id}&counter=${encodeURIComponent('PACD Desk')}`);
+        const data = await res.json();
+        if (data && data.hasActive && data.member) {
+          activeMember = data.member;
+          activeTransactionId = data.transaction_id;
+          if (data.service_start_time) {
+            timerStart = new Date(data.service_start_time.replace(' ', 'T'));
+            if (isNaN(timerStart.getTime())) timerStart = new Date(data.service_start_time);
+          } else {
+            timerStart = new Date();
+          }
+          showActivePanel(data.member);
+          showToast(`✓ Resumed ongoing transaction for ${data.member.name}`, 'info');
+        }
+      } catch (e) {}
+    }
+
+    function logout() {
+      socket.emit('station:logout', { station: 'PACD Desk' });
+      sessionStorage.removeItem('pacd_session');
+      PACD_CLERK = null; location.reload();
+    }
+
+    // Session restore
+    const savedPacd = sessionStorage.getItem('pacd_session');
+    if (savedPacd) {
+      try {
+        const saved = JSON.parse(savedPacd);
+        fetch('/api/clerks?all=true').then(r=>r.json()).then(clerks=>{
+          const still = clerks.find(c=>c.id===saved.id && c.is_active);
+          if (still) activatePacd({ id: still.id, name: still.name, counter: still.counter });
+          else { sessionStorage.removeItem('pacd_session'); }
+        }).catch(()=>{});
+      } catch(e) { sessionStorage.removeItem('pacd_session'); }
+    }
+
+    async function loadQueue() {
+      const r = await fetch('/api/members/pool/pacd');
+      const members = await r.json();
+      const container = document.getElementById('pacd-list');
+      const waiting = members.filter(m => m.status === 'waiting' && !m.is_rerouted);
+      document.getElementById('pacd-count').textContent = waiting.length;
+      if (waiting.length === 0) {
+        container.innerHTML = '<div class="empty-state"><div class="empty-state-icon"><svg class="icon icon-2xl icon-muted" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="1"/><path d="M9 21V9h6v12"/><path d="M3 9h18"/></svg></div><p>No members waiting</p></div>';
+      } else {
+        container.innerHTML = '';
+        waiting.forEach(m => {
+          const div = document.createElement('div');
+          div.className = 'member-card';
+          const waitMins = Math.floor((new Date() - new Date(m.check_in_time)) / 60000);
+          const waitColor = waitMins > 30 ? 'var(--danger)' : waitMins > 15 ? 'var(--warning)' : 'var(--success)';
+          div.innerHTML = `<div class="member-queue" style="background:var(--warning)">${m.queue_number || '—'}</div>
+            <div class="member-info">
+              <div class="member-name">${m.name}</div>
+              <div class="member-sss">${m.sss_number || 'No SSS Number'}</div>
+              <div class="member-meta">
+                <span class="badge badge-yellow">${m.transaction_type}</span>
+                <span class="member-time" style="color:${waitColor}">⏱ ${waitMins}min wait</span>
+              </div>
+            </div>
+            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0;">
+              <span class="badge badge-gray" style="font-size:0.65rem;">WAITING</span>
+            </div>`;
+          div.onclick = () => claimMember(m);
+          container.appendChild(div);
+        });
+      }
+
+      // Re-routed members — identified by is_rerouted flag, NOT by ticket number guessing
+      const rerouted = members.filter(m => m.is_rerouted === 1 && m.status === 'waiting');
+      document.getElementById('rerouted-count').textContent = rerouted.length;
+      const rc = document.getElementById('rerouted-list');
+      if (rerouted.length === 0) {
+        rc.innerHTML = '<div class="empty-state"><div class="empty-state-icon"><svg class="icon icon-2xl icon-muted" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/><line x1="4" y1="4" x2="9" y2="9"/></svg></div><p>No re-routed members</p></div>';
+      } else {
+        rc.innerHTML = '';
+        rerouted.forEach(m => {
+          const waitMins = Math.floor((new Date() - new Date(m.check_in_time)) / 60000);
+          const div = document.createElement('div');
+          div.className = 'member-card rerouted';
+          div.innerHTML = `
+            <div class="member-queue" style="background:var(--accent);"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/><line x1="4" y1="4" x2="9" y2="9"/></svg></div>
+            <div class="member-info">
+              <div class="member-name">${m.name}</div>
+              <div class="member-sss">Original queue: ${m.queue_number || 'N/A'} &nbsp;|&nbsp; From: ${m.original_destination || 'Other Counter'}</div>
+              <div class="member-meta">
+                <span class="badge badge-blue"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px;margin-right:3px;"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>Call by Name</span>
+                <span class="member-time">⏱ ${waitMins}min</span>
+              </div>
+            </div>
+            <div style="flex-shrink:0;">
+              <span class="badge badge-blue" style="font-size:0.65rem;">RE-ROUTED</span>
+            </div>`;
+          div.onclick = () => claimMember(m);
+          rc.appendChild(div);
+        });
+      }
+    }
+    loadQueue();
+
+    async function loadOnHoldMember() {
+      if (!PACD_CLERK) return;
+      try {
+        const r = await fetch('/api/members');
+        const members = await r.json();
+        const held = members.filter(m => m.status === 'on-hold' && (m.claimed_by === PACD_CLERK.id || m.routed_to === 'pacd'));
+        const list = document.getElementById('onhold-list');
+        const count = document.getElementById('onhold-count');
+        if (count) count.textContent = held.length;
+        if (!list) return;
+
+        if (held.length === 0) {
+          list.innerHTML = '<div class="empty-state"><div class="empty-state-icon"><svg class="icon icon-2xl icon-muted" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/></svg></div><p>No returning members</p></div>';
+          return;
+        }
+
+        list.innerHTML = '';
+        held.forEach(m => {
+          const waitMins = Math.floor((new Date() - new Date(m.check_in_time)) / 60000);
+          const div = document.createElement('div');
+          div.className = 'member-card';
+          div.style.cssText = 'border-left: 3px solid var(--warning); cursor: pointer;';
+          div.innerHTML = `
+            <div class="member-queue" style="background:var(--warning);"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/></svg></div>
+            <div class="member-info">
+              <div class="member-name">${m.name}</div>
+              <div class="member-sss">${m.sss_number || 'No SSS Number'}</div>
+              <div class="member-meta">
+                <span class="badge badge-yellow">⏳ Awaiting Return</span>
+                <span class="member-time" style="color:var(--warning);">⏱ ${waitMins}min</span>
+              </div>
+            </div>
+            <button class="btn btn-warning btn-sm" style="flex-shrink:0;white-space:nowrap;" onclick="event.stopPropagation();resumeSpecificMember(${m.id})">
+              ▶ Member Returned
+            </button>`;
+          div.onclick = () => resumeSpecificMember(m.id);
+          list.appendChild(div);
+        });
+      } catch(e) {}
+    }
+
+    async function resumeSpecificMember(memberId) {
+      if (activeMember && activeMember.status === 'being-served') {
+        showToast('Please conclude the current transaction first.', 'error');
+        return;
+      }
+      try {
+        const res = await fetch(`/api/members/${memberId}/resume`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            clerk_id: PACD_CLERK ? PACD_CLERK.id : null,
+            counter: 'PACD Desk'
+          })
+        });
+        const data = await res.json();
+        if (data.success) {
+          activeMember = data.member;
+          activeTransactionId = data.transaction_id;
+          showActivePanel(data.member);
+          loadOnHoldMember();
+          loadQueue();
+          showToast(`Resumed service for ${data.member.name}.`, 'success');
+        } else {
+          showToast(data.error || 'Could not resume member.', 'error');
+          loadOnHoldMember();
+        }
+      } catch(e) {
+        showToast('Connection error.', 'error');
+      }
+    }
+
+    function addInstruction(text) {
+      const input = document.getElementById('instructions-input');
+      if (!input) return;
+      const current = input.value.trim();
+      input.value = current ? `${current}; ${text}` : text;
+    }
+
+    function showActivePanel(member) {
+      document.getElementById('no-active').classList.add('hidden');
+      document.getElementById('active-panel').classList.remove('hidden');
+      document.getElementById('am-name').textContent = member.name;
+      document.getElementById('am-sss').textContent = member.sss_number || 'No SSS Number';
+      document.getElementById('am-queue').textContent = member.queue_number ? `#${member.queue_number}` : 'PACD Walk-In';
+      document.getElementById('am-tx').textContent = member.transaction_type || '';
+
+      const sssInput = document.getElementById('active-sss-input');
+      const sssStatus = document.getElementById('sss-badge-status');
+      if (sssInput) {
+        sssInput.value = member.sss_number || '';
+        if (sssStatus) {
+          sssStatus.textContent = member.sss_number ? 'Verified from Check-In' : 'Enter SSS Number if available';
+          sssStatus.style.color = member.sss_number ? '#059669' : '#d97706';
+        }
+      }
+
+      const declared = member.transaction_type || '';
+      const declaredEl = document.getElementById('tx-logbook-val');
+      if (declaredEl) declaredEl.textContent = declared || 'Not specified';
+
+      const sel = document.getElementById('tx-type-select');
+      if (sel) {
+        sel.value = '';
+        for (const opt of sel.options) {
+          if (opt.value && declared.toLowerCase().includes(opt.value.toLowerCase())) {
+            sel.value = opt.value; break;
+          }
+        }
+        if (!sel.value && sel.options.length > 1) sel.selectedIndex = 1;
+      }
+
+      selectedOutcome = null; selectedRating = null;
+      document.querySelectorAll('.outcome-btn').forEach(b => b.classList.remove('selected','finished','rejected','for-verification','for-appointment'));
+      document.querySelectorAll('.rating-btn').forEach(b => b.classList.remove('selected','happy','neutral','sad'));
+      const instInp = document.getElementById('instructions-input');
+      if (instInp) instInp.value = '';
+      startTimer();
+      loadQueue();
+      loadOnHoldMember();
+    }
+
+    async function claimMember(member) {
+      if (activeMember) { showToast('Please conclude the current transaction first.', 'error'); return; }
+      const res = await fetch(`/api/members/${member.id}/claim`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ clerk_id: PACD_CLERK.id, counter: 'PACD Desk' })
+      });
+      const data = await res.json();
+      if (data.success) {
+        activeMember = data.member; activeTransactionId = data.transaction_id;
+        showActivePanel(data.member);
+      } else {
+        showToast(data.error || 'Could not claim member.', 'error');
+        loadQueue();
+      }
+    }
+
+    function startTimer(customStart) {
+      if (timerInterval) clearInterval(timerInterval);
+      const start = customStart || timerStart || new Date();
+      timerInterval = setInterval(() => {
+        const e = Math.max(0, Math.floor((new Date() - start) / 1000));
+        document.getElementById('am-timer').textContent = `${String(Math.floor(e/60)).padStart(2,'0')}:${String(e%60).padStart(2,'0')}`;
+      }, 1000);
+    }
+
+    function selectOutcome(o) {
+      selectedOutcome = o;
+      document.querySelectorAll('.outcome-btn').forEach(b => b.classList.remove('selected','finished','rejected','for-verification','for-appointment'));
+      document.getElementById(`out-${o}`).classList.add('selected', o);
+      // Only for-verification skips rating — for-appointment means member was served, rating required
+      const showRating = o !== 'for-verification';
+      document.getElementById('rating-section').style.opacity = showRating ? '1' : '0.4';
+      document.getElementById('rating-section').style.pointerEvents = showRating ? 'auto' : 'none';
+    }
+    function selectRating(r) {
+      selectedRating = r;
+      document.querySelectorAll('.rating-btn').forEach(b => b.classList.remove('selected','happy','neutral','sad'));
+      document.getElementById(`rate-${r}`).classList.add('selected', r);
+    }
+    function addTag(tag) {
+      const i = document.getElementById('instructions-input');
+      if (!i) return;
+      const v = i.value.trim();
+      const n = v ? `${v}, ${tag}` : tag;
+      if (n.length <= 200) { i.value = n; }
+    }
+
+    async function concludeTransaction() {
+      if (!selectedOutcome) { showToast('Please select a transaction outcome.', 'error'); return; }
+      if (selectedOutcome === 'for-verification') {
+        await fetch(`/api/members/${activeMember.id}/hold`, { method: 'POST' });
+        showToast('Member placed on hold — same-day return.', 'info');
+        clearActive(); return;
+      }
+      const btn = document.getElementById('btn-conclude');
+      btn.disabled = true; btn.textContent = 'Saving...';
+      const sssVal = document.getElementById('pacd-sss-input') ? document.getElementById('pacd-sss-input').value.trim() : '';
+
+      const res = await fetch(`/api/transactions/${activeTransactionId}/conclude`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          outcome: selectedOutcome,
+          remarks: document.getElementById('instructions-input') ? document.getElementById('instructions-input').value.trim() : null,
+          clerk_instructions: document.getElementById('instructions-input') ? document.getElementById('instructions-input').value.trim() : '',
+          member_id: activeMember.id,
+          sss_number: sssVal || null
+        })
+      });
+      const data = await res.json();
+      if (data.success) { showToast('Transaction concluded.', 'success'); clearActive(); loadQueue(); }
+      else showToast(data.error || 'Error.', 'error');
+      btn.disabled = false; btn.innerHTML = '<svg class="icon icon-md" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Conclude Transaction';
+    }
+
+    function clearActive() {
+      if (timerInterval) clearInterval(timerInterval);
+      activeMember = null; activeTransactionId = null;
+      document.getElementById('active-panel').classList.add('hidden');
+      document.getElementById('no-active').classList.remove('hidden');
+    }
+
+    function showRerouteModal() { if (!activeMember) return; document.getElementById('reroute-modal').classList.remove('hidden'); }
+    function showReferModal()  { if (!activeMember) return; document.getElementById('refer-modal').classList.remove('hidden'); }
+    function showWalkupModal() { document.getElementById('walkup-modal').classList.remove('hidden'); }
+    function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+
+    async function submitReroute() {
+      await fetch(`/api/members/${activeMember.id}/reroute`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ new_destination: document.getElementById('reroute-dest').value }) });
+      closeModal('reroute-modal'); clearActive(); showToast('Member re-routed.', 'info'); loadQueue();
+    }
+    function submitRefer() {
+      closeModal('refer-modal');
+      const w = window.open('','_blank','width=400,height=300');
+      w.document.write(`<html><body style="font-family:Arial;padding:20px;text-align:center"><h3>SSS TOLEDO — DEPARTMENTAL REFERRAL</h3><hr><p><strong>Member:</strong> ${activeMember.name}</p><p><strong>Referred By:</strong> PACD</p><p><strong>Time:</strong> ${new Date().toLocaleTimeString('en-PH')}</p><hr><p>Please present this to the guard for a new queue number.</p><script>window.print();window.close();<\/script></body></html>`);
+    }
+    async function submitWalkup() {
+      const name = document.getElementById('wu-name').value.trim();
+      const tx = document.getElementById('wu-tx').value;
+      if (!name || !tx) { showToast('Fill in required fields.', 'error'); return; }
+      const res = await fetch('/api/members/checkin', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ queue_number: document.getElementById('wu-queue').value.trim() || null, name, sss_number: document.getElementById('wu-sss').value.trim() || null, transaction_type: tx, entry_type: 'walk-in' }) });
+      const data = await res.json();
+      if (data.success) { closeModal('walkup-modal'); claimMember(data.member); }
+    }
+
+    socket.on('member:checkin', loadQueue);
+    socket.on('member:claimed', loadQueue);
+    socket.on('member:rerouted', loadQueue);
+
+    // ── MY MSS TASKS DRAWER ──────────────────────────────────────────────────
+    let myAssignedTasks = [];
+    let completingTaskId = null;
+
+    async function updateMyTaskBadge() {
+      if (!PACD_CLERK) return;
+      try {
+        const r = await fetch(`/api/tasks/my/${PACD_CLERK.id}`);
+        const data = await r.json();
+        myAssignedTasks = data.tasks || [];
+        const badge = document.getElementById('my-task-badge');
+        if (badge) {
+          if (data.activeCount > 0) {
+            badge.textContent = data.activeCount;
+            badge.style.display = 'inline-block';
+          } else {
+            badge.style.display = 'none';
+          }
+        }
+      } catch(e) {}
+    }
+
+    function openMyTasks() {
+      if (!PACD_CLERK) return;
+      document.getElementById('tasks-overlay').classList.add('open');
+      loadMyTasksList();
+    }
+
+    function closeMyTasks() {
+      document.getElementById('tasks-overlay').classList.remove('open');
+    }
+
+    async function loadMyTasksList() {
+      if (!PACD_CLERK) return;
+      const container = document.getElementById('my-tasks-list');
+      container.innerHTML = '<div style="text-align:center;color:#64748b;padding:24px;">Loading assignments...</div>';
+
+      try {
+        const r = await fetch(`/api/tasks/my/${PACD_CLERK.id}`);
+        const data = await r.json();
+        myAssignedTasks = data.tasks || [];
+
+        if (!myAssignedTasks.length) {
+          container.innerHTML = `
+            <div style="text-align:center;padding:36px;color:#64748b;background:#f8fafc;border-radius:12px;border:1px dashed #cbd5e1;">
+              <svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="#94a3b8" stroke-width="1.5" style="margin-bottom:8px;"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+              <div style="font-weight:700;color:#334155;font-size:0.95rem;">No Pending Tasks Assigned</div>
+              <div style="font-size:0.8rem;margin-top:2px;">You are all caught up on internal MSS assignments.</div>
+            </div>`;
+          return;
+        }
+
+        container.innerHTML = '';
+        myAssignedTasks.forEach(t => {
+          const priorityColors = {
+            critical: { bg: '#fee2e2', text: '#b91c1c', border: '#fca5a5', label: 'CRITICAL' },
+            urgent: { bg: '#fef3c7', text: '#b45309', border: '#fde68a', label: 'URGENT' },
+            normal: { bg: '#eff6ff', text: '#1e40af', border: '#bfdbfe', label: 'NORMAL' }
+          };
+          const p = priorityColors[t.priority] || priorityColors.normal;
+
+          const statusBadges = {
+            pending: '<span class="badge badge-amber" style="font-size:0.72rem;"><svg viewBox="0 0 10 10" width="10" height="10" style="display:inline;vertical-align:middle;margin-right:3px;"><circle cx="5" cy="5" r="4" fill="#d97706"/></svg>Pending</span>',
+            ongoing: '<span class="badge badge-blue" style="font-size:0.72rem;"><svg viewBox="0 0 10 10" width="10" height="10" style="display:inline;vertical-align:middle;margin-right:3px;"><circle cx="5" cy="5" r="4" fill="#2563eb"/></svg>In Progress</span>',
+            completed: '<span class="badge badge-green" style="font-size:0.72rem;"><svg viewBox="0 0 10 10" width="10" height="10" style="display:inline;vertical-align:middle;margin-right:3px;"><circle cx="5" cy="5" r="4" fill="#15803d"/></svg>Completed</span>',
+            overdue: '<span class="badge badge-red" style="font-size:0.72rem;"><svg viewBox="0 0 10 10" width="10" height="10" style="display:inline;vertical-align:middle;margin-right:3px;"><circle cx="5" cy="5" r="4" fill="#dc2626"/></svg>Overdue</span>'
+          };
+
+          const item = document.createElement('div');
+          item.style.cssText = `
+            background: #ffffff;
+            border-radius: 10px;
+            border: 1.5px solid ${t.status === 'overdue' ? '#fca5a5' : '#e2e8f0'};
+            padding: 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+          `;
+
+          item.innerHTML = `
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">
+              <div style="display:flex;gap:6px;align-items:center;">
+                <span style="font-size:0.68rem;font-weight:700;padding:2px 6px;border-radius:4px;background:${p.bg};color:${p.text};border:1px solid ${p.border};">${p.label}</span>
+                <span class="badge badge-gray" style="font-size:0.68rem;">${t.category}</span>
+              </div>
+              <div>${statusBadges[t.status] || ''}</div>
+            </div>
+
+            <div>
+              <div style="font-weight:700;font-size:0.92rem;color:#0f172a;margin-bottom:4px;">${t.title}</div>
+              <div style="font-size:0.8rem;color:#64748b;line-height:1.4;">${t.description || 'No detailed notes.'}</div>
+            </div>
+
+            <div style="display:flex;justify-content:space-between;align-items:center;padding-top:8px;border-top:1px solid #f1f5f9;font-size:0.78rem;">
+              <span style="color:#64748b;">Target Deadline: <strong style="color:${t.status === 'overdue' ? '#dc2626' : '#1e40af'};">${t.target_date}</strong></span>
+              
+              <div style="display:flex;gap:6px;">
+                ${t.status !== 'completed' ? `
+                  ${t.status !== 'ongoing' ? `
+                    <button class="btn btn-ghost btn-sm" onclick="setMyTaskStatus(${t.id}, 'ongoing')" style="font-size:0.75rem;color:#1e40af;border-color:#bfdbfe;background:#eff6ff;">▶ Start Working</button>
+                  ` : ''}
+                  <button class="btn btn-primary btn-sm" onclick="openCompleteTaskModal(${t.id}, '${t.title.replace(/'/g, "\\'")}')" style="font-size:0.75rem;background:#15803d;border-color:#15803d;">✓ Mark Done</button>
+                ` : `
+                  <span style="color:#15803d;font-weight:700;font-size:0.75rem;">✓ Accomplished at ${t.completed_at}</span>
+                `}
+              </div>
+            </div>
+          `;
+          container.appendChild(item);
+        });
+      } catch(e) {
+        container.innerHTML = '<div style="color:#b91c1c;padding:16px;">Failed to load assignments.</div>';
+      }
+    }
+
+    async function setMyTaskStatus(id, status) {
+      try {
+        const r = await fetch(`/api/tasks/${id}/status`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status })
+        });
+        const d = await r.json();
+        if (d.success) {
+          showToast('Task status updated.', 'info');
+          loadMyTasksList();
+          updateMyTaskBadge();
+        }
+      } catch(e) {
+        showToast('Network error.', 'error');
+      }
+    }
+
+    function openCompleteTaskModal(id, title) {
+      completingTaskId = id;
+      document.getElementById('complete-task-title').textContent = title;
+      document.getElementById('complete-task-notes').value = '';
+      document.getElementById('task-complete-modal').classList.remove('hidden');
+    }
+
+    async function submitCompleteTask() {
+      const notes = document.getElementById('complete-task-notes').value.trim();
+      if (!notes) {
+        showToast('Please provide a brief accomplishment remark.', 'error');
+        return;
+      }
+
+      try {
+        const r = await fetch(`/api/tasks/${completingTaskId}/status`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: 'completed', accomplishment_notes: notes })
+        });
+        const d = await r.json();
+        if (d.success) {
+          document.getElementById('task-complete-modal').classList.add('hidden');
+          showToast('MSS assignment accomplished!', 'success');
+          loadMyTasksList();
+          updateMyTaskBadge();
+        }
+      } catch(e) {
+        showToast('Network error.', 'error');
+      }
+    }
+
+    // Socket task refresh for personnel
+    socket.on('task:created', () => updateMyTaskBadge());
+    socket.on('task:updated', () => updateMyTaskBadge());
+    socket.on('task:deleted', () => updateMyTaskBadge());
+
+    function showToast(msg, type = 'info') {
+      const c = document.getElementById('toast-container');
+      const t = document.createElement('div');
+      t.className = `toast ${type}`; t.textContent = msg; c.appendChild(t);
+      setTimeout(() => { t.style.animation = 'fadeOut 0.3s ease forwards'; setTimeout(() => t.remove(), 300); }, 4000);
+    }
+  </script>
+</body>
+</html>

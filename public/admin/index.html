@@ -1,0 +1,3699 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SSS Toledo — Branch Operations Monitoring System (BOMS)</title>
+  <link rel="stylesheet" href="/assets/css/styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    :root {
+      --sss-navy: #071e4a;
+      --sss-blue: #0038a8;
+      --sss-royal: #1a56db;
+      --sss-accent: #2563eb;
+      --sss-gold: #f59e0b;
+      --sss-green: #059669;
+      --sss-red: #dc2626;
+      --bg-canvas: #f8fafc;
+      --surface-card: #ffffff;
+      --border-subtle: #e2e8f0;
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+    }
+
+    body {
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      background: var(--bg-canvas);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      color: var(--text-main);
+      margin: 0;
+    }
+
+    /* ── Executive Topbar ── */
+    .topbar {
+      background: linear-gradient(135deg, #071e4a 0%, #0a2f7c 50%, #0038a8 100%);
+      color: #fff;
+      padding: 10px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 4px 14px rgba(7, 30, 74, 0.25);
+      border-bottom: 2px solid rgba(245, 158, 11, 0.4);
+      z-index: 100;
+      flex-shrink: 0;
+    }
+
+    .topbar-brand {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .topbar-logo {
+      width: 42px;
+      height: 42px;
+      background: #fff;
+      border-radius: 10px;
+      padding: 4px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .topbar-gov-republic {
+      font-size: 0.64rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      color: #cbd5e1;
+      text-transform: uppercase;
+    }
+
+    .topbar-title {
+      font-size: 1.15rem;
+      font-weight: 800;
+      letter-spacing: -0.01em;
+      line-height: 1.15;
+    }
+
+    .topbar-subtitle {
+      font-size: 0.76rem;
+      color: #94a3b8;
+      font-weight: 500;
+      margin-top: 1px;
+    }
+
+    .topbar-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .branch-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(255, 255, 255, 0.12);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      padding: 5px 12px;
+      border-radius: 999px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: #f1f5f9;
+      letter-spacing: 0.02em;
+    }
+
+    .admin-clock-box {
+      background: rgba(0, 0, 0, 0.25);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      padding: 5px 12px;
+      border-radius: 8px;
+      font-family: monospace;
+      font-size: 0.88rem;
+      font-weight: 700;
+      color: #fcd34d;
+      letter-spacing: 0.05em;
+    }
+
+    /* ── Main Layout ── */
+    .admin-layout {
+      display: grid;
+      grid-template-columns: 270px 1fr;
+      flex: 1;
+      height: calc(100vh - 64px);
+      overflow: hidden;
+    }
+
+    /* ── Executive Sidebar ── */
+    .sidebar {
+      background: #ffffff;
+      border-right: 1.5px solid var(--border-subtle);
+      padding: 20px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      overflow-y: auto;
+    }
+
+    .nav-section-label {
+      font-size: 0.68rem;
+      font-weight: 800;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      padding: 16px 12px 6px;
+    }
+
+    .nav-section-label:first-child {
+      padding-top: 4px;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 11px 14px;
+      border-radius: 9px;
+      cursor: pointer;
+      transition: all 0.15s ease-in-out;
+      color: #475569;
+      font-size: 0.88rem;
+      font-weight: 600;
+      text-decoration: none;
+      border: 1px solid transparent;
+    }
+
+    .nav-item:hover {
+      background: #f1f5f9;
+      color: var(--sss-navy);
+      transform: translateX(2px);
+    }
+
+    .nav-item.active {
+      background: #eff6ff;
+      color: var(--sss-blue);
+      border-color: #bfdbfe;
+      font-weight: 700;
+      box-shadow: 0 1px 3px rgba(37, 99, 235, 0.08);
+    }
+
+    .nav-item .nav-icon {
+      width: 20px;
+      height: 20px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    /* ── Main Content Area ── */
+    .main-content {
+      overflow-y: auto;
+      padding: 28px 32px;
+      display: flex;
+      flex-direction: column;
+      gap: 26px;
+    }
+
+    .page {
+      display: none;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    .page.active {
+      display: flex;
+    }
+
+    .page-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 14px;
+      padding-bottom: 16px;
+      border-bottom: 1.5px solid var(--border-subtle);
+    }
+
+    .page-title-wrap h2 {
+      margin: 0;
+      font-size: 1.45rem;
+      font-weight: 800;
+      color: var(--sss-navy);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .page-title-wrap p {
+      margin: 4px 0 0 0;
+      font-size: 0.82rem;
+      color: var(--text-muted);
+    }
+
+    /* ── Executive KPI Cards ── */
+    .executive-kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 16px;
+    }
+
+    .kpi-card {
+      background: #ffffff;
+      border: 1.5px solid var(--border-subtle);
+      border-radius: 12px;
+      padding: 18px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .kpi-card::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3.5px;
+      background: var(--sss-blue);
+    }
+
+    .kpi-card.kpi-blue::before {
+      background: var(--sss-blue);
+    }
+
+    .kpi-card.kpi-green::before {
+      background: var(--sss-green);
+    }
+
+    .kpi-card.kpi-amber::before {
+      background: var(--sss-gold);
+    }
+
+    .kpi-card.kpi-purple::before {
+      background: #7c3aed;
+    }
+
+    .kpi-card.kpi-red::before {
+      background: var(--sss-red);
+    }
+
+    .kpi-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .kpi-label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .kpi-icon-pill {
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .kpi-value {
+      font-size: 2.1rem;
+      font-weight: 800;
+      color: var(--text-main);
+      line-height: 1.1;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .kpi-sub {
+      font-size: 0.76rem;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    /* ── Content Cards ── */
+    .card {
+      background: #ffffff;
+      border: 1.5px solid var(--border-subtle);
+      border-radius: 14px;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.03);
+      overflow: hidden;
+    }
+
+    .card-header {
+      padding: 16px 20px;
+      background: #ffffff;
+      border-bottom: 1px solid var(--border-subtle);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .card-header h3 {
+      margin: 0;
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--sss-navy);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .card-body {
+      padding: 20px;
+    }
+
+    /* ── Station Command Matrix ── */
+    .station-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 16px;
+    }
+
+    .station-pod {
+      border: 1.5px solid var(--border-subtle);
+      border-radius: 12px;
+      padding: 16px 18px;
+      background: #ffffff;
+      transition: all 0.2s ease;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .station-pod:hover {
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+      border-color: #cbd5e1;
+    }
+
+    .station-pod-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .station-title-box {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .station-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .station-name {
+      font-size: 0.96rem;
+      font-weight: 800;
+      color: var(--sss-navy);
+    }
+
+    .station-type {
+      font-size: 0.7rem;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 4px;
+      display: inline-block;
+    }
+
+    .station-serving-box {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 10px 12px;
+      font-size: 0.82rem;
+    }
+
+    .station-serving-box.serving-active {
+      background: #f0fdf4;
+      border-color: #86efac;
+    }
+
+    .station-metrics {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-top: 1px solid #f1f5f9;
+      padding-top: 10px;
+      font-size: 0.78rem;
+      color: var(--text-muted);
+    }
+
+    /* ── Tables & Data Grids ── */
+    .admin-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+    }
+
+    .admin-table th {
+      background: #f8fafc;
+      padding: 12px 16px;
+      text-align: left;
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      border-bottom: 1.5px solid var(--border-subtle);
+    }
+
+    .admin-table td {
+      padding: 13px 16px;
+      border-bottom: 1px solid var(--border-subtle);
+      color: var(--text-main);
+      vertical-align: middle;
+    }
+
+    .admin-table tr:hover td {
+      background: #f8fafc;
+    }
+
+    .admin-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    /* ── Pulse Animation ── */
+    @keyframes pulse-ring {
+      0% {
+        transform: scale(0.95);
+        opacity: 1;
+      }
+
+      50% {
+        transform: scale(1.15);
+        opacity: 0.7;
+      }
+
+      100% {
+        transform: scale(0.95);
+        opacity: 1;
+      }
+    }
+
+    .pulse-dot {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--sss-green);
+      animation: pulse-ring 2s infinite ease-in-out;
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 1024px) {
+      .admin-layout {
+        grid-template-columns: 1fr;
+        height: auto;
+      }
+
+      .sidebar {
+        flex-direction: row;
+        overflow-x: auto;
+        padding: 8px 12px;
+      }
+
+      .nav-section-label {
+        display: none;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- ── ADMIN LOGIN GATE ─────────────────────────────────────────────────── -->
+  <div id="admin-login-gate" style="
+    position:fixed;inset:0;z-index:9999;
+    background:linear-gradient(135deg,#071e4a 0%,#0038a8 60%,#1a56db 100%);
+    display:flex;align-items:center;justify-content:center;
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+  ">
+    <div style="
+      background:#fff;border-radius:20px;padding:44px 48px;
+      max-width:420px;width:90%;text-align:center;
+      box-shadow:0 32px 80px rgba(0,0,0,0.35);
+    ">
+      <!-- SSS Emblem -->
+      <div style="margin-bottom:20px;">
+        <img src="/assets/logo.png" alt="SSS" style="width:72px;height:72px;object-fit:contain;">
+      </div>
+      <div
+        style="font-size:0.7rem;font-weight:700;letter-spacing:3px;color:#64748b;text-transform:uppercase;margin-bottom:4px;">
+        Republic of the Philippines
+      </div>
+      <div
+        style="font-size:0.75rem;font-weight:700;letter-spacing:2px;color:#64748b;text-transform:uppercase;margin-bottom:18px;">
+        Social Security System
+      </div>
+      <h2 style="font-size:1.25rem;font-weight:800;color:#071e4a;margin:0 0 4px;">
+        Admin Control Panel
+      </h2>
+      <p style="font-size:0.8rem;color:#94a3b8;margin:0 0 28px;">
+        Toledo Branch • Authorized Personnel Only
+      </p>
+
+      <div style="text-align:left;margin-bottom:16px;">
+        <label style="font-size:0.78rem;font-weight:700;color:#334155;display:block;margin-bottom:6px;">
+          Admin Password
+        </label>
+        <div style="position:relative;">
+          <input type="password" id="admin-gate-pin" placeholder="Enter admin password" maxlength="20"
+            autocomplete="current-password" style="
+              width:100%;box-sizing:border-box;
+              padding:12px 44px 12px 16px;
+              border:2px solid #e2e8f0;border-radius:10px;
+              font-size:1rem;color:#0f172a;outline:none;
+              transition:border 0.2s;
+            " onfocus="this.style.border='2px solid #0038a8'" onblur="this.style.border='2px solid #e2e8f0'"
+            onkeydown="if(event.key==='Enter')doAdminLogin()">
+          <button type="button" onclick="toggleGatePw()" tabindex="-1" style="
+            position:absolute;right:12px;top:50%;transform:translateY(-50%);
+            background:none;border:none;cursor:pointer;color:#94a3b8;padding:4px;
+          ">
+            <svg id="gate-eye-show" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+              stroke-width="2">
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+              <circle cx="12" cy="12" r="3" />
+            </svg>
+            <svg id="gate-eye-hide" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+              stroke-width="2" style="display:none;">
+              <path
+                d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
+              <line x1="1" y1="1" x2="23" y2="23" />
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <div id="admin-gate-err" style="
+        display:none;background:#fef2f2;border:1px solid #fca5a5;
+        border-radius:8px;padding:10px 14px;margin-bottom:14px;
+        font-size:0.82rem;color:#b91c1c;font-weight:600;text-align:left;
+      "></div>
+
+      <button onclick="doAdminLogin()" id="admin-gate-btn" style="
+        width:100%;padding:13px;border:none;border-radius:10px;
+        background:linear-gradient(135deg,#0038a8,#1a56db);
+        color:#fff;font-size:0.95rem;font-weight:700;
+        cursor:pointer;letter-spacing:0.5px;
+        transition:opacity 0.2s,transform 0.1s;
+      " onmouseover="this.style.opacity='0.92'" onmouseout="this.style.opacity='1'"
+        onmousedown="this.style.transform='scale(0.98)'" onmouseup="this.style.transform='scale(1)'">
+        Sign In to Admin Panel
+      </button>
+
+      <p style="font-size:0.72rem;color:#cbd5e1;margin:20px 0 0;">
+        Unauthorized access is strictly prohibited and logged.
+      </p>
+    </div>
+  </div>
+
+  <script>
+    // ── Admin Gate Logic (runs BEFORE Socket.IO loads) ──────────────────────
+    (function () {
+      // Check if already authenticated this session
+      if (sessionStorage.getItem('admin_authenticated') === 'true') {
+        document.getElementById('admin-login-gate').style.display = 'none';
+      }
+    })();
+
+    function toggleGatePw() {
+      const inp = document.getElementById('admin-gate-pin');
+      const show = document.getElementById('gate-eye-show');
+      const hide = document.getElementById('gate-eye-hide');
+      if (inp.type === 'password') {
+        inp.type = 'text'; show.style.display = 'none'; hide.style.display = '';
+      } else {
+        inp.type = 'password'; show.style.display = ''; hide.style.display = 'none';
+      }
+    }
+
+    async function doAdminLogin() {
+      const pin = document.getElementById('admin-gate-pin').value.trim();
+      const err = document.getElementById('admin-gate-err');
+      const btn = document.getElementById('admin-gate-btn');
+
+      if (!pin) {
+        err.textContent = 'Please enter the admin password.';
+        err.style.display = 'block';
+        return;
+      }
+
+      btn.textContent = 'Verifying...';
+      btn.disabled = true;
+      err.style.display = 'none';
+
+      try {
+        const r = await fetch('/api/admin/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ password: pin })
+        });
+        const d = await r.json();
+
+        if (d.success) {
+          sessionStorage.setItem('admin_authenticated', 'true');
+          const gate = document.getElementById('admin-login-gate');
+          gate.style.transition = 'opacity 0.4s';
+          gate.style.opacity = '0';
+          setTimeout(() => gate.style.display = 'none', 400);
+        } else {
+          err.textContent = d.error || 'Incorrect password. Access denied.';
+          err.style.display = 'block';
+          document.getElementById('admin-gate-pin').value = '';
+          document.getElementById('admin-gate-pin').focus();
+          btn.textContent = 'Sign In to Admin Panel';
+          btn.disabled = false;
+        }
+      } catch (e) {
+        err.textContent = 'Connection error. Please try again.';
+        err.style.display = 'block';
+        btn.textContent = 'Sign In to Admin Panel';
+        btn.disabled = false;
+      }
+    }
+  </script>
+
+
+  <nav class="topbar">
+    <div class="topbar-brand">
+      <div class="topbar-logo">
+        <img src="/assets/logo.png" alt="SSS Toledo" style="width:100%;height:100%;object-fit:contain;">
+      </div>
+      <div>
+        <div class="topbar-gov-republic">Republic of the Philippines • Social Security System</div>
+        <div class="topbar-title">Branch Operations Monitoring System (BOMS)</div>
+        <div class="topbar-subtitle">Executive Command Center • Toledo Branch</div>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <div class="branch-badge">
+        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5">
+          <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+          <circle cx="12" cy="10" r="3" />
+        </svg>
+        Branch Code: 07-TLD • Toledo, Cebu
+      </div>
+      <div class="admin-clock-box" id="admin-clock">--:-- --</div>
+      <span class="badge badge-green"
+        style="background:#059669;color:#fff;border:none;padding:5px 10px;font-weight:700;">● Live Synced</span>
+    </div>
+  </nav>
+
+  <div class="admin-layout">
+    <!-- ── Sidebar ── -->
+    <nav class="sidebar">
+      <div class="nav-section-label">Real-Time Operations</div>
+      <a class="nav-item active" onclick="showPage('live')" id="nav-live">
+        <span class="nav-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+            stroke-width="2.2">
+            <rect x="2" y="3" width="20" height="14" rx="2" />
+            <line x1="8" y1="21" x2="16" y2="21" />
+            <line x1="12" y1="17" x2="12" y2="21" />
+          </svg></span>
+        Operations Command
+      </a>
+      <a class="nav-item" onclick="showPage('alerts')" id="nav-alerts">
+        <span class="nav-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+            stroke-width="2.2">
+            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+            <line x1="12" y1="9" x2="12" y2="13" />
+            <line x1="12" y1="17" x2="12.01" y2="17" />
+          </svg></span>
+        SLA &amp; Wait Alerts
+        <span id="alert-badge" class="badge badge-red"
+          style="margin-left:auto;display:none;font-size:0.68rem;padding:2px 6px;">0</span>
+      </a>
+
+      <div class="nav-section-label">MSS Task Management</div>
+      <a class="nav-item" onclick="showPage('tasks')" id="nav-tasks">
+        <span class="nav-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+            stroke-width="2.2">
+            <path d="M9 11l3 3L22 4" />
+            <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
+          </svg></span>
+        MSS Assignments
+        <span id="task-overdue-badge" class="badge badge-red"
+          style="margin-left:auto;display:none;font-size:0.68rem;padding:2px 6px;">0</span>
+      </a>
+
+      <div class="nav-section-label">Staff Analytics</div>
+      <a class="nav-item" onclick="showPage('performance')" id="nav-performance">
+        <span class="nav-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+            stroke-width="2.2">
+            <line x1="18" y1="20" x2="18" y2="10" />
+            <line x1="12" y1="20" x2="12" y2="4" />
+            <line x1="6" y1="20" x2="6" y2="14" />
+          </svg></span>
+        Staff Productivity
+      </a>
+
+      <div class="nav-section-label">Audit &amp; Governance</div>
+      <a class="nav-item" onclick="showPage('transactions')" id="nav-transactions">
+        <span class="nav-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+            stroke-width="2.2">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+            <polyline points="14 2 14 8 20 8" />
+            <line x1="16" y1="13" x2="8" y2="13" />
+            <line x1="16" y1="17" x2="8" y2="17" />
+          </svg></span>
+        Master Audit Log
+      </a>
+      <a class="nav-item" onclick="showPage('csm')" id="nav-csm">
+        <span class="nav-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+            stroke-width="2.2">
+            <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3H14z" />
+            <path d="M7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3" />
+          </svg></span>
+        ARTA CSM Analytics
+      </a>
+      <a class="nav-item" onclick="showPage('appointments')" id="nav-appointments">
+        <span class="nav-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+            stroke-width="2.2">
+            <rect x="3" y="4" width="18" height="18" rx="2" />
+            <line x1="16" y1="2" x2="16" y2="6" />
+            <line x1="8" y1="2" x2="8" y2="6" />
+            <line x1="3" y1="10" x2="21" y2="10" />
+          </svg></span>
+        Appointment Rosters
+      </a>
+      <a class="nav-item" onclick="showPage('reports')" id="nav-reports">
+        <span class="nav-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+            stroke-width="2.2">
+            <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
+            <rect x="8" y="2" width="8" height="4" rx="1" />
+          </svg></span>
+        Custom Date Reports
+      </a>
+
+      <div class="nav-section-label">Administration</div>
+      <a class="nav-item" onclick="showPage('clerks')" id="nav-clerks">
+        <span class="nav-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+            stroke-width="2.2">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+            <circle cx="12" cy="7" r="4" />
+          </svg></span>
+        Staff Accounts &amp; Backup
+      </a>
+    </nav>
+
+    <!-- ── Main Content ── -->
+    <div class="main-content">
+
+      <!-- ═════════════════════════════════════════════════════════════════════ -->
+      <!-- PAGE 1: OPERATIONS COMMAND (LIVE DASHBOARD) -->
+      <!-- ═════════════════════════════════════════════════════════════════════ -->
+      <div class="page active" id="page-live">
+        <div class="page-header">
+          <div class="page-title-wrap">
+            <h2>
+              <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5"
+                style="color:var(--sss-blue);">
+                <rect x="2" y="3" width="20" height="14" rx="2" />
+                <line x1="8" y1="21" x2="16" y2="21" />
+                <line x1="12" y1="17" x2="12" y2="21" />
+              </svg>
+              Branch Operations Command
+            </h2>
+            <p>Live real-time monitoring of all Toledo branch counters, wait times, and Citizen's Charter SLAs.</p>
+          </div>
+          <div style="display:flex;gap:8px;">
+            <button class="btn btn-ghost btn-sm" onclick="loadLiveDashboard()"
+              style="display:flex;align-items:center;gap:6px;">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5">
+                <polyline points="23 4 23 10 17 10" />
+                <polyline points="1 20 1 14 7 14" />
+                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
+              </svg>
+              Refresh Data
+            </button>
+            <a href="/api/reports/export/excel?all=1" class="btn btn-primary btn-sm"
+              style="background:#15803d;border-color:#15803d;display:flex;align-items:center;gap:6px;text-decoration:none;">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                <polyline points="7 10 12 15 17 10" />
+                <line x1="12" y1="15" x2="12" y2="3" />
+              </svg>
+              Daily Master Excel (.xlsx)
+            </a>
+          </div>
+        </div>
+
+        <!-- Executive KPI Strip -->
+        <div class="executive-kpi-grid">
+          <div class="kpi-card kpi-blue">
+            <div class="kpi-top">
+              <span class="kpi-label">Total Foot Traffic</span>
+              <span class="kpi-icon-pill" style="background:#eff6ff;color:var(--sss-blue);"><svg viewBox="0 0 24 24"
+                  width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                  <circle cx="9" cy="7" r="4" />
+                  <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                </svg></span>
+            </div>
+            <div class="kpi-value" id="stat-total">—</div>
+            <div class="kpi-sub">Total citizens assisted today</div>
+          </div>
+
+          <div class="kpi-card kpi-amber">
+            <div class="kpi-top">
+              <span class="kpi-label">Waiting in Lobby</span>
+              <span class="kpi-icon-pill" style="background:#fffbeb;color:var(--sss-gold);"><svg viewBox="0 0 24 24"
+                  width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <circle cx="12" cy="12" r="10" />
+                  <polyline points="12 6 12 12 16 14" />
+                </svg></span>
+            </div>
+            <div class="kpi-value" id="stat-waiting" style="color:#b45309;">—</div>
+            <div class="kpi-sub">Active members in queue pools</div>
+          </div>
+
+          <div class="kpi-card kpi-purple">
+            <div class="kpi-top">
+              <span class="kpi-label">Avg Wait Duration</span>
+              <span class="kpi-icon-pill" style="background:#f5f3ff;color:#7c3aed;"><svg viewBox="0 0 24 24" width="16"
+                  height="16" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
+                </svg></span>
+            </div>
+            <div class="kpi-value" id="stat-avgwait" style="color:#6d28d9;">—</div>
+            <div class="kpi-sub">Target Citizen's Charter: &lt; 15.0m</div>
+          </div>
+
+          <div class="kpi-card kpi-green">
+            <div class="kpi-top">
+              <span class="kpi-label">Satisfaction Score</span>
+              <span class="kpi-icon-pill" style="background:#f0fdf4;color:var(--sss-green);"><svg viewBox="0 0 24 24"
+                  width="16" height="16" fill="currentColor">
+                  <polygon
+                    points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                </svg></span>
+            </div>
+            <div class="kpi-value" id="stat-rating" style="color:var(--sss-green);">—</div>
+            <div class="kpi-sub">Member CSAT average index</div>
+          </div>
+        </div>
+
+        <!-- Physical Station Command Matrix -->
+        <div class="card">
+          <div class="card-header">
+            <h3>
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2">
+                <rect x="3" y="3" width="7" height="7" />
+                <rect x="14" y="3" width="7" height="7" />
+                <rect x="14" y="14" width="7" height="7" />
+                <rect x="3" y="14" width="7" height="7" />
+              </svg>
+              Physical Counter &amp; Station Matrix
+            </h3>
+            <span class="badge badge-blue">Real-Time Desk Status</span>
+          </div>
+          <div class="card-body">
+            <div class="station-grid" id="counter-grid">
+              <div style="color:var(--text-muted);font-size:0.85rem;">Connecting to branch stations...</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Live Outcome Breakdown -->
+        <div class="card">
+          <div class="card-header">
+            <h3>
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                <polyline points="22 4 12 14.01 9 11.01" />
+              </svg>
+              Today's Transaction Resolution Flow
+            </h3>
+          </div>
+          <div class="card-body">
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:14px;" id="tx-flow">
+              <div class="kpi-card" style="padding:14px;">
+                <div class="kpi-label" style="color:#15803d;">Finished / Concluded</div>
+                <div class="kpi-value" id="flow-finished" style="color:#15803d;font-size:1.7rem;">—</div>
+              </div>
+              <div class="kpi-card" style="padding:14px;">
+                <div class="kpi-label" style="color:#b91c1c;">Rejected / Deficient</div>
+                <div class="kpi-value" id="flow-rejected" style="color:#b91c1c;font-size:1.7rem;">—</div>
+              </div>
+              <div class="kpi-card" style="padding:14px;">
+                <div class="kpi-label" style="color:#b45309;">For Verification (Held)</div>
+                <div class="kpi-value" id="flow-verification" style="color:#b45309;font-size:1.7rem;">—</div>
+              </div>
+              <div class="kpi-card" style="padding:14px;">
+                <div class="kpi-label" style="color:#1e40af;">For Appointment</div>
+                <div class="kpi-value" id="flow-appointment" style="color:#1e40af;font-size:1.7rem;">—</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SLA Watchdog Alerts -->
+        <div class="card" id="sla-card">
+          <div class="card-header">
+            <h3>
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#dc2626" stroke-width="2.2">
+                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+                <line x1="12" y1="9" x2="12" y2="13" />
+                <line x1="12" y1="17" x2="12.01" y2="17" />
+              </svg>
+              Citizen's Charter &amp; ARTA Wait-Time Watchdog
+            </h3>
+            <span class="badge badge-green" id="wait-alert-count">0 Over-SLA</span>
+          </div>
+          <div class="card-body" id="wait-alerts">
+            <div style="color:var(--text-muted);font-size:0.85rem;">Scanning wait queues...</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═════════════════════════════════════════════════════════════════════ -->
+      <!-- PAGE 2: STAFF PRODUCTIVITY -->
+      <!-- ═════════════════════════════════════════════════════════════════════ -->
+      <div class="page" id="page-performance">
+        <div class="page-header">
+          <div class="page-title-wrap">
+            <h2>
+              <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5"
+                style="color:var(--sss-blue);">
+                <line x1="18" y1="20" x2="18" y2="10" />
+                <line x1="12" y1="20" x2="12" y2="4" />
+                <line x1="6" y1="20" x2="6" y2="14" />
+              </svg>
+              Staff Productivity &amp; Performance Leaderboard
+            </h2>
+            <p>Individual officer output, average handle duration, and citizen satisfaction ratings for today.</p>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-body" style="padding:0;">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Counter / Station</th>
+                  <th>Assigned Officer</th>
+                  <th>Total Served</th>
+                  <th>Avg Handle Duration</th>
+                  <th>Avg Member Wait</th>
+                  <th>CSAT Rating</th>
+                  <th>Rejected</th>
+                </tr>
+              </thead>
+              <tbody id="performance-table">
+                <tr>
+                  <td colspan="7" style="text-align:center;color:var(--text-muted);padding:32px;">Loading performance
+                    metrics...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═════════════════════════════════════════════════════════════════════ -->
+      <!-- PAGE: MSS TASK MANAGEMENT -->
+      <!-- ═════════════════════════════════════════════════════════════════════ -->
+      <div class="page" id="page-tasks">
+        <div class="page-header">
+          <div class="page-title-wrap">
+            <h2>
+              <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5"
+                style="color:var(--sss-blue);">
+                <path d="M9 11l3 3L22 4" />
+                <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
+              </svg>
+              MSS Task &amp; Assignment Management
+            </h2>
+            <p>Step 1–6 Process Flow: Encode assignments, set deadlines, track automated status, and produce
+              accomplishment analytics.</p>
+          </div>
+          <div style="display:flex;gap:10px;">
+            <button class="btn btn-primary btn-sm" onclick="openCreateTaskModal()"
+              style="display:flex;align-items:center;gap:6px;">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5">
+                <line x1="12" y1="5" x2="12" y2="19" />
+                <line x1="5" y1="12" x2="19" y2="12" />
+              </svg>
+              New Assignment
+            </button>
+            <a href="/api/tasks/export/excel" class="btn btn-primary btn-sm"
+              style="background:#15803d;border-color:#15803d;display:flex;align-items:center;gap:6px;text-decoration:none;">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                <polyline points="7 10 12 15 17 10" />
+                <line x1="12" y1="15" x2="12" y2="3" />
+              </svg>
+              Export Accomplishment Report (.xlsx)
+            </a>
+          </div>
+        </div>
+
+        <!-- Task KPI Ribbon -->
+        <div class="executive-kpi-grid">
+          <div class="kpi-card kpi-blue">
+            <div class="kpi-top"><span class="kpi-label">Total Assignments</span></div>
+            <div class="kpi-value" id="task-stat-total">—</div>
+            <div class="kpi-sub">All active &amp; archived tasks</div>
+          </div>
+          <div class="kpi-card kpi-amber">
+            <div class="kpi-top"><span class="kpi-label"><svg viewBox="0 0 10 10" width="10" height="10"
+                  style="display:inline;vertical-align:middle;margin-right:3px;">
+                  <circle cx="5" cy="5" r="4" fill="#d97706" />
+                </svg>Pending</span></div>
+            <div class="kpi-value" id="task-stat-pending" style="color:#b45309;">—</div>
+            <div class="kpi-sub">Awaiting staff pickup</div>
+          </div>
+          <div class="kpi-card kpi-purple">
+            <div class="kpi-top"><span class="kpi-label"><svg viewBox="0 0 10 10" width="10" height="10"
+                  style="display:inline;vertical-align:middle;margin-right:3px;">
+                  <circle cx="5" cy="5" r="4" fill="#2563eb" />
+                </svg>Ongoing</span></div>
+            <div class="kpi-value" id="task-stat-ongoing" style="color:#6d28d9;">—</div>
+            <div class="kpi-sub">Currently in progress</div>
+          </div>
+          <div class="kpi-card kpi-green">
+            <div class="kpi-top"><span class="kpi-label"><svg viewBox="0 0 10 10" width="10" height="10"
+                  style="display:inline;vertical-align:middle;margin-right:3px;">
+                  <circle cx="5" cy="5" r="4" fill="#15803d" />
+                </svg>Completed</span></div>
+            <div class="kpi-value" id="task-stat-completed" style="color:#15803d;">—</div>
+            <div class="kpi-sub">Accomplished with notes</div>
+          </div>
+          <div class="kpi-card kpi-red">
+            <div class="kpi-top"><span class="kpi-label"><svg viewBox="0 0 10 10" width="10" height="10"
+                  style="display:inline;vertical-align:middle;margin-right:3px;">
+                  <circle cx="5" cy="5" r="4" fill="#dc2626" />
+                </svg>Overdue</span></div>
+            <div class="kpi-value" id="task-stat-overdue" style="color:#b91c1c;">—</div>
+            <div class="kpi-sub">Passed target deadline</div>
+          </div>
+        </div>
+
+        <!-- Task Toolbar & Filter -->
+        <div class="card">
+          <div
+            style="padding:16px 20px;background:#f8fafc;border-bottom:1px solid #e2e8f0;display:flex;gap:12px;flex-wrap:wrap;align-items:center;justify-content:space-between;">
+            <div style="display:flex;gap:8px;align-items:center;flex:1;max-width:320px;position:relative;">
+              <input type="text" id="task-search-q" class="form-input" placeholder="Search task or personnel..."
+                oninput="debounceTaskSearch()" style="padding-left:34px;font-size:0.85rem;">
+              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#94a3b8" stroke-width="2.5"
+                style="position:absolute;left:10px;top:50%;transform:translateY(-50%);">
+                <circle cx="11" cy="11" r="8" />
+                <line x1="21" y1="21" x2="16.65" y2="16.65" />
+              </svg>
+            </div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+              <select id="task-filter-category" class="form-select" onchange="loadTasks()"
+                style="font-size:0.82rem;width:180px;">
+                <option value="">All Categories</option>
+                <option value="E-4 & Member Records">E-4 &amp; Member Records</option>
+                <option value="Claims & Benefits">Claims &amp; Benefits</option>
+                <option value="ACOP & Pensioners">ACOP &amp; Pensioners</option>
+                <option value="Loans & Contributions">Loans &amp; Contributions</option>
+                <option value="General Admin">General Admin / Operations</option>
+              </select>
+              <select id="task-filter-assignee" class="form-select" onchange="loadTasks()"
+                style="font-size:0.82rem;width:160px;">
+                <option value="">All Personnel</option>
+              </select>
+              <div style="display:flex;gap:4px;">
+                <button class="btn btn-ghost btn-sm task-status-btn active" onclick="setTaskStatusFilter('all', this)"
+                  style="font-size:0.75rem;padding:4px 10px;">All</button>
+                <button class="btn btn-ghost btn-sm task-status-btn" onclick="setTaskStatusFilter('pending', this)"
+                  style="font-size:0.75rem;padding:4px 10px;">Pending</button>
+                <button class="btn btn-ghost btn-sm task-status-btn" onclick="setTaskStatusFilter('ongoing', this)"
+                  style="font-size:0.75rem;padding:4px 10px;">Ongoing</button>
+                <button class="btn btn-ghost btn-sm task-status-btn" onclick="setTaskStatusFilter('completed', this)"
+                  style="font-size:0.75rem;padding:4px 10px;">Completed</button>
+                <button class="btn btn-ghost btn-sm task-status-btn" onclick="setTaskStatusFilter('overdue', this)"
+                  style="font-size:0.75rem;padding:4px 10px;color:#dc2626;">Overdue</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tasks Data Container -->
+          <div class="card-body" style="padding:20px;">
+            <div id="tasks-grid"
+              style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:16px;">
+              <div style="color:var(--text-muted);font-size:0.85rem;">Loading MSS tasks...</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═════════════════════════════════════════════════════════════════════ -->
+      <!-- PAGE 3: MASTER AUDIT LOG -->
+      <!-- ═════════════════════════════════════════════════════════════════════ -->
+      <div class="page" id="page-transactions">
+        <div class="page-header">
+          <div class="page-title-wrap">
+            <h2>
+              <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5"
+                style="color:var(--sss-blue);">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                <polyline points="14 2 14 8 20 8" />
+                <line x1="16" y1="13" x2="8" y2="13" />
+                <line x1="16" y1="17" x2="8" y2="17" />
+              </svg>
+              Branch Master Audit Log &amp; SSS Service Matrix
+            </h2>
+            <p>Auditable ledger and official SSS daily service tally matrix (A / R / Total) by transaction type and
+              clerk.</p>
+          </div>
+          <div style="display:flex;gap:10px;align-items:center;">
+            <div style="background:#f1f5f9;border-radius:8px;padding:3px;display:flex;gap:4px;">
+              <button id="btn-view-ledger" class="btn btn-sm" onclick="switchTxView('ledger')"
+                style="background:var(--sss-blue);color:#fff;border:none;font-weight:600;font-size:0.8rem;padding:5px 12px;">Detailed
+                Log</button>
+              <button id="btn-view-matrix" class="btn btn-sm btn-ghost" onclick="switchTxView('matrix')"
+                style="color:#475569;border:none;font-weight:600;font-size:0.8rem;padding:5px 12px;">📊 SSS Service
+                Matrix (A / R / Total)</button>
+            </div>
+            <button class="btn btn-ghost btn-sm" onclick="refreshTxData()"
+              style="display:flex;align-items:center;gap:6px;">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5">
+                <polyline points="23 4 23 10 17 10" />
+                <polyline points="1 20 1 14 7 14" />
+                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
+              </svg>
+              Refresh
+            </button>
+            <button class="btn btn-primary btn-sm" onclick="exportMasterLogToExcel()"
+              style="background:#15803d;border-color:#15803d;display:flex;align-items:center;gap:6px;">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                <polyline points="7 10 12 15 17 10" />
+                <line x1="12" y1="15" x2="12" y2="3" />
+              </svg>
+              Export SSS Service Log (.xlsx)
+            </button>
+          </div>
+        </div>
+
+        <div class="card">
+          <!-- Filter Toolbar -->
+          <div
+            style="padding:16px 20px;background:#f8fafc;border-bottom:1px solid #e2e8f0;display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
+            <div style="flex:1;min-width:220px;position:relative;">
+              <input type="text" id="tx-search-q" class="form-input"
+                placeholder="Search SSS #, Name, Queue #, remarks..." oninput="debounceTxSearch()"
+                style="padding-left:36px;font-size:0.85rem;">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#94a3b8" stroke-width="2.5"
+                style="position:absolute;left:11px;top:50%;transform:translateY(-50%);">
+                <circle cx="11" cy="11" r="8" />
+                <line x1="21" y1="21" x2="16.65" y2="16.65" />
+              </svg>
+            </div>
+            <input type="date" id="tx-filter-date" class="form-input" onchange="onTxDateFilterChange()"
+              style="width:145px;font-size:0.82rem;" title="Specific Date">
+            <select id="tx-filter-counter" class="form-select" onchange="onTxDateFilterChange()"
+              style="width:145px;font-size:0.82rem;">
+              <option value="">All Desks</option>
+              <option value="Counter 1">Counter 1</option>
+              <option value="Counter 2">Counter 2</option>
+              <option value="Counter 3">Counter 3</option>
+              <option value="Counter 4">Counter 4</option>
+              <option value="Side Counter">Side Counter</option>
+              <option value="PACD">PACD Desk</option>
+              <option value="E-Center">E-Center Station</option>
+            </select>
+            <!-- Dynamic Transacted Types Filter (Populates only active transaction types for the selected day) -->
+            <select id="tx-filter-active-type" class="form-select" onchange="loadMasterTransactions()"
+              style="width:230px;font-size:0.82rem;font-weight:600;color:var(--sss-blue);">
+              <option value="">All Transacted Types</option>
+            </select>
+            <select id="tx-filter-channel" class="form-select" onchange="loadMasterTransactions()"
+              style="width:130px;font-size:0.82rem;">
+              <option value="">All Channels</option>
+              <option value="walk-in">Walk-In</option>
+              <option value="direct">Direct BAS</option>
+              <option value="portal">My.SSS Portal</option>
+            </select>
+            <select id="tx-filter-outcome" class="form-select" onchange="loadMasterTransactions()"
+              style="width:140px;font-size:0.82rem;">
+              <option value="">All Outcomes</option>
+              <option value="finished">Finished (A)</option>
+              <option value="for-verification">For Verification (R)</option>
+              <option value="rejected">Rejected (R)</option>
+              <option value="for-appointment">For Appt</option>
+            </select>
+            <select id="tx-filter-rating" class="form-select" onchange="loadMasterTransactions()"
+              style="width:120px;font-size:0.82rem;">
+              <option value="">All CSAT</option>
+              <option value="happy">Satisfied (5★)</option>
+              <option value="neutral">Neutral (3★)</option>
+              <option value="sad">Unsatisfied (1★)</option>
+            </select>
+            <button class="btn btn-ghost btn-sm" onclick="resetMasterFilters()"
+              style="font-size:0.8rem;padding:6px 10px;" title="Reset all filters">Reset</button>
+            <span class="badge badge-blue" id="tx-results-count" style="font-size:0.75rem;">Loading...</span>
+          </div>
+
+          <!-- VIEW 1: Detailed Table Ledger -->
+          <div id="view-tx-ledger" class="card-body" style="padding:0;overflow-x:auto;">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Ticket</th>
+                  <th>Member Name</th>
+                  <th>SSS Number</th>
+                  <th>Desk</th>
+                  <th>Officer</th>
+                  <th>Channel</th>
+                  <th>Transaction</th>
+                  <th>Wait</th>
+                  <th>Duration</th>
+                  <th>Outcome</th>
+                  <th>CSAT</th>
+                  <th>Remarks</th>
+                </tr>
+              </thead>
+              <tbody id="master-tx-tbody">
+                <tr>
+                  <td colspan="12" style="text-align:center;color:var(--text-muted);padding:32px;">Loading master log
+                    records...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- VIEW 2: SSS Daily Service Matrix (A / R / Total) -->
+          <div id="view-tx-matrix" class="card-body" style="padding:0;overflow-x:auto;display:none;">
+            <div id="matrix-container" style="padding:16px;">
+              <div style="text-align:center;color:var(--text-muted);padding:32px;">Loading SSS service matrix...</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═════════════════════════════════════════════════════════════════════ -->
+      <!-- PAGE 6: APPOINTMENTS -->
+      <!-- ═════════════════════════════════════════════════════════════════════ -->
+      <div class="page" id="page-appointments">
+        <div class="page-header">
+          <div class="page-title-wrap">
+            <h2>
+              <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5"
+                style="color:var(--sss-blue);">
+                <rect x="3" y="4" width="18" height="18" rx="2" />
+                <line x1="16" y1="2" x2="16" y2="6" />
+                <line x1="8" y1="2" x2="8" y2="6" />
+                <line x1="3" y1="10" x2="21" y2="10" />
+              </svg>
+              Appointment Rosters &amp; Import
+            </h2>
+            <p>Branch Appointment System (BAS) direct appointments and online portal queues.</p>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <h3>Import Appointment Schedule</h3>
+            <label class="btn btn-primary btn-sm" for="excel-upload">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5">
+                <polyline points="16 16 12 12 8 16" />
+                <line x1="12" y1="12" x2="12" y2="21" />
+                <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3" />
+              </svg>
+              Upload Excel File
+            </label>
+          </div>
+          <div class="card-body">
+            <div class="import-zone" onclick="document.getElementById('excel-upload').click()">
+              <input type="file" id="excel-upload" accept=".xlsx,.xls" onchange="importExcel(this)">
+              <div style="display:flex;justify-content:center;margin-bottom:8px;color:var(--sss-blue);">
+                <svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                  <polyline points="17 8 12 3 7 8" />
+                  <line x1="12" y1="3" x2="12" y2="15" />
+                </svg>
+              </div>
+              <p style="font-weight:700;color:var(--sss-navy);margin:0;">Click to upload appointment roster (.xlsx)</p>
+              <p style="font-size:0.8rem;color:var(--text-muted);margin:4px 0 0;">Safe to upload anytime • Automatically
+                matches officer schedules</p>
+            </div>
+            <div id="import-result" class="hidden"
+              style="margin-top:12px;padding:12px 16px;border-radius:10px;font-size:0.85rem;font-weight:600;"></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header" style="flex-wrap:wrap;gap:12px;">
+            <h3>Today's Appointment List</h3>
+            <span class="badge badge-blue" id="appt-total">0 appointments</span>
+          </div>
+          <div
+            style="padding:14px 18px;background:#f8fafc;border-bottom:1px solid #e2e8f0;display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;">
+            <div style="display:flex;gap:8px;align-items:center;flex:1;max-width:360px;">
+              <input type="text" id="appt-search" class="form-input"
+                placeholder="Search appointment by name, phone or officer..." oninput="filterAppointments()"
+                style="font-size:0.85rem;padding:7px 12px;">
+            </div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;">
+              <button class="btn btn-ghost btn-sm appt-filter-btn active" onclick="setApptFilter('all', this)"
+                style="font-size:0.75rem;padding:4px 10px;">All</button>
+              <button class="btn btn-ghost btn-sm appt-filter-btn" onclick="setApptFilter('in-lobby', this)"
+                style="font-size:0.75rem;padding:4px 10px;">In Lobby</button>
+              <button class="btn btn-ghost btn-sm appt-filter-btn" onclick="setApptFilter('done', this)"
+                style="font-size:0.75rem;padding:4px 10px;">Served</button>
+              <button class="btn btn-ghost btn-sm appt-filter-btn" onclick="setApptFilter('not-arrived', this)"
+                style="font-size:0.75rem;padding:4px 10px;">Not Arrived</button>
+              <button class="btn btn-ghost btn-sm appt-filter-btn" onclick="setApptFilter('no-show', this)"
+                style="font-size:0.75rem;padding:4px 10px;">No-Show</button>
+            </div>
+          </div>
+          <div class="card-body" style="padding:0;overflow-x:auto;">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Member Name</th>
+                  <th>Appointment Time</th>
+                  <th>Assigned Officer</th>
+                  <th>Booking Channel</th>
+                  <th>Arrival Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="appt-table">
+                <tr>
+                  <td colspan="6" style="text-align:center;color:var(--text-muted);padding:32px;">Loading
+                    appointments...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═════════════════════════════════════════════════════════════════════ -->
+      <!-- PAGE 7: SLA ALERTS -->
+      <!-- ═════════════════════════════════════════════════════════════════════ -->
+      <div class="page" id="page-alerts">
+        <div class="page-header">
+          <div class="page-title-wrap">
+            <h2>
+              <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5"
+                style="color:var(--sss-red);">
+                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+                <line x1="12" y1="9" x2="12" y2="13" />
+                <line x1="12" y1="17" x2="12.01" y2="17" />
+              </svg>
+              Live SLA &amp; No-Show Alerts
+            </h2>
+            <p>Active anomaly detection for long-waiting members and unverified appointment bookings.</p>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <h3>Potential Appointment No-Shows</h3>
+          </div>
+          <div class="card-body" id="noshow-alerts">
+            <div style="color:var(--text-muted);font-size:0.85rem;">No active no-show alerts.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═════════════════════════════════════════════════════════════════════ -->
+      <!-- PAGE 8: CUSTOM REPORTS -->
+      <!-- ═════════════════════════════════════════════════════════════════════ -->
+      <div class="page" id="page-reports">
+        <div class="page-header">
+          <div class="page-title-wrap">
+            <h2>
+              <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5"
+                style="color:var(--sss-blue);">
+                <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
+                <rect x="8" y="2" width="8" height="4" rx="1" />
+              </svg>
+              Branch Management &amp; Audit Reports
+            </h2>
+            <p>Generate certified statistical summaries and multi-tab Excel workbooks for any date range.</p>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <h3>Custom Date Range Export</h3>
+          </div>
+          <div class="card-body">
+            <div style="display:flex;gap:14px;align-items:flex-end;flex-wrap:wrap;">
+              <div class="form-group"><label class="form-label">From Date</label><input type="date" class="form-input"
+                  id="rep-from-date"></div>
+              <div class="form-group"><label class="form-label">To Date</label><input type="date" class="form-input"
+                  id="rep-to-date"></div>
+              <button class="btn btn-primary" onclick="generateCustomReport()"
+                style="display:flex;align-items:center;gap:6px;">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+                </svg>
+                Preview Report
+              </button>
+              <button class="btn btn-primary" onclick="downloadCustomExcel()"
+                style="background:#15803d;border-color:#15803d;display:flex;align-items:center;gap:6px;">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                  <polyline points="7 10 12 15 17 10" />
+                  <line x1="12" y1="15" x2="12" y2="3" />
+                </svg>
+                Download Multi-Tab Excel (.xlsx)
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div id="custom-report-output" class="hidden"></div>
+      </div>
+
+      <!-- ═════════════════════════════════════════════════════════════════════ -->
+      <!-- PAGE: ARTA CLIENT SATISFACTION MEASUREMENT (CSM) -->
+      <!-- ═════════════════════════════════════════════════════════════════════ -->
+      <div class="page" id="page-csm">
+        <div class="page-header">
+          <div class="page-title-wrap">
+            <h2>
+              <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5"
+                style="color:var(--sss-blue);">
+                <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3H14z" />
+                <path d="M7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3" />
+              </svg>
+              ARTA Client Satisfaction Measurement (CSM)
+            </h2>
+            <p>Official ARTA / CSC standardized citizen feedback, Net Promoter Score (NPS), and quarterly audit metrics.
+            </p>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+            <div
+              style="display:inline-flex;background:#f1f5f9;border-radius:8px;padding:2px;border:1px solid #cbd5e1;gap:2px;">
+              <button class="btn btn-ghost btn-sm" onclick="setQuarterDates(1)"
+                style="padding:4px 8px;font-size:0.75rem;font-weight:700;">Q1</button>
+              <button class="btn btn-ghost btn-sm" onclick="setQuarterDates(2)"
+                style="padding:4px 8px;font-size:0.75rem;font-weight:700;">Q2</button>
+              <button class="btn btn-ghost btn-sm" onclick="setQuarterDates(3)"
+                style="padding:4px 8px;font-size:0.75rem;font-weight:700;">Q3</button>
+              <button class="btn btn-ghost btn-sm" onclick="setQuarterDates(4)"
+                style="padding:4px 8px;font-size:0.75rem;font-weight:700;">Q4</button>
+              <button class="btn btn-ghost btn-sm" onclick="resetCsmDates()"
+                style="padding:4px 8px;font-size:0.75rem;font-weight:700;">Today</button>
+            </div>
+            <input type="date" id="csm-date-from" class="form-input form-input-sm" style="width:130px;">
+            <span style="color:var(--text-muted);font-size:0.8rem;">to</span>
+            <input type="date" id="csm-date-to" class="form-input form-input-sm" style="width:130px;">
+            <button class="btn btn-primary btn-sm" onclick="loadArtaCsm()">Filter</button>
+            <button class="btn btn-ghost btn-sm" onclick="openArtaPrintModal()"
+              style="display:flex;align-items:center;gap:5px;border-color:#cbd5e1;">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5">
+                <polyline points="6 9 6 2 18 2 18 9" />
+                <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
+                <rect x="6" y="14" width="12" height="8" />
+              </svg>
+              Print ARTA Form
+            </button>
+            <button class="btn btn-primary btn-sm" onclick="exportArtaExcel()"
+              style="background:#15803d;border-color:#15803d;display:flex;align-items:center;gap:6px;">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                <polyline points="7 10 12 15 17 10" />
+                <line x1="12" y1="15" x2="12" y2="3" />
+              </svg>
+              ARTA Excel (.xlsx)
+            </button>
+          </div>
+        </div>
+
+        <!-- 4 Hero KPI Cards for NPS & CSAT -->
+        <div class="executive-kpi-grid" style="margin-bottom:20px;">
+          <div class="kpi-card kpi-blue">
+            <div class="kpi-top">
+              <span class="kpi-label">Net Promoter Score (NPS)</span>
+              <span class="kpi-icon-pill" style="background:#eff6ff;color:var(--sss-blue);">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
+                  <polygon
+                    points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                </svg>
+              </span>
+            </div>
+            <div class="kpi-value" id="csm-nps-score" style="color:#0038A8;">—</div>
+            <div class="kpi-sub" id="csm-nps-status">% Promoters minus % Detractors</div>
+          </div>
+
+          <div class="kpi-card kpi-green">
+            <div class="kpi-top">
+              <span class="kpi-label">Promoters (Score 9-10)</span>
+              <span class="kpi-icon-pill" style="background:#f0fdf4;color:#15803d;">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#15803d" stroke-width="2.2">
+                  <circle cx="12" cy="12" r="10" />
+                  <path d="M8 14s1.5 2 4 2 4-2 4-2" />
+                  <line x1="9" y1="9" x2="9.01" y2="9" />
+                  <line x1="15" y1="9" x2="15.01" y2="9" />
+                </svg>
+              </span>
+            </div>
+            <div class="kpi-value" id="csm-promoters" style="color:#15803d;">—</div>
+            <div class="kpi-sub" id="csm-promoters-pct">Extremely Likely to Recommend</div>
+          </div>
+
+          <div class="kpi-card kpi-yellow">
+            <div class="kpi-top">
+              <span class="kpi-label">Passives (Score 7-8)</span>
+              <span class="kpi-icon-pill" style="background:#fffbeb;color:#b45309;">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#b45309" stroke-width="2.2">
+                  <circle cx="12" cy="12" r="10" />
+                  <line x1="8" y1="15" x2="16" y2="15" />
+                  <line x1="9" y1="9" x2="9.01" y2="9" />
+                  <line x1="15" y1="9" x2="15.01" y2="9" />
+                </svg>
+              </span>
+            </div>
+            <div class="kpi-value" id="csm-passives" style="color:#b45309;">—</div>
+            <div class="kpi-sub" id="csm-passives-pct">Satisfied / Neutral</div>
+          </div>
+
+          <div class="kpi-card" style="border-left:4px solid #dc2626;">
+            <div class="kpi-top">
+              <span class="kpi-label">Detractors (Score 1-6)</span>
+              <span class="kpi-icon-pill" style="background:#fef2f2;color:#dc2626;">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#dc2626" stroke-width="2.2">
+                  <circle cx="12" cy="12" r="10" />
+                  <path d="M16 16s-1.5-2-4-2-4 2-4 2" />
+                  <line x1="9" y1="9" x2="9.01" y2="9" />
+                  <line x1="15" y1="9" x2="15.01" y2="9" />
+                </svg>
+              </span>
+            </div>
+            <div class="kpi-value" id="csm-detractors" style="color:#dc2626;">—</div>
+            <div class="kpi-sub" id="csm-detractors-pct">Needs Follow-Up / Improvement</div>
+          </div>
+        </div>
+
+        <!-- 2x2 Breakdown Grid -->
+        <div
+          style="display:grid;grid-template-columns:repeat(auto-fit, minmax(400px, 1fr));gap:20px;margin-bottom:24px;">
+          <!-- Card 1: Customer Type Distribution -->
+          <div class="card">
+            <div class="card-header">
+              <h3>
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2">
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                  <circle cx="9" cy="7" r="4" />
+                  <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                </svg>
+                Customer Type Demographics (ARTA CSM)
+              </h3>
+            </div>
+            <div class="card-body">
+              <div id="csm-cust-types-list" style="display:flex;flex-direction:column;gap:8px;">
+                <div style="color:var(--text-muted);font-size:0.85rem;">Loading customer demographics...</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card 2: Gender & Age Demographics -->
+          <div class="card">
+            <div class="card-header">
+              <h3>
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2">
+                  <circle cx="12" cy="12" r="10" />
+                  <path d="M12 6v6l4 2" />
+                </svg>
+                Demographic Profile (Sex &amp; Age Group)
+              </h3>
+            </div>
+            <div class="card-body">
+              <div style="margin-bottom:16px;">
+                <strong style="font-size:0.84rem;color:var(--sss-navy);">Sex Distribution:</strong>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px;" id="csm-sex-boxes">
+                  <div style="background:#eff6ff;padding:10px 14px;border-radius:8px;border:1px solid #bfdbfe;">
+                    <div style="font-size:0.75rem;color:#1e40af;font-weight:700;">MALE</div>
+                    <div style="font-size:1.3rem;font-weight:800;color:#1e40af;" id="csm-male-val">0</div>
+                  </div>
+                  <div style="background:#fdf2f8;padding:10px 14px;border-radius:8px;border:1px solid #fbcfe8;">
+                    <div style="font-size:0.75rem;color:#9d174d;font-weight:700;">FEMALE</div>
+                    <div style="font-size:1.3rem;font-weight:800;color:#9d174d;" id="csm-female-val">0</div>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <strong style="font-size:0.84rem;color:var(--sss-navy);">Age Group Distribution:</strong>
+                <div id="csm-age-list" style="display:flex;flex-direction:column;gap:6px;margin-top:8px;">
+                  <!-- Populated dynamically -->
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card 3: Feedback Sentiment & Root Causes -->
+          <div class="card">
+            <div class="card-header">
+              <h3>
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2">
+                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                </svg>
+                Feedback Sentiment Category
+              </h3>
+            </div>
+            <div class="card-body">
+              <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px;">
+                <div
+                  style="background:#f0fdf4;padding:10px;border-radius:8px;border:1px solid #bbf7d0;text-align:center;">
+                  <div
+                    style="font-size:0.75rem;color:#15803d;font-weight:700;display:flex;align-items:center;justify-content:center;gap:4px;">
+                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor"
+                      stroke-width="2.2">
+                      <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3H14z" />
+                      <path d="M7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3" />
+                    </svg>
+                    POSITIVE
+                  </div>
+                  <div style="font-size:1.3rem;font-weight:800;color:#15803d;" id="csm-fb-pos">0</div>
+                </div>
+                <div
+                  style="background:#fffaf5;padding:10px;border-radius:8px;border:1px solid #fed7aa;text-align:center;">
+                  <div
+                    style="font-size:0.75rem;color:#c2410c;font-weight:700;display:flex;align-items:center;justify-content:center;gap:4px;">
+                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor"
+                      stroke-width="2.2">
+                      <path
+                        d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+                      <line x1="12" y1="9" x2="12" y2="13" />
+                      <line x1="12" y1="17" x2="12.01" y2="17" />
+                    </svg>
+                    SUGGESTIONS
+                  </div>
+                  <div style="font-size:1.3rem;font-weight:800;color:#c2410c;" id="csm-fb-neg">0</div>
+                </div>
+                <div
+                  style="background:#f8fafc;padding:10px;border-radius:8px;border:1px solid #e2e8f0;text-align:center;">
+                  <div
+                    style="font-size:0.75rem;color:#64748b;font-weight:700;display:flex;align-items:center;justify-content:center;gap:4px;">
+                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor"
+                      stroke-width="2.2">
+                      <circle cx="12" cy="12" r="9" />
+                      <line x1="8" y1="12" x2="16" y2="12" />
+                    </svg>
+                    NO COMMENT
+                  </div>
+                  <div style="font-size:1.3rem;font-weight:800;color:#64748b;" id="csm-fb-none">0</div>
+                </div>
+              </div>
+
+              <div>
+                <strong style="font-size:0.84rem;color:var(--sss-navy);">Top Root-Cause Reasons Logged:</strong>
+                <div id="csm-reasons-list" style="display:flex;flex-direction:column;gap:6px;margin-top:8px;">
+                  <div style="color:var(--text-muted);font-size:0.85rem;">No negative feedback recorded.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card 4: CSAT 5-Scale Quality Breakdown -->
+          <div class="card">
+            <div class="card-header">
+              <h3>
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2">
+                  <polygon
+                    points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                </svg>
+                CSAT Quality Breakdown
+              </h3>
+            </div>
+            <div class="card-body" id="csm-csat-breakdown">
+              <div style="display:flex;flex-direction:column;gap:10px;">
+                <div style="display:flex;justify-content:space-between;align-items:center;">
+                  <span style="display:flex;align-items:center;gap:8px;font-weight:700;color:#15803d;">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#15803d" stroke-width="2.2">
+                      <circle cx="12" cy="12" r="10" />
+                      <path d="M8 14s1.5 2 4 2 4-2 4-2" />
+                      <line x1="9" y1="9" x2="9.01" y2="9" />
+                      <line x1="15" y1="9" x2="15.01" y2="9" />
+                    </svg>
+                    Very Satisfied (5★)
+                  </span>
+                  <strong id="csm-csat-5">0</strong>
+                </div>
+                <div style="display:flex;justify-content:space-between;align-items:center;">
+                  <span style="display:flex;align-items:center;gap:8px;font-weight:700;color:#0369a1;">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#0369a1" stroke-width="2.2">
+                      <circle cx="12" cy="12" r="10" />
+                      <path d="M8 13.5c1.2 1.5 2.8 2 4 2s2.8-.5 4-2" />
+                      <line x1="9" y1="9.5" x2="9.01" y2="9.5" />
+                      <line x1="15" y1="9.5" x2="15.01" y2="9.5" />
+                    </svg>
+                    Satisfied (4★)
+                  </span>
+                  <strong id="csm-csat-4">0</strong>
+                </div>
+                <div style="display:flex;justify-content:space-between;align-items:center;">
+                  <span style="display:flex;align-items:center;gap:8px;font-weight:700;color:#b45309;">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#b45309" stroke-width="2.2">
+                      <circle cx="12" cy="12" r="10" />
+                      <line x1="8" y1="15" x2="16" y2="15" />
+                      <line x1="9" y1="9" x2="9.01" y2="9" />
+                      <line x1="15" y1="9" x2="15.01" y2="9" />
+                    </svg>
+                    Neutral (3★)
+                  </span>
+                  <strong id="csm-csat-3">0</strong>
+                </div>
+                <div style="display:flex;justify-content:space-between;align-items:center;">
+                  <span style="display:flex;align-items:center;gap:8px;font-weight:700;color:#b91c1c;">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#b91c1c" stroke-width="2.2">
+                      <circle cx="12" cy="12" r="10" />
+                      <path d="M16 16s-1.5-2-4-2-4 2-4 2" />
+                      <line x1="9" y1="9" x2="9.01" y2="9" />
+                      <line x1="15" y1="9" x2="15.01" y2="9" />
+                    </svg>
+                    Unsatisfied (1★)
+                  </span>
+                  <strong id="csm-csat-1">0</strong>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═════════════════════════════════════════════════════════════════════ -->
+      <!-- PAGE 9: STAFF ACCOUNTS & DISASTER RECOVERY -->
+      <!-- ═════════════════════════════════════════════════════════════════════ -->
+      <div class="page" id="page-clerks">
+        <div class="page-header">
+          <div class="page-title-wrap">
+            <h2>
+              <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5"
+                style="color:var(--sss-blue);">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                <circle cx="12" cy="7" r="4" />
+              </svg>
+              Staff Accounts &amp; Disaster Recovery
+            </h2>
+            <p>Unified employee credentials, security PIN management, and full branch database backups.</p>
+          </div>
+        </div>
+
+        <!-- Database Daily Backup Card -->
+        <div class="card" style="border-left:4px solid #16a34a;">
+          <div class="card-header">
+            <h3>
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#16a34a" stroke-width="2.5">
+                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
+                <polyline points="17 21 17 13 7 13 7 21" />
+                <polyline points="7 3 7 8 15 8" />
+              </svg>
+              Branch Database Snapshot (Disaster Recovery)
+            </h3>
+            <span class="badge badge-green">Daily Archive</span>
+          </div>
+          <div class="card-body">
+            <p style="font-size:0.84rem;color:var(--text-muted);margin-top:0;line-height:1.5;">
+              Download an encrypted, single-file snapshot of the branch database (<code>sss_toledo.db</code>) containing
+              all member queues, transactions, clerk KPIs, and appointment rosters for offsite safety.
+            </p>
+            <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:12px;">
+              <a href="/api/reports/backup/db" class="btn btn-primary btn-sm"
+                style="display:inline-flex;align-items:center;gap:6px;background:#15803d;border-color:#15803d;text-decoration:none;padding:9px 16px;">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                  <polyline points="7 10 12 15 17 10" />
+                  <line x1="12" y1="15" x2="12" y2="3" />
+                </svg>
+                Download Database Snapshot (.db)
+              </a>
+              <span style="font-size:0.78rem;color:var(--text-muted);">Safe to download anytime during active branch
+                operations.</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Add Staff Member -->
+        <div class="card">
+          <div class="card-header">
+            <h3>Add New Staff Member</h3>
+          </div>
+          <div class="card-body">
+            <div class="clerk-form">
+              <div class="form-group"><label class="form-label">Full Name</label><input type="text" class="form-input"
+                  id="new-name" placeholder="e.g. Employee Name"></div>
+              <div class="form-group"><label class="form-label">Account Role</label>
+                <select class="form-select" id="new-counter">
+                  <option value="Branch Staff">Branch Staff (Counter Officer / Desk)</option>
+                  <option value="Admin">Administrator (Branch Management)</option>
+                </select>
+              </div>
+              <div class="form-group"><label class="form-label">Password (4 digits)</label><input type="password"
+                  class="form-input" id="new-pin" placeholder="••••" maxlength="4" inputmode="numeric"></div>
+              <button class="btn btn-primary" onclick="addClerk()">Add Employee</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Staff Table -->
+        <div class="card">
+          <div class="card-body" style="padding:0;">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th></th>
+                  <th>Employee Name</th>
+                  <th>Role</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="clerks-table">
+                <tr>
+                  <td colspan="5" style="text-align:center;color:var(--text-muted);padding:32px;">Loading accounts...
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Password Reset Modal -->
+        <div class="modal-overlay hidden" id="pin-reset-modal" style="z-index:1000;">
+          <div class="modal" style="max-width:380px;">
+            <div class="modal-header">
+              <h3 style="display:flex;align-items:center;gap:8px;">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="3" y="11" width="18" height="11" rx="2" />
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                </svg>
+                Reset Password
+              </h3>
+              <button class="btn btn-ghost btn-sm"
+                onclick="document.getElementById('pin-reset-modal').classList.add('hidden')">✕</button>
+            </div>
+            <div class="modal-body">
+              <p style="font-size:0.85rem;margin-bottom:14px;">Set a new 4-digit password for <strong
+                  id="pin-reset-name"></strong>.</p>
+              <div class="pw-wrap" style="position:relative;">
+                <input type="password" class="form-input" id="pin-reset-input" placeholder="New 4-digit password"
+                  maxlength="4" inputmode="numeric" style="padding-right:40px;">
+                <button type="button" onclick="toggleResetPwVisibility()"
+                  style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#9ca3af;"
+                  tabindex="-1">
+                  <svg id="pr-eye-show" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor"
+                    stroke-width="2">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8z" />
+                    <circle cx="12" cy="12" r="3" />
+                  </svg>
+                  <svg id="pr-eye-hide" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor"
+                    stroke-width="2" style="display:none;">
+                    <path
+                      d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
+                    <line x1="1" y1="1" x2="23" y2="23" />
+                  </svg>
+                </button>
+              </div>
+              <div id="pin-reset-err"
+                style="display:none;color:#b91c1c;font-size:0.8rem;margin-top:8px;font-weight:600;"></div>
+            </div>
+            <div class="modal-footer">
+              <button class="btn btn-ghost"
+                onclick="document.getElementById('pin-reset-modal').classList.add('hidden')">Cancel</button>
+              <button class="btn btn-primary" onclick="submitPinReset()">Save Password</button>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /page-clerks -->
+
+    </div><!-- /main-content -->
+  </div><!-- /admin-layout -->
+
+  <!-- ARTA CSM Official Printable Report Modal (A4 Government Format) -->
+  <div class="modal-overlay hidden" id="arta-print-modal"
+    style="z-index:2500;align-items:flex-start;overflow-y:auto;padding:20px;">
+    <div class="modal"
+      style="max-width:850px;width:100%;background:#ffffff;margin:20px auto;border-radius:12px;box-shadow:0 20px 40px rgba(0,0,0,0.25);">
+      <div class="modal-header" style="background:#071E4A;color:#ffffff;border-radius:12px 12px 0 0;padding:16px 24px;">
+        <h3 style="display:flex;align-items:center;gap:10px;color:#ffffff;font-size:1.15rem;font-weight:800;">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polyline points="6 9 6 2 18 2 18 9" />
+            <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
+            <rect x="6" y="14" width="12" height="8" />
+          </svg>
+          Official ARTA CSM Report Preview
+        </h3>
+        <div style="display:flex;gap:8px;">
+          <button class="btn btn-sm" onclick="printArtaReport()"
+            style="background:#FCD34D;color:#071E4A;font-weight:800;border:none;display:flex;align-items:center;gap:6px;">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5">
+              <polyline points="6 9 6 2 18 2 18 9" />
+              <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
+              <rect x="6" y="14" width="12" height="8" />
+            </svg>
+            Print / Save as PDF
+          </button>
+          <button class="btn btn-ghost btn-sm" onclick="closeArtaPrintModal()"
+            style="color:#ffffff;border-color:rgba(255,255,255,0.3);">✕ Close</button>
+        </div>
+      </div>
+
+      <div class="modal-body" id="arta-printable-sheet"
+        style="padding:32px 36px;color:#1e293b;font-family:'Inter',sans-serif;">
+        <!-- Official Government Header -->
+        <div style="text-align:center;border-bottom:2px solid #071E4A;padding-bottom:14px;margin-bottom:20px;">
+          <div style="font-size:0.75rem;font-weight:700;letter-spacing:0.1em;color:#64748b;text-transform:uppercase;">
+            Republic of the Philippines</div>
+          <h2 style="font-size:1.35rem;font-weight:900;color:#071E4A;margin:2px 0 4px 0;">SOCIAL SECURITY SYSTEM</h2>
+          <div style="font-size:0.95rem;font-weight:700;color:#0A3871;">TOLEDO BRANCH OFFICE • REGION VII</div>
+          <div
+            style="font-size:0.85rem;font-weight:800;background:#071E4A;color:#ffffff;padding:4px 12px;border-radius:4px;display:inline-block;margin-top:8px;">
+            HARMONIZED CLIENT SATISFACTION MEASUREMENT (CSM) REPORT
+          </div>
+          <div style="font-size:0.78rem;color:#64748b;margin-top:6px;" id="print-period-label">Audit Period: Today</div>
+        </div>
+
+        <!-- Section 1: Executive Scorecard -->
+        <div style="margin-bottom:20px;">
+          <h4
+            style="font-size:0.95rem;font-weight:800;color:#071E4A;border-bottom:1.5px solid #cbd5e1;padding-bottom:4px;margin-bottom:10px;">
+            I. EXECUTIVE SUMMARY &amp; NET PROMOTER SCORE (NPS)
+          </h4>
+          <table style="width:100%;border-collapse:collapse;font-size:0.82rem;">
+            <thead>
+              <tr style="background:#0A3871;color:#ffffff;text-align:left;">
+                <th style="padding:6px 10px;border:1px solid #cbd5e1;">Metric Indicator</th>
+                <th style="padding:6px 10px;border:1px solid #cbd5e1;">Branch Result</th>
+                <th style="padding:6px 10px;border:1px solid #cbd5e1;">ARTA Standard</th>
+                <th style="padding:6px 10px;border:1px solid #cbd5e1;">Compliance Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td style="padding:6px 10px;border:1px solid #cbd5e1;">Overall Citizen Satisfaction (CSAT)</td>
+                <td style="padding:6px 10px;border:1px solid #cbd5e1;font-weight:700;color:#15803d;"
+                  id="print-csat-pct">100.0%</td>
+                <td style="padding:6px 10px;border:1px solid #cbd5e1;">&gt;= 80.0%</td>
+                <td style="padding:6px 10px;border:1px solid #cbd5e1;font-weight:700;color:#15803d;">COMPLIANT</td>
+              </tr>
+              <tr>
+                <td style="padding:6px 10px;border:1px solid #cbd5e1;">Net Promoter Score (NPS)</td>
+                <td style="padding:6px 10px;border:1px solid #cbd5e1;font-weight:700;color:#0038A8;"
+                  id="print-nps-score">+59</td>
+                <td style="padding:6px 10px;border:1px solid #cbd5e1;">&gt;= +30.0</td>
+                <td style="padding:6px 10px;border:1px solid #cbd5e1;font-weight:700;color:#0038A8;">EXCELLENT</td>
+              </tr>
+              <tr>
+                <td style="padding:6px 10px;border:1px solid #cbd5e1;">Total Citizens Surveyed</td>
+                <td style="padding:6px 10px;border:1px solid #cbd5e1;font-weight:700;" id="print-total-respondents">0
+                </td>
+                <td style="padding:6px 10px;border:1px solid #cbd5e1;">Representative Sample</td>
+                <td style="padding:6px 10px;border:1px solid #cbd5e1;font-weight:700;color:#15803d;">VALID</td>
+              </tr>
+              <tr>
+                <td style="padding:6px 10px;border:1px solid #cbd5e1;">Promoters (Score 9-10 / 5★)</td>
+                <td style="padding:6px 10px;border:1px solid #cbd5e1;font-weight:700;color:#15803d;"
+                  id="print-promoters-val">0</td>
+                <td style="padding:6px 10px;border:1px solid #cbd5e1;">Loyal Advocates</td>
+                <td style="padding:6px 10px;border:1px solid #cbd5e1;">OPTIMAL</td>
+              </tr>
+              <tr>
+                <td style="padding:6px 10px;border:1px solid #cbd5e1;">Passives (Score 7-8 / 3★)</td>
+                <td style="padding:6px 10px;border:1px solid #cbd5e1;" id="print-passives-val">0</td>
+                <td style="padding:6px 10px;border:1px solid #cbd5e1;">Satisfied</td>
+                <td style="padding:6px 10px;border:1px solid #cbd5e1;">ACCEPTABLE</td>
+              </tr>
+              <tr>
+                <td style="padding:6px 10px;border:1px solid #cbd5e1;">Detractors (Score 1-6 / 1★)</td>
+                <td style="padding:6px 10px;border:1px solid #cbd5e1;font-weight:700;color:#dc2626;"
+                  id="print-detractors-val">0</td>
+                <td style="padding:6px 10px;border:1px solid #cbd5e1;">&lt; 10.0%</td>
+                <td style="padding:6px 10px;border:1px solid #cbd5e1;font-weight:700;color:#15803d;">WITHIN LIMIT</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Section 2: Demographics Breakdown -->
+        <div style="margin-bottom:20px;display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+          <div>
+            <h4
+              style="font-size:0.88rem;font-weight:800;color:#071E4A;border-bottom:1px solid #cbd5e1;padding-bottom:3px;margin-bottom:8px;">
+              II. MEMBERSHIP CATEGORIES
+            </h4>
+            <div id="print-cust-types" style="font-size:0.78rem;"></div>
+          </div>
+          <div>
+            <h4
+              style="font-size:0.88rem;font-weight:800;color:#071E4A;border-bottom:1px solid #cbd5e1;padding-bottom:3px;margin-bottom:8px;">
+              III. SEX &amp; AGE PROFILE
+            </h4>
+            <div id="print-demographics" style="font-size:0.78rem;"></div>
+          </div>
+        </div>
+
+        <!-- Section 3: Feedback & Root Cause Analysis -->
+        <div style="margin-bottom:28px;">
+          <h4
+            style="font-size:0.88rem;font-weight:800;color:#071E4A;border-bottom:1px solid #cbd5e1;padding-bottom:3px;margin-bottom:8px;">
+            IV. CITIZEN SENTIMENT &amp; ROOT-CAUSE BOTTLENECKS
+          </h4>
+          <div id="print-sentiment-summary" style="font-size:0.78rem;"></div>
+        </div>
+
+        <!-- Official Signatures -->
+        <div
+          style="display:grid;grid-template-columns:1fr 1fr;gap:40px;margin-top:36px;padding-top:16px;border-top:1px dashed #cbd5e1;font-size:0.82rem;">
+          <div>
+            <div style="font-weight:700;margin-bottom:36px;">Prepared &amp; Consolidated by:</div>
+            <div style="border-bottom:1px solid #000;width:80%;margin-bottom:4px;"></div>
+            <div style="font-weight:800;color:#071E4A;">BRANCH CSAT &amp; PACD OFFICER</div>
+            <div style="font-size:0.72rem;color:#64748b;">Social Security System — Toledo Branch</div>
+          </div>
+          <div>
+            <div style="font-weight:700;margin-bottom:36px;">Reviewed &amp; Approved by:</div>
+            <div style="border-bottom:1px solid #000;width:80%;margin-bottom:4px;"></div>
+            <div style="font-weight:800;color:#071E4A;">BRANCH HEAD / OIC</div>
+            <div style="font-size:0.72rem;color:#64748b;">Social Security System — Toledo Branch</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- New MSS Task Creation Modal (body level) -->
+  <div class="modal-overlay hidden" id="task-create-modal" style="z-index:2000;">
+    <div class="modal" style="max-width:540px;">
+      <div class="modal-header">
+        <h3 style="display:flex;align-items:center;gap:8px;">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M9 11l3 3L22 4" />
+            <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
+          </svg>
+          Create MSS Assignment (Step 1–3)
+        </h3>
+        <button class="btn btn-ghost btn-sm" onclick="closeCreateTaskModal()">✕</button>
+      </div>
+      <div class="modal-body" style="display:flex;flex-direction:column;gap:14px;">
+        <div class="form-group">
+          <label class="form-label">Task / Assignment Title *</label>
+          <input type="text" id="task-in-title" class="form-input" placeholder="e.g. Encode 50 E-4 Corrections Batch A">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Detailed Description / Instructions</label>
+          <textarea id="task-in-desc" class="form-input" rows="3"
+            placeholder="Provide specific batch details, document numbers, or instructions for the staff..."></textarea>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+          <div class="form-group">
+            <label class="form-label">Category / Division *</label>
+            <select id="task-in-category" class="form-select">
+              <option value="E-4 & Member Records">E-4 &amp; Member Records</option>
+              <option value="Claims & Benefits">Claims &amp; Benefits</option>
+              <option value="ACOP & Pensioners">ACOP &amp; Pensioners</option>
+              <option value="Loans & Contributions">Loans &amp; Contributions</option>
+              <option value="General Admin">General Admin / Operations</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Priority Level *</label>
+            <select id="task-in-priority" class="form-select">
+              <option value="normal">Normal</option>
+              <option value="urgent">Urgent</option>
+              <option value="critical">High Priority / Critical</option>
+            </select>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+          <div class="form-group">
+            <label class="form-label">Assign Personnel (Step 2) *</label>
+            <select id="task-in-assignee" class="form-select">
+              <option value="">All Branch Personnel (Creates individual copy per staff)</option>
+              <!-- Populated dynamically -->
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Target Completion Date &amp; Time (Step 3) *</label>
+            <input type="datetime-local" id="task-in-target" class="form-input">
+          </div>
+        </div>
+        <div id="task-create-err" style="display:none;color:#b91c1c;font-size:0.8rem;font-weight:600;"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" onclick="closeCreateTaskModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="submitCreateTask()">Dispatch Assignment</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Task Reassignment Modal (body level) -->
+  <div class="modal-overlay hidden" id="task-reassign-modal" style="z-index:2000;">
+    <div class="modal" style="max-width:440px;">
+      <div class="modal-header">
+        <h3 style="display:flex;align-items:center;gap:8px;">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polyline points="23 4 23 10 17 10" />
+            <polyline points="1 20 1 14 7 14" />
+            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
+          </svg>
+          Reassign MSS Task
+        </h3>
+        <button class="btn btn-ghost btn-sm"
+          onclick="document.getElementById('task-reassign-modal').classList.add('hidden')">✕</button>
+      </div>
+      <div class="modal-body" style="display:flex;flex-direction:column;gap:14px;">
+        <p style="font-size:0.85rem;margin:0;">Reassign <strong id="reassign-task-title"></strong> to a new officer:</p>
+        <div class="form-group">
+          <label class="form-label">New Assignee *</label>
+          <select id="reassign-in-assignee" class="form-select"></select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">New Target Completion Date *</label>
+          <input type="datetime-local" id="reassign-in-target" class="form-input">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Priority</label>
+          <select id="reassign-in-priority" class="form-select">
+            <option value="normal">Normal</option>
+            <option value="urgent">Urgent</option>
+            <option value="critical">Critical</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost"
+          onclick="document.getElementById('task-reassign-modal').classList.add('hidden')">Cancel</button>
+        <button class="btn btn-primary" onclick="submitReassignTask()">Save Reassignment</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast-container" id="toast-container"></div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const socket = io();
+    socket.emit('join:room', 'admin');
+    let trafficChart = null, txTypeChart = null;
+
+    // ── Clock ─────────────────────────────────────────────────────────────
+    function updateClock() {
+      document.getElementById('admin-clock').textContent =
+        new Date().toLocaleTimeString('en-PH', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
+    }
+    setInterval(updateClock, 1000); updateClock();
+
+    // ── Navigation ────────────────────────────────────────────────────────
+    function showPage(id) {
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+      document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+      const targetPage = document.getElementById(`page-${id}`);
+      const targetNav = document.getElementById(`nav-${id}`);
+      if (targetPage) targetPage.classList.add('active');
+      if (targetNav) targetNav.classList.add('active');
+
+      if (id === 'live') loadLiveDashboard();
+      if (id === 'tasks') { populateAssigneeDropdowns(); loadTasks(); }
+      if (id === 'performance') loadPerformance();
+      if (id === 'csm') loadArtaCsm();
+      if (id === 'transactions') { populateActiveTransactionTypes(); loadMasterTransactions(); if (currentTxView === 'matrix') loadMasterMatrix(); }
+      if (id === 'appointments') loadAppointments();
+      if (id === 'clerks') loadClerks();
+    }
+
+    // ── Physical Station Definitions ──────────────────────────────────────
+    const PHYSICAL_STATIONS = [
+      { id: 'c1', name: 'Counter 1', type: 'Main Counter', pool: 'Series 1000–3000 & Appts', color: '#1a56db' },
+      { id: 'c2', name: 'Counter 2', type: 'Main Counter', pool: 'Series 1000–3000 & Appts', color: '#1a56db' },
+      { id: 'c3', name: 'Counter 3', type: 'Main Counter', pool: 'Series 1000–3000 & Appts', color: '#1a56db' },
+      { id: 'c4', name: 'Counter 4', type: 'Main Counter', pool: 'Series 1000–3000 & Appts', color: '#1a56db' },
+      { id: 'side', name: 'Side Counter', type: 'Priority Lane', pool: 'Priority & Verification', color: '#0d9f6e' },
+      { id: 'pacd', name: 'PACD Desk', type: 'Public Assistance', pool: 'Series 001–999 & Inquiries', color: '#d97706' },
+      { id: 'ecenter', name: 'E-Center Station', type: 'Online Portal', pool: 'Series 4000 & My.SSS Services', color: '#7e22ce' }
+    ];
+
+    // ── Live Operations Command ───────────────────────────────────────────
+    async function loadLiveDashboard() {
+      try {
+        const r = await fetch('/api/transactions/stats/today');
+        const data = await r.json();
+
+        document.getElementById('stat-total').textContent = data.stats.total || 0;
+        document.getElementById('stat-waiting').textContent = data.waiting.count || 0;
+        document.getElementById('stat-avgwait').textContent = data.stats.avg_wait ? `${parseFloat(data.stats.avg_wait).toFixed(1)}m` : '0.0m';
+        const avgR = data.stats.avg_rating;
+        document.getElementById('stat-rating').innerHTML = avgR ? `<svg viewBox="0 0 16 16" width="13" height="13" style="display:inline;vertical-align:middle;margin-right:2px;color:#d97706;" fill="currentColor"><path d="M8 1l1.8 3.6L14 5.3l-3 2.9.7 4.1L8 10.3l-3.7 2 .7-4.1-3-2.9 4.2-.7z"/></svg> ${parseFloat(avgR).toFixed(2)}` : '<svg viewBox="0 0 16 16" width="13" height="13" style="display:inline;vertical-align:middle;margin-right:2px;color:#d97706;" fill="currentColor"><path d="M8 1l1.8 3.6L14 5.3l-3 2.9.7 4.1L8 10.3l-3.7 2 .7-4.1-3-2.9 4.2-.7z"/></svg> 5.0';
+
+        document.getElementById('flow-finished').textContent = data.stats.finished || 0;
+        document.getElementById('flow-rejected').textContent = data.stats.rejected || 0;
+        document.getElementById('flow-verification').textContent = data.stats.for_verification || 0;
+        document.getElementById('flow-appointment').textContent = data.stats.for_appointment || 0;
+
+        // Render Physical Station-Centric Grid
+        const grid = document.getElementById('counter-grid');
+        grid.innerHTML = '';
+
+        PHYSICAL_STATIONS.forEach(station => {
+          const presence = data.activePresence?.find(p => {
+            if (station.id === 'pacd') return p.station === 'PACD Desk' || p.station === 'PACD';
+            if (station.id === 'ecenter') return p.station === 'E-Center Station' || p.station === 'E-Center';
+            if (station.id === 'side') return p.station === 'Side Counter';
+            return p.station === station.name;
+          });
+
+          const serving = data.currentlyServing?.find(s => {
+            if (station.id === 'pacd') return s.routed_to === 'pacd' || s.counter === 'PACD' || s.counter === 'PACD Desk';
+            if (station.id === 'ecenter') return s.routed_to === 'ecenter' || s.counter?.includes('E-Center');
+            if (station.id === 'side') return s.counter === 'Side Counter';
+            return s.counter === station.name;
+          });
+
+          const stationTxs = data.byCounter?.filter(b => {
+            if (station.id === 'pacd') return b.counter === 'PACD' || b.counter === 'PACD Desk';
+            if (station.id === 'ecenter') return b.counter?.includes('E-Center');
+            if (station.id === 'side') return b.counter === 'Side Counter';
+            return b.counter === station.name;
+          }) || [];
+
+          const totalServed = stationTxs.reduce((sum, x) => sum + (x.served || 0), 0);
+          const avgDur = stationTxs.length > 0 && stationTxs[0].avg_duration ? `${parseFloat(stationTxs[0].avg_duration).toFixed(1)}m avg` : '—';
+          const officerName = presence?.clerkName || serving?.clerk_name || null;
+          const isActive = !!presence || !!serving;
+          const isServing = !!serving;
+
+          const div = document.createElement('div');
+          div.className = 'station-pod';
+          div.innerHTML = `
+            <div class="station-pod-header">
+              <div class="station-title-box">
+                <div class="station-icon" style="background:${station.color}15;color:${station.color};">
+                  <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+                </div>
+                <div>
+                  <div class="station-name">${station.name}</div>
+                  <span class="station-type" style="background:${station.color}12;color:${station.color};">${station.type}</span>
+                </div>
+              </div>
+              <div>
+                ${isServing
+              ? `<span class="badge badge-green" style="display:inline-flex;align-items:center;gap:5px;font-weight:700;"><span class="pulse-dot"></span> In Service</span>`
+              : isActive
+                ? `<span class="badge badge-blue" style="font-weight:700;">● Online</span>`
+                : `<span class="badge badge-gray" style="font-weight:600;">○ Standby</span>`}
+              </div>
+            </div>
+
+            <div style="font-size:0.8rem;color:var(--text-muted);display:flex;align-items:center;gap:6px;">
+              <span>Officer:</span>
+              <strong style="color:${isActive ? '#0f172a' : '#94a3b8'};">${officerName || 'Uncrewed / Not Logged In'}</strong>
+            </div>
+
+            <div class="station-serving-box ${isServing ? 'serving-active' : ''}">
+              ${isServing
+              ? `<div style="font-weight:700;color:#15803d;display:flex;align-items:center;gap:6px;">
+                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                    <span>${serving.queue_number ? `#${serving.queue_number} ` : ''}${serving.member_name}</span>
+                   </div>
+                   <div style="font-size:0.75rem;color:#166534;margin-top:2px;">
+                     ${serving.confirmed_transaction_type || serving.transaction_type || 'Processing'}
+                   </div>`
+              : isActive
+                ? `<div style="color:var(--sss-blue);font-weight:600;display:flex;align-items:center;gap:6px;">
+                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                    Ready &amp; Waiting for Next Member
+                   </div>`
+                : `<div style="color:#94a3b8;">Station offline / uncrewed.</div>`}
+            </div>
+
+            <div class="station-metrics">
+              <span>Today: <strong>${totalServed} served</strong></span>
+              <span>Avg Time: <strong>${avgDur}</strong></span>
+            </div>`;
+          grid.appendChild(div);
+        });
+
+        // SLA Watchdog
+        renderLiveWaitAlerts(data.longWaiting || []);
+
+      } catch (e) { console.error('Live dashboard error:', e); }
+    }
+    loadLiveDashboard();
+    setInterval(loadLiveDashboard, 30000);
+
+    // ── Live Wait Alerts Engine ────────────────────────────────────────────
+    function renderLiveWaitAlerts(longWaiting) {
+      const container = document.getElementById('wait-alerts');
+      const countEl = document.getElementById('wait-alert-count');
+      const badge = document.getElementById('alert-badge');
+      if (!container) return;
+
+      if (longWaiting.length === 0) {
+        if (countEl) { countEl.textContent = '0 SLA Breaches'; countEl.className = 'badge badge-green'; }
+        if (badge) badge.style.display = 'none';
+        container.innerHTML = `
+          <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:16px 20px;display:flex;align-items:center;gap:14px;">
+            <div style="width:36px;height:36px;border-radius:50%;background:#dcfce7;color:#15803d;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+            </div>
+            <div>
+              <div style="font-weight:800;color:#15803d;font-size:0.92rem;">All Queues Operating Within ARTA 15-Minute SLA</div>
+              <div style="font-size:0.78rem;color:#166534;margin-top:2px;">No members have exceeded the statutory maximum wait time threshold across any desk.</div>
+            </div>
+          </div>`;
+      } else {
+        if (countEl) { countEl.textContent = `${longWaiting.length} Over-SLA Alert(s)`; countEl.className = 'badge badge-red'; }
+        if (badge) { badge.textContent = longWaiting.length; badge.style.display = 'inline-flex'; }
+        container.innerHTML = '';
+        longWaiting.forEach(m => {
+          const div = document.createElement('div');
+          div.className = 'alert-item';
+          div.style.marginBottom = '10px';
+          div.innerHTML = `
+            <div class="alert-icon">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#dc2626" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            </div>
+            <div class="alert-text" style="flex:1;">
+              <div><strong>#${m.queue_number || '—'} ${m.name}</strong> — Waiting <span style="font-weight:800;color:#b91c1c;">${m.wait_minutes} mins</span> in ${m.routed_to.toUpperCase()} queue.</div>
+              <div style="font-size:0.78rem;color:#7f1d1d;margin-top:2px;">Service: ${m.transaction_type} • Checked in at ${m.check_in_time ? m.check_in_time.slice(11, 16) : '—'}</div>
+            </div>`;
+          container.appendChild(div);
+        });
+      }
+    }
+
+    // ── Performance Table Refinement ───────────────────────────────────────
+    async function loadPerformance() {
+      const r = await fetch('/api/transactions/stats/today');
+      const data = await r.json();
+      const tbody = document.getElementById('performance-table');
+      if (!data.byCounter || data.byCounter.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:32px;">No transaction records logged yet today.</td></tr>';
+        return;
+      }
+      tbody.innerHTML = '';
+      data.byCounter.forEach(c => {
+        const isOjt = !c.clerk_id || c.clerk_name === 'OJT Assistant';
+        const ratingColor = c.avg_rating >= 4 ? '#16a34a' : c.avg_rating >= 3 ? '#f59e0b' : '#dc2626';
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td><strong>${c.counter}</strong></td>
+          <td>
+            ${isOjt
+            ? '<span class="badge badge-purple" style="font-size:0.7rem;padding:2px 8px;"><svg viewBox="0 0 16 16" width="13" height="13" style="display:inline;vertical-align:middle;margin-right:4px;" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M8 2L2 5l6 3 6-3-6-3z"/><path d="M2 5v5c0 2.2 2.7 3.5 6 3.5S14 12.2 14 10V5"/></svg>OJT Student Assistant</span>'
+            : `<strong style="color:var(--sss-navy);">${c.clerk_name}</strong>`}
+          </td>
+          <td><strong style="font-size:1.05rem;color:var(--sss-blue);">${c.served}</strong></td>
+          <td>${c.avg_duration ? `${parseFloat(c.avg_duration).toFixed(1)}m` : '—'}</td>
+          <td>${c.avg_wait ? `${parseFloat(c.avg_wait).toFixed(1)}m` : '—'}</td>
+          <td style="color:${ratingColor};font-weight:800;">${c.avg_rating ? `<svg viewBox="0 0 16 16" width="13" height="13" style="display:inline;vertical-align:middle;margin-right:2px;color:#d97706;" fill="currentColor"><path d="M8 1l1.8 3.6L14 5.3l-3 2.9.7 4.1L8 10.3l-3.7 2 .7-4.1-3-2.9 4.2-.7z"/></svg> ${parseFloat(c.avg_rating).toFixed(2)}` : '—'}</td>
+          <td>${c.rejected || 0}</td>`;
+        tbody.appendChild(tr);
+      });
+    }
+
+    // ── Traffic Chart ─────────────────────────────────────────────────────
+    async function loadTraffic() {
+      const r = await fetch('/api/transactions/stats/today');
+      const data = await r.json();
+
+      const labels = Array.from({ length: 9 }, (_, i) => {
+        const h = i + 8;
+        return h <= 12 ? `${h}:00 AM` : h === 12 ? '12:00 PM' : `${h - 12}:00 PM`;
+      });
+      const counts = labels.map((_, i) => {
+        const h = String(i + 8).padStart(2, '0');
+        const found = data.hourly?.find(x => x.hour === h);
+        return found ? found.count : 0;
+      });
+
+      if (trafficChart) trafficChart.destroy();
+      trafficChart = new Chart(document.getElementById('traffic-chart'), {
+        type: 'bar',
+        data: {
+          labels,
+          datasets: [{
+            label: 'Member Arrivals',
+            data: counts,
+            backgroundColor: 'rgba(0, 56, 168, 0.85)',
+            borderColor: '#0038a8',
+            borderWidth: 1.5,
+            borderRadius: 6
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
+        }
+      });
+
+      if (txTypeChart) txTypeChart.destroy();
+      const types = data.byTransactionType || [];
+      txTypeChart = new Chart(document.getElementById('tx-type-chart'), {
+        type: 'doughnut',
+        data: {
+          labels: types.map(t => t.transaction_type),
+          datasets: [{
+            data: types.map(t => t.count),
+            backgroundColor: ['#0038a8', '#15803d', '#d97706', '#b91c1c', '#7c3aed', '#0284c7', '#059669', '#e11d48', '#64748b']
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { position: 'right' } }
+        }
+      });
+
+      // Staffing & Peak Insights
+      const insightEl = document.getElementById('traffic-insight-text');
+      if (insightEl) {
+        let maxCount = 0, peakHour = '';
+        counts.forEach((c, idx) => {
+          if (c > maxCount) {
+            maxCount = c;
+            peakHour = labels[idx];
+          }
+        });
+
+        const topType = types.length > 0 ? types[0].transaction_type : 'General Inquiries';
+        if (maxCount > 0) {
+          insightEl.innerHTML = `
+            <div style="display:flex;flex-direction:column;gap:8px;">
+              <div><strong><svg viewBox="0 0 16 16" width="13" height="13" style="display:inline;vertical-align:middle;margin-right:4px;" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="2 12 6 6 9 9 14 3"/></svg>Peak Arrival Surge:</strong> Highest branch foot traffic occurs around <span style="color:#0038a8;font-weight:800;">${peakHour}</span> with <strong>${maxCount} member check-ins</strong>.</div>
+              <div><strong><svg viewBox="0 0 16 16" width="13" height="13" style="display:inline;vertical-align:middle;margin-right:4px;" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M8 1a3.5 3.5 0 0 1 3.5 3.5c0 2.5-3.5 7-3.5 7S4.5 7 4.5 4.5A3.5 3.5 0 0 1 8 1z"/><circle cx="8" cy="4.5" r="1.2"/></svg>Top Service Category:</strong> <span style="color:#15803d;font-weight:800;">${topType}</span> represents the highest operational demand today.</div>
+              <div style="background:#ffffff;border:1px solid #bfdbfe;border-radius:8px;padding:10px 14px;color:#1e40af;font-size:0.83rem;">
+                <strong>Branch Head Action:</strong> Ensure all main service counters and PACD are actively manned during ${peakHour}. Activate Side Counter Priority Lane if wait times approach 15 minutes.
+              </div>
+            </div>`;
+        } else {
+          insightEl.innerHTML = 'Analyzing branch telemetry as citizens check in at the kiosk.';
+        }
+      }
+    }
+
+    // ── Health Score ──────────────────────────────────────────────────────
+    async function loadHealth() {
+      const r = await fetch('/api/transactions/stats/today');
+      const data = await r.json();
+      const s = data.stats;
+      if (!s || s.total === 0) { document.getElementById('health-score').textContent = '100'; document.getElementById('health-grade').textContent = 'Healthy'; return; }
+
+      const total = s.total || 1;
+      const completionRate = ((s.finished || 0) / total) * 100;
+      const rejectionRate = ((s.rejected || 0) / total) * 100;
+      const deferredRate = ((s.for_appointment || 0) / total) * 100;
+      const happyRate = ((s.happy || 0) / total) * 100;
+      const avgWait = s.avg_wait || 0;
+
+      let score = 100;
+      if (avgWait > 30) score -= 20;
+      else if (avgWait > 20) score -= 10;
+      else if (avgWait > 15) score -= 5;
+      if (completionRate < 70) score -= 20;
+      else if (completionRate < 80) score -= 10;
+      if (rejectionRate > 20) score -= 15;
+      else if (rejectionRate > 10) score -= 7;
+      if (happyRate < 60) score -= 15;
+      else if (happyRate < 75) score -= 7;
+      score = Math.max(0, Math.min(100, Math.round(score)));
+
+      document.getElementById('health-score').textContent = score;
+      const grade = score >= 80 ? '<span class="badge badge-green">Excellent (ARTA Compliant)</span>' : score >= 60 ? '<span class="badge badge-yellow">Monitor Closely</span>' : '<span class="badge badge-red">Needs Attention</span>';
+      document.getElementById('health-grade').innerHTML = grade;
+
+      document.getElementById('h-wait').textContent = avgWait ? `${parseFloat(avgWait).toFixed(1)}m` : '0.0m';
+      document.getElementById('h-completion').textContent = `${completionRate.toFixed(1)}%`;
+      document.getElementById('h-satisfaction').innerHTML = s.avg_rating ? `<svg viewBox="0 0 16 16" width="13" height="13" style="display:inline;vertical-align:middle;margin-right:2px;color:#d97706;" fill="currentColor"><path d="M8 1l1.8 3.6L14 5.3l-3 2.9.7 4.1L8 10.3l-3.7 2 .7-4.1-3-2.9 4.2-.7z"/></svg> ${parseFloat(s.avg_rating).toFixed(2)}` : '<svg viewBox="0 0 16 16" width="13" height="13" style="display:inline;vertical-align:middle;margin-right:2px;color:#d97706;" fill="currentColor"><path d="M8 1l1.8 3.6L14 5.3l-3 2.9.7 4.1L8 10.3l-3.7 2 .7-4.1-3-2.9 4.2-.7z"/></svg> 5.0';
+      document.getElementById('h-happy').textContent = `${happyRate.toFixed(1)}%`;
+      document.getElementById('h-rejection').textContent = `${rejectionRate.toFixed(1)}%`;
+      document.getElementById('h-deferred').textContent = `${deferredRate.toFixed(1)}%`;
+    }
+
+    // ── Master Audit Log & SSS Service Matrix ────────────────────────────
+    let txDebounceTimer = null;
+    let currentTxView = 'ledger';
+
+    function debounceTxSearch() {
+      clearTimeout(txDebounceTimer);
+      txDebounceTimer = setTimeout(loadMasterTransactions, 300);
+    }
+
+    function switchTxView(mode) {
+      currentTxView = mode;
+      const ledgerView = document.getElementById('view-tx-ledger');
+      const matrixView = document.getElementById('view-tx-matrix');
+      const btnLedger = document.getElementById('btn-view-ledger');
+      const btnMatrix = document.getElementById('btn-view-matrix');
+
+      if (mode === 'ledger') {
+        ledgerView.style.display = 'block';
+        matrixView.style.display = 'none';
+        btnLedger.style.background = 'var(--sss-blue)';
+        btnLedger.style.color = '#fff';
+        btnLedger.className = 'btn btn-sm';
+        btnMatrix.style.background = 'transparent';
+        btnMatrix.style.color = '#475569';
+        btnMatrix.className = 'btn btn-sm btn-ghost';
+      } else {
+        ledgerView.style.display = 'none';
+        matrixView.style.display = 'block';
+        btnMatrix.style.background = 'var(--sss-blue)';
+        btnMatrix.style.color = '#fff';
+        btnMatrix.className = 'btn btn-sm';
+        btnLedger.style.background = 'transparent';
+        btnLedger.style.color = '#475569';
+        btnLedger.className = 'btn btn-sm btn-ghost';
+        loadMasterMatrix();
+      }
+    }
+
+    async function onTxDateFilterChange() {
+      await populateActiveTransactionTypes();
+      loadMasterTransactions();
+      if (currentTxView === 'matrix') {
+        loadMasterMatrix();
+      }
+    }
+
+    async function populateActiveTransactionTypes() {
+      const date = document.getElementById('tx-filter-date')?.value || '';
+      const counter = document.getElementById('tx-filter-counter')?.value || '';
+      const select = document.getElementById('tx-filter-active-type');
+      if (!select) return;
+
+      const currentVal = select.value;
+      const params = new URLSearchParams();
+      if (date) params.set('date', date);
+      if (counter) params.set('counter', counter);
+
+      try {
+        const res = await fetch(`/api/transactions/active-types?${params.toString()}`);
+        const types = await res.json();
+
+        select.innerHTML = '<option value="">All Transacted Types (No Filter)</option>';
+        types.forEach(t => {
+          const opt = document.createElement('option');
+          opt.value = t.tx_type;
+          opt.textContent = `${t.tx_type} (${t.total} total • A:${t.accepted} R:${t.rejected})`;
+          select.appendChild(opt);
+        });
+
+        if (currentVal && Array.from(select.options).some(o => o.value === currentVal)) {
+          select.value = currentVal;
+        }
+      } catch (e) {
+        console.error('Failed to load active transaction types:', e);
+      }
+    }
+
+    async function refreshTxData() {
+      await populateActiveTransactionTypes();
+      await loadMasterTransactions();
+      if (currentTxView === 'matrix') {
+        await loadMasterMatrix();
+      }
+    }
+
+    async function loadMasterTransactions() {
+      const q = document.getElementById('tx-search-q')?.value || '';
+      const date = document.getElementById('tx-filter-date')?.value || '';
+      const counter = document.getElementById('tx-filter-counter')?.value || '';
+      const activeType = document.getElementById('tx-filter-active-type')?.value || '';
+      const channel = document.getElementById('tx-filter-channel')?.value || '';
+      const outcome = document.getElementById('tx-filter-outcome')?.value || '';
+      const rating = document.getElementById('tx-filter-rating')?.value || '';
+
+      const params = new URLSearchParams();
+      if (q) params.set('q', q);
+      if (date) params.set('date', date);
+      if (counter) params.set('counter', counter);
+      if (activeType) params.set('tx_type', activeType);
+      if (channel) params.set('channel', channel);
+      if (outcome) params.set('outcome', outcome);
+      if (rating) params.set('rating', rating);
+
+      const tbody = document.getElementById('master-tx-tbody');
+      tbody.innerHTML = '<tr><td colspan="12" style="text-align:center;color:var(--text-muted);padding:24px;">Loading transactions...</td></tr>';
+
+      try {
+        const res = await fetch(`/api/transactions/search?${params.toString()}`);
+        const data = await res.json();
+        document.getElementById('tx-results-count').textContent = `${data.length} records`;
+
+        if (data.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="12" style="text-align:center;color:var(--text-muted);padding:32px;">No transactions matching criteria.</td></tr>';
+          return;
+        }
+
+        tbody.innerHTML = '';
+        data.forEach(t => {
+          const outcomeBadge = {
+            'finished': '<span class="badge badge-green">Finished (A)</span>',
+            'rejected': '<span class="badge badge-red">Rejected (R)</span>',
+            'for-verification': '<span class="badge badge-yellow">For Verification (R)</span>',
+            'for-appointment': '<span class="badge badge-blue">For Appt</span>'
+          }[t.outcome] || `<span class="badge badge-gray">${t.outcome || '—'}</span>`;
+
+          const ratingBadge = {
+            'happy': '<span style="color:#15803d;font-weight:700;"><svg viewBox="0 0 16 16" width="13" height="13" style="display:inline;vertical-align:middle;margin-right:2px;color:#d97706;" fill="currentColor"><path d="M8 1l1.8 3.6L14 5.3l-3 2.9.7 4.1L8 10.3l-3.7 2 .7-4.1-3-2.9 4.2-.7z"/></svg> 5.0</span>',
+            'neutral': '<span style="color:#d97706;font-weight:700;"><svg viewBox="0 0 16 16" width="13" height="13" style="display:inline;vertical-align:middle;margin-right:2px;color:#d97706;" fill="currentColor"><path d="M8 1l1.8 3.6L14 5.3l-3 2.9.7 4.1L8 10.3l-3.7 2 .7-4.1-3-2.9 4.2-.7z"/></svg> 3.0</span>',
+            'sad': '<span style="color:#dc2626;font-weight:700;"><svg viewBox="0 0 16 16" width="13" height="13" style="display:inline;vertical-align:middle;margin-right:2px;color:#d97706;" fill="currentColor"><path d="M8 1l1.8 3.6L14 5.3l-3 2.9.7 4.1L8 10.3l-3.7 2 .7-4.1-3-2.9 4.2-.7z"/></svg> 1.0</span>'
+          }[t.rating] || '—';
+
+          const entryBadge = {
+            'walk-in': '<span class="badge badge-blue">Walk-In</span>',
+            'direct-appointment': '<span class="badge" style="background:#fdf4ff;color:#7e22ce;border:1px solid #f0abfc;">BAS Appt</span>',
+            'appointment': '<span class="badge" style="background:#fdf4ff;color:#7e22ce;border:1px solid #f0abfc;">BAS Appt</span>',
+            'direct': '<span class="badge" style="background:#fdf4ff;color:#7e22ce;border:1px solid #f0abfc;">BAS Appt</span>',
+            'portal-appointment': '<span class="badge" style="background:#fff7ed;color:#c2410c;border:1px solid #fed7aa;">Portal Appt</span>',
+            'portal-pool': '<span class="badge" style="background:#fff7ed;color:#c2410c;border:1px solid #fed7aa;">Portal Appt</span>',
+            'portal': '<span class="badge" style="background:#fff7ed;color:#c2410c;border:1px solid #fed7aa;">Portal Appt</span>'
+          }[t.entry_type] || `<span class="badge badge-gray">${t.entry_type || 'Walk-In'}</span>`;
+
+          let deskDisplay = t.counter || 'Counter 1';
+          if (deskDisplay === 'Branch Staff' || deskDisplay === 'Main Counter' || !deskDisplay) {
+            deskDisplay = t.routed_to === 'pacd' ? 'PACD Desk' : t.routed_to === 'ecenter' ? 'E-Center Station' : 'Counter 1';
+          }
+          if (deskDisplay === 'PACD') deskDisplay = 'PACD Desk';
+          if (deskDisplay === 'E-Center') deskDisplay = 'E-Center Station';
+
+          let deskBadgeStyle = 'background:#eff6ff;color:#1e40af;border:1px solid #bfdbfe;';
+          if (deskDisplay.includes('PACD')) {
+            deskBadgeStyle = 'background:#fffbeb;color:#b45309;border:1px solid #fde68a;';
+          } else if (deskDisplay.includes('E-Center')) {
+            deskBadgeStyle = 'background:#fdf4ff;color:#7e22ce;border:1px solid #f0abfc;';
+          } else if (deskDisplay.includes('Side Counter')) {
+            deskBadgeStyle = 'background:#f0fdf4;color:#15803d;border:1px solid #bbf7d0;';
+          }
+
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td><strong style="color:var(--sss-blue);">${t.queue_number || '—'}</strong></td>
+            <td><strong>${t.name}</strong></td>
+            <td>${t.sss_number ? `<span style="font-family:monospace;background:#f1f5f9;padding:2px 6px;border-radius:4px;font-weight:700;">${t.sss_number}</span>` : '<span style="color:#9ca3af;">—</span>'}</td>
+            <td><span class="badge" style="font-size:0.75rem;padding:3px 8px;font-weight:700;${deskBadgeStyle}">${deskDisplay}</span></td>
+            <td>${t.clerk_name || 'OJT Assistant'}</td>
+            <td>${entryBadge}</td>
+            <td>${t.confirmed_transaction_type || t.transaction_type || '—'}</td>
+            <td>${t.wait_time_minutes ? `${parseFloat(t.wait_time_minutes).toFixed(1)}m` : '—'}</td>
+            <td>${t.duration_minutes ? `${parseFloat(t.duration_minutes).toFixed(1)}m` : '—'}</td>
+            <td>${outcomeBadge}</td>
+            <td>${ratingBadge}</td>
+            <td style="max-width:200px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${t.feedback_reason || t.remarks || ''}">${t.feedback_reason ? `<span style="display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:999px;font-size:0.72rem;font-weight:700;background:#fff1f2;color:#e11d48;border:1px solid #fecdd3;"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> ${t.feedback_reason}</span>` : (t.remarks || '<span style="color:#cbd5e1;">—</span>')}</td>`;
+          tbody.appendChild(tr);
+        });
+      } catch (e) {
+        tbody.innerHTML = '<tr><td colspan="12" style="text-align:center;color:#dc2626;padding:24px;">Failed to load transactions.</td></tr>';
+      }
+    }
+
+    async function loadMasterMatrix() {
+      const container = document.getElementById('matrix-container');
+      if (!container) return;
+
+      const date = document.getElementById('tx-filter-date')?.value || '';
+      const counter = document.getElementById('tx-filter-counter')?.value || '';
+
+      const params = new URLSearchParams();
+      if (date) params.set('date', date);
+      else params.set('all', '1');
+      if (counter) params.set('counter', counter);
+
+      container.innerHTML = '<div style="text-align:center;color:var(--text-muted);padding:32px;">Generating SSS Daily Service Matrix...</div>';
+
+      try {
+        const res = await fetch(`/api/reports/matrix?${params.toString()}`);
+        const data = await res.json();
+
+        if (!data.matrix || data.matrix.length === 0) {
+          container.innerHTML = '<div style="text-align:center;color:var(--text-muted);padding:40px;">No service transactions recorded for this period.</div>';
+          return;
+        }
+
+        const clerks = data.clerks || [];
+        let html = `
+          <div style="margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+            <div style="background:#1E3A8A;color:#fff;padding:8px 16px;border-radius:6px;font-weight:700;font-size:0.95rem;display:inline-flex;align-items:center;gap:8px;">
+              <span>SSS TOLEDO BRANCH — SERVICE LOG MATRIX</span>
+              <span style="background:rgba(255,255,255,0.2);padding:2px 8px;border-radius:4px;font-size:0.8rem;font-weight:600;">${data.period}</span>
+            </div>
+            <div style="font-size:0.82rem;color:#64748b;">
+              Showing <strong>${data.matrix.length} transacted types</strong> across <strong>${clerks.length} active service desks</strong>
+            </div>
+          </div>
+          <div style="overflow-x:auto;border:1px solid #cbd5e1;border-radius:6px;">
+            <table class="admin-table" style="font-size:0.82rem;margin:0;border-collapse:collapse;">
+              <thead>
+                <tr style="background:#005596;color:#fff;border-bottom:1px solid #003e6d;">
+                  <th rowspan="2" style="width:45px;text-align:center;vertical-align:middle;border-right:1px solid rgba(255,255,255,0.2);color:#fff;">No.</th>
+                  <th rowspan="2" style="min-width:280px;vertical-align:middle;border-right:2px solid #1E3A8A;color:#fff;">Transaction Type</th>
+                  <th colspan="3" style="text-align:center;background:#1E3A8A;border-right:2px solid #0f172a;color:#fff;">Overall Branch Total</th>
+                  ${clerks.map(c => `
+                    <th colspan="3" style="text-align:center;background:#0284C7;border-right:1px solid rgba(255,255,255,0.2);color:#fff;">${c.name} <span style="opacity:0.8;font-size:0.75rem;">(${c.counter})</span></th>
+                  `).join('')}
+                </tr>
+                <tr style="background:#f1f5f9;color:#1e293b;border-bottom:2px solid #005596;">
+                  <th style="width:50px;text-align:center;background:#e0f2fe;font-weight:700;">A</th>
+                  <th style="width:50px;text-align:center;background:#fee2e2;font-weight:700;">R</th>
+                  <th style="width:55px;text-align:center;background:#fef3c7;font-weight:800;color:#dc2626;border-right:2px solid #1E3A8A;">Total</th>
+                  ${clerks.map(() => `
+                    <th style="width:45px;text-align:center;font-weight:600;">A</th>
+                    <th style="width:45px;text-align:center;font-weight:600;">R</th>
+                    <th style="width:50px;text-align:center;font-weight:700;color:#dc2626;border-right:1px solid #cbd5e1;">Total</th>
+                  `).join('')}
+                </tr>
+              </thead>
+              <tbody>
+                ${data.matrix.map((row, idx) => `
+                  <tr style="background:${idx % 2 === 0 ? '#ffffff' : '#f8fafc'};border-bottom:1px solid #e2e8f0;">
+                    <td style="text-align:center;color:#64748b;font-weight:600;border-right:1px solid #e2e8f0;">${idx + 1}</td>
+                    <td style="font-weight:600;color:#1e293b;border-right:2px solid #cbd5e1;">${row.tx_type}</td>
+                    <td style="text-align:center;font-weight:700;color:#15803d;background:rgba(220,252,231,0.4);">${row.accepted}</td>
+                    <td style="text-align:center;font-weight:700;color:${row.rejected > 0 ? '#b91c1c' : '#94a3b8'};background:rgba(254,226,226,0.4);">${row.rejected}</td>
+                    <td style="text-align:center;font-weight:800;color:#dc2626;background:rgba(254,243,199,0.5);border-right:2px solid #cbd5e1;">${row.total}</td>
+                    ${clerks.map(c => {
+          const cStats = row.byClerk && row.byClerk[c.name] ? row.byClerk[c.name] : { accepted: 0, rejected: 0, total: 0 };
+          return `
+                        <td style="text-align:center;color:${cStats.accepted > 0 ? '#15803d' : '#cbd5e1'};">${cStats.accepted || 0}</td>
+                        <td style="text-align:center;color:${cStats.rejected > 0 ? '#b91c1c' : '#cbd5e1'};">${cStats.rejected || 0}</td>
+                        <td style="text-align:center;font-weight:700;color:${cStats.total > 0 ? '#dc2626' : '#cbd5e1'};border-right:1px solid #e2e8f0;">${cStats.total || 0}</td>
+                      `;
+        }).join('')}
+                  </tr>
+                `).join('')}
+              </tbody>
+              <tfoot>
+                <tr style="background:#fef3c7;border-top:2px solid #1E3A8A;font-weight:800;color:#1E3A8A;">
+                  <td style="text-align:center;">★</td>
+                  <td style="border-right:2px solid #cbd5e1;">DAILY BRANCH GRAND TOTAL</td>
+                  <td style="text-align:center;color:#15803d;background:#dcfce7;font-size:0.9rem;">${data.totals.accepted}</td>
+                  <td style="text-align:center;color:#b91c1c;background:#fee2e2;font-size:0.9rem;">${data.totals.rejected}</td>
+                  <td style="text-align:center;color:#dc2626;background:#fde68a;font-size:0.95rem;border-right:2px solid #cbd5e1;">${data.totals.total}</td>
+                  ${clerks.map(c => {
+          const cTotalA = data.matrix.reduce((acc, row) => acc + ((row.byClerk && row.byClerk[c.name]) ? row.byClerk[c.name].accepted : 0), 0);
+          const cTotalR = data.matrix.reduce((acc, row) => acc + ((row.byClerk && row.byClerk[c.name]) ? row.byClerk[c.name].rejected : 0), 0);
+          const cGrand = cTotalA + cTotalR;
+          return `
+                      <td style="text-align:center;color:#15803d;">${cTotalA}</td>
+                      <td style="text-align:center;color:#b91c1c;">${cTotalR}</td>
+                      <td style="text-align:center;color:#dc2626;border-right:1px solid #cbd5e1;">${cGrand}</td>
+                    `;
+        }).join('')}
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        `;
+
+        container.innerHTML = html;
+      } catch (e) {
+        container.innerHTML = `<div style="text-align:center;color:#dc2626;padding:32px;">Failed to load SSS Matrix: ${e.message}</div>`;
+      }
+    }
+
+    function resetMasterFilters() {
+      if (document.getElementById('tx-search-q')) document.getElementById('tx-search-q').value = '';
+      if (document.getElementById('tx-filter-date')) document.getElementById('tx-filter-date').value = '';
+      if (document.getElementById('tx-filter-counter')) document.getElementById('tx-filter-counter').value = '';
+      if (document.getElementById('tx-filter-active-type')) document.getElementById('tx-filter-active-type').value = '';
+      if (document.getElementById('tx-filter-channel')) document.getElementById('tx-filter-channel').value = '';
+      if (document.getElementById('tx-filter-outcome')) document.getElementById('tx-filter-outcome').value = '';
+      if (document.getElementById('tx-filter-rating')) document.getElementById('tx-filter-rating').value = '';
+      onTxDateFilterChange();
+    }
+
+    function exportMasterLogToExcel() {
+      const q = document.getElementById('tx-search-q')?.value || '';
+      const date = document.getElementById('tx-filter-date')?.value || '';
+      const counter = document.getElementById('tx-filter-counter')?.value || '';
+      const activeType = document.getElementById('tx-filter-active-type')?.value || '';
+      const channel = document.getElementById('tx-filter-channel')?.value || '';
+      const outcome = document.getElementById('tx-filter-outcome')?.value || '';
+      const rating = document.getElementById('tx-filter-rating')?.value || '';
+
+      const params = new URLSearchParams();
+      if (date) params.set('date', date);
+      else params.set('all', '1');
+      if (counter) params.set('counter', counter);
+      if (activeType) params.set('tx_type', activeType);
+      if (channel) params.set('channel', channel);
+      if (outcome) params.set('outcome', outcome);
+      if (rating) params.set('rating', rating);
+      if (q && q.trim()) params.set('q', q.trim());
+
+      window.location.href = `/api/reports/export/excel?${params.toString()}`;
+    }
+
+    // ── Appointments ──────────────────────────────────────────────────────
+    let allAppointments = [];
+    let currentApptFilter = 'all';
+
+    async function loadAppointments() {
+      try {
+        const r = await fetch('/api/appointments');
+        allAppointments = await r.json();
+        renderAppointments();
+      } catch (e) {
+        console.error('Failed to load appointments:', e);
+      }
+    }
+
+    function setApptFilter(status, btn) {
+      currentApptFilter = status;
+      document.querySelectorAll('.appt-filter-btn').forEach(b => b.classList.remove('active'));
+      if (btn) btn.classList.add('active');
+      renderAppointments();
+    }
+
+    function filterAppointments() { renderAppointments(); }
+
+    function renderAppointments() {
+      const q = (document.getElementById('appt-search')?.value || '').toLowerCase().trim();
+      let filtered = allAppointments.filter(a => {
+        const matchesQuery = !q || (a.name && a.name.toLowerCase().includes(q)) || (a.phone_number && a.phone_number.includes(q)) || (a.clerk_name && a.clerk_name.toLowerCase().includes(q));
+        if (!matchesQuery) return false;
+        if (currentApptFilter === 'all') return true;
+        if (currentApptFilter === 'done') return a.arrival_status === 'done' || a.arrival_status === 'served';
+        return a.arrival_status === currentApptFilter;
+      });
+
+      document.getElementById('appt-total').textContent = `${filtered.length} of ${allAppointments.length} appointments`;
+      const tbody = document.getElementById('appt-table');
+      if (filtered.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:32px;">No matching appointments found.</td></tr>';
+        return;
+      }
+      tbody.innerHTML = '';
+      filtered.forEach(a => {
+        const statusMap = {
+          'not-arrived': '<span class="badge badge-gray">Not Arrived</span>',
+          'in-lobby': '<span class="badge badge-green">In Lobby</span>',
+          'done': '<span class="badge badge-green" style="background:#f0fdf4;color:#15803d;border:1px solid #bbf7d0;">✓ Served</span>',
+          'served': '<span class="badge badge-green" style="background:#f0fdf4;color:#15803d;border:1px solid #bbf7d0;">✓ Served</span>',
+          'no-show': '<span class="badge badge-red">No Show</span>'
+        };
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td><strong>${a.name}</strong>${a.phone_number ? `<br><span style="font-size:0.78rem;color:var(--text-muted);">${a.phone_number}</span>` : ''}</td>
+          <td><strong style="color:var(--sss-navy);">${a.appointment_time}</strong></td>
+          <td>${a.clerk_name || 'Unassigned'}</td>
+          <td><span class="badge ${a.type === 'portal' ? 'badge-yellow' : 'badge-blue'}">${a.type === 'portal' ? 'Portal Pool' : 'BAS Direct'}</span></td>
+          <td>${statusMap[a.arrival_status] || a.arrival_status}</td>
+          <td>${a.arrival_status === 'not-arrived' ? `<button class="btn btn-ghost btn-sm" onclick="markNoShow(${a.id})">Mark No-Show</button>` : '—'}</td>`;
+        tbody.appendChild(tr);
+      });
+    }
+
+    async function markNoShow(id) {
+      await fetch(`/api/appointments/${id}/noshow`, { method: 'POST' });
+      loadAppointments(); showToast('Appointment marked as no-show.', 'info');
+    }
+
+    async function importExcel(input) {
+      if (!input.files[0]) return;
+      const form = new FormData();
+      form.append('file', input.files[0]);
+      const result = document.getElementById('import-result');
+      result.textContent = 'Importing...';
+      result.className = '';
+      try {
+        const r = await fetch('/api/appointments/import', { method: 'POST', body: form });
+        const d = await r.json();
+        if (d.success) {
+          result.className = 'badge badge-green';
+          result.textContent = `✓ Successfully imported ${d.imported} appointments!`;
+          loadAppointments();
+        } else {
+          result.className = 'badge badge-red';
+          result.textContent = `Error: ${d.error}`;
+        }
+      } catch (e) {
+        result.className = 'badge badge-red';
+        result.textContent = 'Import failed. Please check your network and Excel format.';
+      }
+      input.value = '';
+    }
+
+    // ── Custom Reports ────────────────────────────────────────────────────
+    async function generateCustomReport() {
+      const from = document.getElementById('rep-from-date')?.value;
+      const to = document.getElementById('rep-to-date')?.value;
+      if (!from || !to) { showToast('Please select both From and To dates.', 'error'); return; }
+
+      const output = document.getElementById('custom-report-output');
+      output.classList.remove('hidden');
+      output.innerHTML = '<div style="text-align:center;padding:32px;color:var(--text-muted);">Generating certified report summary...</div>';
+
+      try {
+        const r = await fetch(`/api/reports/summary?from=${from}&to=${to}`);
+        const data = await r.json();
+        renderCustomReportHtml(data, from, to);
+      } catch (e) {
+        output.innerHTML = '<div style="color:var(--sss-red);padding:20px;">Failed to generate report.</div>';
+      }
+    }
+
+    function renderCustomReportHtml(data, from, to) {
+      const output = document.getElementById('custom-report-output');
+      const s = data.summary || data.stats || {};
+      const total = s.total_served || s.total || 0;
+      const pct = v => total > 0 ? ((v / total) * 100).toFixed(1) + '%' : '0%';
+
+      const byCounter = data.byCounter || [];
+      const byTx = data.byTransactionType || [];
+
+      output.innerHTML = `
+        <div class="card" style="margin-top:20px;padding:24px;">
+          <div style="text-align:center;border-bottom:1.5px solid var(--border-subtle);padding-bottom:16px;margin-bottom:20px;">
+            <div style="font-size:0.75rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;">Republic of the Philippines</div>
+            <h2 style="margin:4px 0;color:var(--sss-navy);font-size:1.3rem;">SOCIAL SECURITY SYSTEM — TOLEDO BRANCH</h2>
+            <div style="font-size:0.85rem;color:var(--sss-blue);font-weight:700;">Executive Operations &amp; Citizen's Charter Audit Report</div>
+            <div style="font-size:0.78rem;color:var(--text-muted);margin-top:2px;">Coverage Period: <strong>${from}</strong> to <strong>${to}</strong></div>
+          </div>
+
+          <div class="executive-kpi-grid" style="margin-bottom:24px;">
+            <div class="kpi-card kpi-blue">
+              <div class="kpi-top"><span class="kpi-label">Total Transactions</span><span class="kpi-icon-pill"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg></span></div>
+              <div class="kpi-value" style="color:var(--sss-navy);">${total}</div>
+              <div class="kpi-sub">Total Citizens Served</div>
+            </div>
+            <div class="kpi-card kpi-green">
+              <div class="kpi-top"><span class="kpi-label">Completion Rate</span><span class="kpi-icon-pill"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></span></div>
+              <div class="kpi-value" style="color:#15803d;">${pct(s.finished || 0)}</div>
+              <div class="kpi-sub">${s.finished || 0} Successful Transactions</div>
+            </div>
+            <div class="kpi-card kpi-amber">
+              <div class="kpi-top"><span class="kpi-label">Average Wait</span><span class="kpi-icon-pill"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></span></div>
+              <div class="kpi-value" style="color:#b45309;">${s.avg_wait ? parseFloat(s.avg_wait).toFixed(1) : 0}m</div>
+              <div class="kpi-sub">ARTA Target: &lt; 15.0m</div>
+            </div>
+            <div class="kpi-card kpi-purple">
+              <div class="kpi-top"><span class="kpi-label">Avg Handle Duration</span><span class="kpi-icon-pill"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></span></div>
+              <div class="kpi-value" style="color:#7e22ce;">${s.avg_duration ? parseFloat(s.avg_duration).toFixed(1) : 0}m</div>
+              <div class="kpi-sub">Desk Processing Speed</div>
+            </div>
+          </div>
+
+          <!-- Counter Breakdown Table -->
+          <div style="margin-bottom:24px;">
+            <h4 style="font-size:0.92rem;font-weight:800;color:var(--sss-navy);margin-bottom:10px;">Desk &amp; Counter Performance Summary</h4>
+            <div style="overflow-x:auto;">
+              <table class="admin-table">
+                <thead>
+                  <tr>
+                    <th>Station / Counter</th>
+                    <th>Officer Assigned</th>
+                    <th>Citizens Served</th>
+                    <th>Avg Wait Time</th>
+                    <th>Avg Handle Time</th>
+                    <th>CSAT Rating</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${byCounter.length === 0 ? '<tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:16px;">No counter data recorded for this range.</td></tr>' : byCounter.map(c => `
+                    <tr>
+                      <td><strong>${c.counter}</strong></td>
+                      <td>${c.clerk_name || 'Counter Staff'}</td>
+                      <td><span class="badge badge-blue">${c.served}</span></td>
+                      <td>${c.avg_wait ? parseFloat(c.avg_wait).toFixed(1) + 'm' : '—'}</td>
+                      <td>${c.avg_duration ? parseFloat(c.avg_duration).toFixed(1) + 'm' : '—'}</td>
+                      <td>${c.avg_rating ? '★ ' + parseFloat(c.avg_rating).toFixed(1) : '—'}</td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Transaction Types Table -->
+          ${byTx.length > 0 ? `
+          <div style="margin-bottom:20px;">
+            <h4 style="font-size:0.92rem;font-weight:800;color:var(--sss-navy);margin-bottom:10px;">Transaction Type Breakdown</h4>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(240px, 1fr));gap:8px;">
+              ${byTx.map(t => `
+                <div style="display:flex;justify-content:space-between;align-items:center;background:#f8fafc;padding:8px 12px;border-radius:6px;border:1px solid #e2e8f0;font-size:0.82rem;">
+                  <span><strong>${t.transaction_type}</strong></span>
+                  <span class="badge badge-gray">${t.count} (${pct(t.count)})</span>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+          ` : ''}
+
+          <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:20px;padding-top:16px;border-top:1px solid #f1f5f9;">
+            <button class="btn btn-primary btn-sm" onclick="downloadCustomExcel()" style="background:#15803d;border-color:#15803d;display:flex;align-items:center;gap:6px;">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Download Multi-Tab Excel (.xlsx)
+            </button>
+          </div>
+        </div>`;
+    }
+
+    function downloadCustomExcel() {
+      const from = document.getElementById('rep-from-date')?.value;
+      const to = document.getElementById('rep-to-date')?.value;
+      if (!from || !to) { showToast('Please select both From and To dates.', 'error'); return; }
+      window.location.href = `/api/reports/export/excel?from=${from}&to=${to}`;
+    }
+
+    // ── Staff Accounts ────────────────────────────────────────────────────
+    async function loadClerks() {
+      const r = await fetch('/api/clerks?all=true');
+      const clerks = await r.json();
+      const tbody = document.getElementById('clerks-table');
+      tbody.innerHTML = '';
+      clerks.forEach(c => {
+        const isAdmin = c.counter === 'Admin';
+        const roleLabel = isAdmin ? 'Administrator (Branch Head)' : 'Branch Staff (Counter / Desk Officer)';
+        const roleBadge = isAdmin ? 'badge-purple' : 'badge-blue';
+        const isOnline = c.is_active;
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td><div style="width:32px;height:32px;border-radius:50%;background:#eff6ff;color:#1e40af;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.75rem;">${c.name.slice(0, 2).toUpperCase()}</div></td>
+          <td><strong>${c.name}</strong></td>
+          <td><span class="badge ${roleBadge}">${roleLabel}</span></td>
+          <td>${isOnline ? '<span class="badge badge-green">● Active</span>' : '<span class="badge badge-gray">Inactive</span>'}</td>
+          <td>
+            <div style="display:flex;gap:6px;align-items:center;">
+              <button class="btn btn-ghost btn-sm" onclick="openPinReset(${c.id}, '${c.name.replace(/'/g, "\\'")}')">Reset PIN</button>
+              ${!isAdmin ? `<a href="/api/reports/export/excel?clerk_id=${c.id}" class="btn btn-ghost btn-sm" style="color:#15803d;text-decoration:none;">Excel Log</a>` : ''}
+              ${!isAdmin ? (isOnline
+            ? `<button class="btn btn-ghost btn-sm" style="color:#dc2626;border-color:#fecaca;" onclick="toggleClerkStatus(${c.id}, '${c.name.replace(/'/g, "\\'")}', 0)">Deactivate</button>`
+            : `<button class="btn btn-ghost btn-sm" style="color:#15803d;border-color:#bbf7d0;" onclick="toggleClerkStatus(${c.id}, '${c.name.replace(/'/g, "\\'")}', 1)">Reactivate</button>`
+          ) : ''}
+            </div>
+          </td>`;
+        tbody.appendChild(tr);
+      });
+    }
+
+    async function toggleClerkStatus(id, name, targetStatus) {
+      const action = targetStatus === 0 ? 'deactivate' : 'reactivate';
+      const promptText = targetStatus === 0
+        ? `Are you sure you want to DEACTIVATE ${name}?\n\nThey will immediately be blocked from logging in at any workstation. Historical audit logs will remain intact.`
+        : `Reactivate account for ${name}?`;
+
+      if (!confirm(promptText)) return;
+
+      try {
+        const res = await fetch(`/api/clerks/${id}/toggle`, { method: 'PUT' });
+        const data = await res.json();
+        if (data.success) {
+          showToast(`Account for ${name} ${targetStatus === 0 ? 'deactivated' : 'reactivated'}.`, 'success');
+          loadClerks();
+        } else {
+          showToast('Failed to update account status.', 'error');
+        }
+      } catch (e) {
+        showToast('Network error.', 'error');
+      }
+    }
+
+    let resettingClerkId = null;
+    function openPinReset(id, name) {
+      resettingClerkId = id;
+      document.getElementById('pin-reset-name').textContent = name;
+      document.getElementById('pin-reset-input').value = '';
+      document.getElementById('pin-reset-err').style.display = 'none';
+      document.getElementById('pin-reset-modal').classList.remove('hidden');
+    }
+
+    async function submitPinReset() {
+      const pin = document.getElementById('pin-reset-input').value.trim();
+      const err = document.getElementById('pin-reset-err');
+      if (!/^\d{4}$/.test(pin)) {
+        err.textContent = 'Password must be exactly 4 digits.';
+        err.style.display = 'block';
+        return;
+      }
+      const r = await fetch(`/api/clerks/${resettingClerkId}/pin`, {
+        method: 'PUT', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pin })
+      });
+      const d = await r.json();
+      if (d.success) {
+        document.getElementById('pin-reset-modal').classList.add('hidden');
+        showToast('Password updated successfully.', 'success');
+      } else {
+        err.textContent = d.error || 'Failed to update.';
+        err.style.display = 'block';
+      }
+    }
+
+    function toggleResetPwVisibility() {
+      const inp = document.getElementById('pin-reset-input');
+      const show = document.getElementById('pr-eye-show');
+      const hide = document.getElementById('pr-eye-hide');
+      if (inp.type === 'password') { inp.type = 'text'; show.style.display = 'none'; hide.style.display = ''; }
+      else { inp.type = 'password'; show.style.display = ''; hide.style.display = 'none'; }
+    }
+
+    async function addClerk() {
+      const name = document.getElementById('new-name').value.trim();
+      const counter = document.getElementById('new-counter').value;
+      const pin = document.getElementById('new-pin').value.trim();
+      if (!name) { showToast('Please enter an employee name.', 'error'); return; }
+      if (!/^\d{4}$/.test(pin)) { showToast('Password must be exactly 4 digits.', 'error'); return; }
+
+      const r = await fetch('/api/clerks', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, counter, pin })
+      });
+      const d = await r.json();
+      if (d.success) {
+        document.getElementById('new-name').value = '';
+        document.getElementById('new-pin').value = '';
+        showToast('Employee account created.', 'success');
+        loadClerks();
+      } else {
+        showToast(d.error || 'Could not add account.', 'error');
+      }
+    }
+
+    // ── MSS Tasks & Assignment Management ─────────────────────────────────
+    let allTasks = [];
+    let currentTaskStatus = 'all';
+    let taskSearchTimeout = null;
+
+    async function loadTasks() {
+      try {
+        const category = document.getElementById('task-filter-category')?.value || '';
+        const assignee = document.getElementById('task-filter-assignee')?.value || '';
+        const q = document.getElementById('task-search-q')?.value || '';
+
+        const params = new URLSearchParams();
+        if (currentTaskStatus !== 'all') params.set('status', currentTaskStatus);
+        if (category) params.set('category', category);
+        if (assignee) params.set('assigned_to', assignee);
+        if (q) params.set('q', q);
+
+        const r = await fetch(`/api/tasks?${params.toString()}`);
+        const data = await r.json();
+
+        allTasks = data.tasks || [];
+        const stats = data.stats || {};
+
+        // Update KPIs
+        if (document.getElementById('task-stat-total')) document.getElementById('task-stat-total').textContent = stats.total || 0;
+        if (document.getElementById('task-stat-pending')) document.getElementById('task-stat-pending').textContent = stats.pending || 0;
+        if (document.getElementById('task-stat-ongoing')) document.getElementById('task-stat-ongoing').textContent = stats.ongoing || 0;
+        if (document.getElementById('task-stat-completed')) document.getElementById('task-stat-completed').textContent = stats.completed || 0;
+        if (document.getElementById('task-stat-overdue')) document.getElementById('task-stat-overdue').textContent = stats.overdue || 0;
+
+        // Update Sidebar Overdue Badge
+        const overdueBadge = document.getElementById('task-overdue-badge');
+        if (overdueBadge) {
+          if (stats.overdue > 0) {
+            overdueBadge.textContent = `${stats.overdue} OVERDUE`;
+            overdueBadge.style.display = 'inline-block';
+          } else {
+            overdueBadge.style.display = 'none';
+          }
+        }
+
+        renderTasksGrid();
+      } catch (e) {
+        console.error('Failed to load tasks:', e);
+      }
+    }
+
+    function renderTasksGrid() {
+      const container = document.getElementById('tasks-grid');
+      if (!container) return;
+
+      if (!allTasks.length) {
+        container.innerHTML = `
+          <div style="grid-column:1/-1;text-align:center;padding:48px 24px;background:#f8fafc;border-radius:12px;border:1.5px dashed #cbd5e1;">
+            <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="#94a3b8" stroke-width="1.5" style="margin-bottom:12px;"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+            <div style="font-weight:700;color:#334155;font-size:1rem;margin-bottom:4px;">No MSS Assignments Found</div>
+            <div style="font-size:0.85rem;color:#64748b;">No tasks match the active filter criteria. Click "New Assignment" to create one.</div>
+          </div>`;
+        return;
+      }
+
+      container.innerHTML = '';
+      allTasks.forEach(t => {
+        const priorityColors = {
+          critical: { bg: '#fee2e2', text: '#b91c1c', border: '#fca5a5', label: 'CRITICAL' },
+          urgent: { bg: '#fef3c7', text: '#b45309', border: '#fde68a', label: 'URGENT' },
+          normal: { bg: '#eff6ff', text: '#1e40af', border: '#bfdbfe', label: 'NORMAL' }
+        };
+        const p = priorityColors[t.priority] || priorityColors.normal;
+
+        const statusBadges = {
+          pending: '<span class="badge badge-amber" style="font-size:0.75rem;"><svg viewBox="0 0 10 10" width="10" height="10" style="display:inline;vertical-align:middle;margin-right:3px;"><circle cx="5" cy="5" r="4" fill="#d97706"/></svg>Pending</span>',
+          ongoing: '<span class="badge badge-blue" style="font-size:0.75rem;"><svg viewBox="0 0 10 10" width="10" height="10" style="display:inline;vertical-align:middle;margin-right:3px;"><circle cx="5" cy="5" r="4" fill="#2563eb"/></svg>Ongoing</span>',
+          completed: '<span class="badge badge-green" style="font-size:0.75rem;"><svg viewBox="0 0 10 10" width="10" height="10" style="display:inline;vertical-align:middle;margin-right:3px;"><circle cx="5" cy="5" r="4" fill="#15803d"/></svg>Completed</span>',
+          overdue: '<span class="badge badge-red" style="font-size:0.75rem;"><svg viewBox="0 0 10 10" width="10" height="10" style="display:inline;vertical-align:middle;margin-right:3px;"><circle cx="5" cy="5" r="4" fill="#dc2626"/></svg>Overdue</span>'
+        };
+
+        const card = document.createElement('div');
+        card.style.cssText = `
+          background: #ffffff;
+          border-radius: 12px;
+          border: 1.5px solid ${t.status === 'overdue' ? '#fca5a5' : '#e2e8f0'};
+          padding: 16px;
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+          box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+          transition: all 0.2s ease;
+        `;
+
+        card.innerHTML = `
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">
+            <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
+              <span style="font-size:0.7rem;font-weight:700;padding:2px 8px;border-radius:6px;background:${p.bg};color:${p.text};border:1px solid ${p.border};">${p.label}</span>
+              <span class="badge badge-gray" style="font-size:0.7rem;">${t.category}</span>
+            </div>
+            <div>${statusBadges[t.status] || ''}</div>
+          </div>
+
+          <div>
+            <h4 style="margin:0 0 6px 0;font-size:0.95rem;color:#0f172a;font-weight:700;">${t.title}</h4>
+            <p style="margin:0;font-size:0.82rem;color:#64748b;line-height:1.4;">${t.description || 'No detailed instructions.'}</p>
+          </div>
+
+          <div style="margin-top:auto;padding-top:10px;border-top:1px solid #f1f5f9;display:flex;flex-direction:column;gap:8px;font-size:0.8rem;">
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+              <span style="color:#64748b;">Assigned Officer:</span>
+              <strong style="color:#1e293b;">${t.assignee_name || 'All Staff'}</strong>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+              <span style="color:#64748b;">Target Deadline:</span>
+              <span style="font-weight:700;color:${t.status === 'overdue' ? '#dc2626' : '#1e40af'};">${t.target_date}</span>
+            </div>
+            ${t.completed_at ? `
+              <div style="background:#f0fdf4;padding:8px 10px;border-radius:6px;border:1px solid #bbf7d0;font-size:0.78rem;">
+                <div style="font-weight:700;color:#15803d;margin-bottom:2px;">✓ Accomplished at ${t.completed_at}</div>
+                <div style="color:#166534;">${t.accomplishment_notes || 'No notes.'}</div>
+              </div>` : ''}
+          </div>
+
+          <div style="display:flex;gap:6px;justify-content:flex-end;padding-top:6px;">
+            ${t.status !== 'completed' ? `<button class="btn btn-ghost btn-sm" onclick="openReassignTaskModal(${t.id}, '${t.title.replace(/'/g, "\\'")}', '${t.assigned_to || ''}', '${t.target_date}', '${t.priority}')" style="font-size:0.75rem;">Reassign</button>` : ''}
+            <button class="btn btn-ghost btn-sm" onclick="deleteTask(${t.id})" style="font-size:0.75rem;color:#dc2626;">Delete</button>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    function setTaskStatusFilter(status, btn) {
+      currentTaskStatus = status;
+      document.querySelectorAll('.task-status-btn').forEach(b => b.classList.remove('active'));
+      if (btn) btn.classList.add('active');
+      loadTasks();
+    }
+
+    function debounceTaskSearch() {
+      clearTimeout(taskSearchTimeout);
+      taskSearchTimeout = setTimeout(() => loadTasks(), 300);
+    }
+
+    async function populateAssigneeDropdowns() {
+      try {
+        const r = await fetch('/api/clerks?all=true');
+        const clerks = await r.json();
+
+        const createSel = document.getElementById('task-in-assignee');
+        const filterSel = document.getElementById('task-filter-assignee');
+        const reassignSel = document.getElementById('reassign-in-assignee');
+
+        if (createSel) {
+          createSel.innerHTML = '<option value="">All Branch Personnel (Creates individual copy per staff)</option>';
+          clerks.forEach(c => {
+            if (c.counter !== 'Admin') {
+              createSel.innerHTML += `<option value="${c.id}">${c.name} (${c.counter})</option>`;
+            }
+          });
+        }
+
+        if (filterSel) {
+          filterSel.innerHTML = '<option value="">All Personnel</option>';
+          clerks.forEach(c => {
+            if (c.counter !== 'Admin') {
+              filterSel.innerHTML += `<option value="${c.id}">${c.name}</option>`;
+            }
+          });
+        }
+
+        if (reassignSel) {
+          reassignSel.innerHTML = '<option value="">All Branch Personnel (Open Pool)</option>';
+          clerks.forEach(c => {
+            if (c.counter !== 'Admin') {
+              reassignSel.innerHTML += `<option value="${c.id}">${c.name} (${c.counter})</option>`;
+            }
+          });
+        }
+      } catch (e) { }
+    }
+
+    function openCreateTaskModal() {
+      populateAssigneeDropdowns();
+      document.getElementById('task-in-title').value = '';
+      document.getElementById('task-in-desc').value = '';
+
+      const now = new Date();
+      now.setHours(17, 0, 0, 0);
+      const isoStr = now.toISOString().slice(0, 16);
+      document.getElementById('task-in-target').value = isoStr;
+
+      document.getElementById('task-create-err').style.display = 'none';
+      document.getElementById('task-create-modal').classList.remove('hidden');
+    }
+
+    function closeCreateTaskModal() {
+      document.getElementById('task-create-modal').classList.add('hidden');
+    }
+
+    async function submitCreateTask() {
+      const title = document.getElementById('task-in-title').value.trim();
+      const description = document.getElementById('task-in-desc').value.trim();
+      const category = document.getElementById('task-in-category').value;
+      const priority = document.getElementById('task-in-priority').value;
+      const assigned_to = document.getElementById('task-in-assignee').value || null;
+      const target_date = document.getElementById('task-in-target').value.replace('T', ' ');
+
+      const err = document.getElementById('task-create-err');
+      if (!title || !target_date) {
+        err.textContent = 'Please provide a task title and target completion date.';
+        err.style.display = 'block';
+        return;
+      }
+
+      try {
+        const r = await fetch('/api/tasks', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ title, description, category, priority, assigned_to, target_date })
+        });
+        const d = await r.json();
+        if (d.success) {
+          closeCreateTaskModal();
+          if (d.count > 1) {
+            showToast(`Assignment dispatched to ${d.count} staff members individually.`, 'success');
+          } else {
+            showToast('MSS assignment dispatched successfully.', 'success');
+          }
+          loadTasks();
+        } else {
+          err.textContent = d.error || 'Failed to create assignment.';
+          err.style.display = 'block';
+        }
+      } catch (e) {
+        err.textContent = 'Network error.';
+        err.style.display = 'block';
+      }
+    }
+
+    let reassigningTaskId = null;
+    function openReassignTaskModal(id, title, assignedTo, targetDate, priority) {
+      reassigningTaskId = id;
+      populateAssigneeDropdowns();
+      document.getElementById('reassign-task-title').textContent = title;
+      if (document.getElementById('reassign-in-assignee')) document.getElementById('reassign-in-assignee').value = assignedTo;
+      if (document.getElementById('reassign-in-target')) document.getElementById('reassign-in-target').value = targetDate.replace(' ', 'T');
+      if (document.getElementById('reassign-in-priority')) document.getElementById('reassign-in-priority').value = priority || 'normal';
+      document.getElementById('task-reassign-modal').classList.remove('hidden');
+    }
+
+    async function submitReassignTask() {
+      const assigned_to = document.getElementById('reassign-in-assignee').value || null;
+      const target_date = document.getElementById('reassign-in-target').value.replace('T', ' ');
+      const priority = document.getElementById('reassign-in-priority').value;
+
+      try {
+        const r = await fetch(`/api/tasks/${reassigningTaskId}/reassign`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ assigned_to, target_date, priority })
+        });
+        const d = await r.json();
+        if (d.success) {
+          document.getElementById('task-reassign-modal').classList.add('hidden');
+          showToast('Task reassigned successfully.', 'success');
+          loadTasks();
+        }
+      } catch (e) {
+        showToast('Failed to reassign task.', 'error');
+      }
+    }
+
+    async function deleteTask(id) {
+      if (!confirm('Permanently delete this MSS assignment record? This cannot be undone.')) return;
+      try {
+        const r = await fetch(`/api/tasks/${id}`, { method: 'DELETE' });
+        const d = await r.json();
+        if (d.success) {
+          showToast('Assignment deleted.', 'success');
+          loadTasks();
+        }
+      } catch (e) {
+        showToast('Failed to delete assignment.', 'error');
+      }
+    }
+
+    // ── ARTA CSM Analytics & Reporting ───────────────────────────────────
+    async function loadArtaCsm() {
+      const from = document.getElementById('csm-date-from')?.value;
+      const to = document.getElementById('csm-date-to')?.value;
+      const params = new URLSearchParams();
+      if (from && to) { params.set('from', from); params.set('to', to); }
+      else { params.set('date', new Date().toISOString().split('T')[0]); }
+
+      try {
+        const res = await fetch(`/api/reports/arta-csm?${params.toString()}`);
+        const data = await res.json();
+
+        // 1. NPS
+        const npsScore = data.nps.score;
+        const npsScoreEl = document.getElementById('csm-nps-score');
+        if (npsScoreEl) {
+          npsScoreEl.textContent = (npsScore >= 0 ? `+${npsScore}` : `${npsScore}`);
+          npsScoreEl.style.color = npsScore >= 70 ? '#15803d' : npsScore >= 30 ? '#0038A8' : npsScore >= 0 ? '#b45309' : '#dc2626';
+        }
+        document.getElementById('csm-nps-status').textContent = npsScore >= 70 ? 'World Class NPS (70+)' : npsScore >= 50 ? 'Excellent NPS (50+)' : npsScore >= 0 ? 'Good / Positive NPS' : 'Needs Corrective Action';
+
+        document.getElementById('csm-promoters').textContent = data.nps.promoters;
+        document.getElementById('csm-promoters-pct').textContent = `${data.nps.promoterPct}% of respondents`;
+
+        document.getElementById('csm-passives').textContent = data.nps.passives;
+        document.getElementById('csm-passives-pct').textContent = `${data.nps.passives} respondents`;
+
+        document.getElementById('csm-detractors').textContent = data.nps.detractors;
+        document.getElementById('csm-detractors-pct').textContent = `${data.nps.detractorPct}% of respondents`;
+
+        // 2. Customer Types
+        const ctList = document.getElementById('csm-cust-types-list');
+        if (ctList) {
+          ctList.innerHTML = '';
+          const entries = Object.entries(data.customerTypes || {});
+          if (entries.length === 0) {
+            ctList.innerHTML = '<div style="color:var(--text-muted);font-size:0.85rem;">No customer records logged for this period.</div>';
+          } else {
+            entries.sort((a, b) => b[1] - a[1]).forEach(([type, count]) => {
+              const pct = data.totalResponses > 0 ? ((count / data.totalResponses) * 100).toFixed(1) : 0;
+              const row = document.createElement('div');
+              row.style.cssText = 'display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid #f1f5f9;font-size:0.85rem;';
+              row.innerHTML = `<span><strong>${type}</strong></span><span style="display:flex;gap:8px;align-items:center;"><span class="badge badge-gray">${count}</span><span style="font-size:0.75rem;color:var(--text-muted);">${pct}%</span></span>`;
+              ctList.appendChild(row);
+            });
+          }
+        }
+
+        // 3. Demographics (Sex & Age)
+        document.getElementById('csm-male-val').textContent = data.sex.male || 0;
+        document.getElementById('csm-female-val').textContent = data.sex.female || 0;
+
+        const ageList = document.getElementById('csm-age-list');
+        if (ageList) {
+          ageList.innerHTML = `
+            <div style="display:flex;justify-content:space-between;font-size:0.8rem;padding:4px 0;border-bottom:1px solid #f1f5f9;"><span>Under 20 years:</span><strong>${data.ageGroups.under_20}</strong></div>
+            <div style="display:flex;justify-content:space-between;font-size:0.8rem;padding:4px 0;border-bottom:1px solid #f1f5f9;"><span>20 – 34 years (Young Adult):</span><strong>${data.ageGroups.age_20_34}</strong></div>
+            <div style="display:flex;justify-content:space-between;font-size:0.8rem;padding:4px 0;border-bottom:1px solid #f1f5f9;"><span>35 – 49 years (Middle Age):</span><strong>${data.ageGroups.age_35_49}</strong></div>
+            <div style="display:flex;justify-content:space-between;font-size:0.8rem;padding:4px 0;border-bottom:1px solid #f1f5f9;"><span>50 – 64 years (Senior Pre-Retiree):</span><strong>${data.ageGroups.age_50_64}</strong></div>
+            <div style="display:flex;justify-content:space-between;font-size:0.8rem;padding:4px 0;border-bottom:1px solid #f1f5f9;"><span>65+ years (Senior Citizen):</span><strong>${data.ageGroups.age_65_plus}</strong></div>
+          `;
+        }
+
+        // 4. Feedback Category & Top Root Causes
+        document.getElementById('csm-fb-pos').textContent = data.feedbackCategories.positive || 0;
+        document.getElementById('csm-fb-neg').textContent = data.feedbackCategories.negative || 0;
+        document.getElementById('csm-fb-none').textContent = data.feedbackCategories.no_comment || 0;
+
+        const reasonsList = document.getElementById('csm-reasons-list');
+        if (reasonsList) {
+          reasonsList.innerHTML = '';
+          const reasonEntries = Object.entries(data.reasonsTally || {});
+          if (reasonEntries.length === 0) {
+            reasonsList.innerHTML = '<div style="color:#15803d;font-size:0.82rem;font-weight:600;display:flex;align-items:center;gap:6px;"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#15803d" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> Zero recurring complaints or service deficiencies recorded.</div>';
+          } else {
+            reasonEntries.sort((a, b) => b[1] - a[1]).forEach(([reason, count]) => {
+              const div = document.createElement('div');
+              div.style.cssText = 'display:flex;justify-content:space-between;align-items:center;background:#fffaf5;border:1px solid #fed7aa;padding:6px 10px;border-radius:6px;font-size:0.82rem;';
+              div.innerHTML = `<span style="color:#9a3412;font-weight:600;display:flex;align-items:center;gap:6px;"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#ea580c" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> ${reason}</span><strong style="color:#c2410c;">${count}</strong>`;
+              reasonsList.appendChild(div);
+            });
+          }
+        }
+
+        // 5. CSAT Breakdown
+        document.getElementById('csm-csat-5').textContent = data.csat.very_satisfied || 0;
+        document.getElementById('csm-csat-4').textContent = data.csat.satisfied || 0;
+        document.getElementById('csm-csat-3').textContent = data.csat.neutral || 0;
+        document.getElementById('csm-csat-1').textContent = data.csat.unsatisfied || 0;
+
+      } catch (e) {
+        console.error('Failed to load ARTA CSM analytics:', e);
+      }
+    }
+
+    function resetCsmDates() {
+      const today = new Date().toISOString().split('T')[0];
+      const fromEl = document.getElementById('csm-date-from');
+      const toEl = document.getElementById('csm-date-to');
+      if (fromEl) fromEl.value = today;
+      if (toEl) toEl.value = today;
+      loadArtaCsm();
+    }
+
+    function setQuarterDates(q) {
+      const year = new Date().getFullYear();
+      const quarters = {
+        1: { from: `${year}-01-01`, to: `${year}-03-31` },
+        2: { from: `${year}-04-01`, to: `${year}-06-30` },
+        3: { from: `${year}-07-01`, to: `${year}-09-30` },
+        4: { from: `${year}-10-01`, to: `${year}-12-31` }
+      };
+      if (quarters[q]) {
+        document.getElementById('csm-date-from').value = quarters[q].from;
+        document.getElementById('csm-date-to').value = quarters[q].to;
+        loadArtaCsm();
+      }
+    }
+
+    function exportArtaExcel() {
+      const from = document.getElementById('csm-date-from')?.value;
+      const to = document.getElementById('csm-date-to')?.value;
+      const params = new URLSearchParams();
+      if (from && to) { params.set('from', from); params.set('to', to); }
+      else { params.set('date', new Date().toISOString().split('T')[0]); }
+      window.location.href = `/api/reports/export/arta-excel?${params.toString()}`;
+    }
+
+    let currentArtaData = null;
+    async function openArtaPrintModal() {
+      const from = document.getElementById('csm-date-from')?.value;
+      const to = document.getElementById('csm-date-to')?.value;
+      const params = new URLSearchParams();
+      if (from && to) { params.set('from', from); params.set('to', to); }
+      else { params.set('date', new Date().toISOString().split('T')[0]); }
+
+      try {
+        const res = await fetch(`/api/reports/arta-csm?${params.toString()}`);
+        const data = await res.json();
+        currentArtaData = data;
+
+        const periodLabel = from && to ? `Audit Period: ${from} to ${to}` : `Audit Period: ${new Date().toLocaleDateString('en-PH', { month: 'long', day: 'numeric', year: 'numeric' })}`;
+        document.getElementById('print-period-label').textContent = periodLabel;
+
+        const total = data.ratedCount || 0;
+        const csatPct = total > 0 ? (((data.nps.promoters + data.nps.passives) / total) * 100).toFixed(1) : '100.0';
+        document.getElementById('print-csat-pct').textContent = `${csatPct}%`;
+        document.getElementById('print-nps-score').textContent = data.nps.score >= 0 ? `+${data.nps.score}` : `${data.nps.score}`;
+        document.getElementById('print-total-respondents').textContent = `${total} citizens`;
+        document.getElementById('print-promoters-val').textContent = `${data.nps.promoters} (${data.nps.promoterPct}%)`;
+        document.getElementById('print-passives-val').textContent = `${data.nps.passives} (${total > 0 ? ((data.nps.passives / total) * 100).toFixed(1) : 0}%)`;
+        document.getElementById('print-detractors-val').textContent = `${data.nps.detractors} (${data.nps.detractorPct}%)`;
+
+        // Customer Types Table
+        const custDiv = document.getElementById('print-cust-types');
+        custDiv.innerHTML = '';
+        Object.entries(data.customerTypes || {}).forEach(([type, count]) => {
+          const pct = data.totalResponses > 0 ? ((count / data.totalResponses) * 100).toFixed(1) : 0;
+          custDiv.innerHTML += `<div style="display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid #f1f5f9;"><span>${type}:</span><strong>${count} (${pct}%)</strong></div>`;
+        });
+
+        // Demographics
+        const demoDiv = document.getElementById('print-demographics');
+        demoDiv.innerHTML = `
+          <div style="display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid #f1f5f9;"><span>Male / Female Ratio:</span><strong>${data.sex.male} Male / ${data.sex.female} Female</strong></div>
+          <div style="display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid #f1f5f9;"><span>Under 20 years:</span><strong>${data.ageGroups.under_20}</strong></div>
+          <div style="display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid #f1f5f9;"><span>20 – 34 years (Young Adult):</span><strong>${data.ageGroups.age_20_34}</strong></div>
+          <div style="display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid #f1f5f9;"><span>35 – 49 years (Middle Age):</span><strong>${data.ageGroups.age_35_49}</strong></div>
+          <div style="display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid #f1f5f9;"><span>50 – 64 years (Pre-Retiree):</span><strong>${data.ageGroups.age_50_64}</strong></div>
+          <div style="display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid #f1f5f9;"><span>65+ years (Senior Citizen):</span><strong>${data.ageGroups.age_65_plus}</strong></div>
+        `;
+
+        // Sentiment summary
+        const sentDiv = document.getElementById('print-sentiment-summary');
+        sentDiv.innerHTML = `
+          <div style="display:flex;gap:24px;margin-bottom:8px;flex-wrap:wrap;">
+            <span style="display:inline-flex;align-items:center;gap:4px;"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="#15803d" stroke-width="2"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3H14z"/><path d="M7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg> Positive Experiences: <strong>${data.feedbackCategories.positive}</strong></span>
+            <span style="display:inline-flex;align-items:center;gap:4px;"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="#c2410c" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Suggestions / Feedback: <strong>${data.feedbackCategories.negative}</strong></span>
+            <span style="display:inline-flex;align-items:center;gap:4px;"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="#64748b" stroke-width="2"><circle cx="12" cy="12" r="9"/><line x1="8" y1="12" x2="16" y2="12"/></svg> No Comments: <strong>${data.feedbackCategories.no_comment}</strong></span>
+          </div>
+        `;
+        const rEntries = Object.entries(data.reasonsTally || {});
+        if (rEntries.length > 0) {
+          sentDiv.innerHTML += `<div style="font-weight:700;margin-top:6px;color:#9a3412;">Documented Bottlenecks: ` + rEntries.map(([r, c]) => `${r} (${c})`).join(' • ') + `</div>`;
+        } else {
+          sentDiv.innerHTML += `<div style="color:#15803d;font-style:italic;display:flex;align-items:center;gap:4px;"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="#15803d" stroke-width="2.2"><polyline points="20 6 9 17 4 12"/></svg> No recurring bottlenecks or negative service feedback recorded.</div>`;
+        }
+
+        document.getElementById('arta-print-modal').classList.remove('hidden');
+      } catch (e) {
+        showToast('Error loading print report.', 'error');
+      }
+    }
+
+    function closeArtaPrintModal() {
+      document.getElementById('arta-print-modal').classList.add('hidden');
+    }
+
+    function printArtaReport() {
+      const content = document.getElementById('arta-printable-sheet').innerHTML;
+      const printWindow = window.open('', '', 'width=900,height=700');
+      printWindow.document.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>SSS Toledo — ARTA CSM Official Report</title>
+          <style>
+            @page { size: A4; margin: 15mm; }
+            body { font-family: 'Arial', sans-serif; color: #111; margin: 0; padding: 0; }
+            table { width: 100%; border-collapse: collapse; }
+            th, td { border: 1px solid #cbd5e1; padding: 6px 8px; }
+            th { background: #0A3871 !important; color: #fff !important; -webkit-print-color-adjust: exact; }
+          </style>
+        </head>
+        <body onload="window.print();window.close();">
+          ${content}
+        </body>
+        </html>
+      `);
+      printWindow.document.close();
+    }
+
+    // ── Socket Telemetry ──────────────────────────────────────────────────
+    socket.on('stations:presence', () => loadLiveDashboard());
+    socket.on('member:checkin', () => loadLiveDashboard());
+    socket.on('member:claimed', () => loadLiveDashboard());
+    socket.on('transaction:concluded', () => loadLiveDashboard());
+    socket.on('appointments:imported', () => { showToast('Appointments imported!', 'success'); loadAppointments(); });
+    socket.on('task:created', () => { loadTasks(); });
+    socket.on('task:updated', () => { loadTasks(); });
+    socket.on('task:deleted', () => { loadTasks(); });
+
+    // ── Toast ─────────────────────────────────────────────────────────────
+    function showToast(msg, type = 'info') {
+      const c = document.getElementById('toast-container'), t = document.createElement('div');
+      t.className = `toast ${type}`; t.textContent = msg; c.appendChild(t);
+      setTimeout(() => { t.style.animation = 'fadeOut 0.3s ease forwards'; setTimeout(() => t.remove(), 300); }, 4000);
+    }
+  </script>
+</body>
+
+</html>

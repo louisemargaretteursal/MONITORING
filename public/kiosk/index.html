@@ -1,0 +1,1395 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SSS Toledo — E-Logbook Kiosk</title>
+  <link rel="stylesheet" href="/assets/css/styles.css">
+  <style>
+    body {
+      background: #f8f9fa;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .kiosk-header {
+      padding: 16px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid #e5e7eb;
+      background: #fff;
+    }
+
+    .kiosk-brand {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .kiosk-logo {
+      width: 40px;
+      height: 40px;
+      border-radius: 8px;
+      background: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+      font-weight: 900;
+      color: #fff;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    }
+
+    .kiosk-brand-text h2 {
+      color: #1f2937;
+      font-size: 1rem;
+      font-weight: 700;
+    }
+
+    .kiosk-brand-text p {
+      color: #6b7280;
+      font-size: 0.75rem;
+    }
+
+    .kiosk-clock {
+      color: #1f2937;
+      font-size: 1.2rem;
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .kiosk-main {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px 16px;
+    }
+
+    .kiosk-panel {
+      background: #fff;
+      border-radius: 12px;
+      width: 100%;
+      max-width: 560px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+      overflow: hidden;
+      border: 1px solid #e5e7eb;
+    }
+
+    /* Mode Selector */
+    .mode-selector {
+      padding: 24px;
+    }
+
+    .mode-selector h1 {
+      font-size: 1.3rem;
+      color: #1f2937;
+      margin-bottom: 4px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .mode-selector p {
+      font-size: 0.875rem;
+      color: #6b7280;
+      margin-bottom: 20px;
+    }
+
+    .mode-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .mode-btn {
+      padding: 14px 12px;
+      border: 1.5px solid #d1d5db;
+      border-radius: 8px;
+      background: #fff;
+      cursor: pointer;
+      transition: 0.2s;
+      text-align: center;
+      font-family: inherit;
+    }
+
+    .mode-btn:hover {
+      border-color: #1a56db;
+      background: #eff6ff;
+    }
+
+    .mode-btn.active {
+      border-color: #1a56db;
+      background: #eff6ff;
+    }
+
+    .mode-btn .mode-icon {
+      font-size: 1.5rem;
+      display: block;
+      margin-bottom: 6px;
+      color: #6b7280;
+    }
+
+    .mode-btn.active .mode-icon {
+      color: #1a56db;
+    }
+
+    .mode-btn .mode-label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: #4b5563;
+      line-height: 1.3;
+    }
+
+    .mode-btn.active .mode-label {
+      color: #1a56db;
+    }
+
+    /* Forms */
+    .kiosk-form {
+      padding: 0 24px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .kiosk-form .form-input,
+    .kiosk-form .form-select {
+      font-size: 0.95rem;
+      padding: 12px 14px;
+      border-radius: 8px;
+      border: 1px solid #d1d5db;
+      background: #fff;
+    }
+
+    .kiosk-form .form-input:focus,
+    .kiosk-form .form-select:focus {
+      outline: none;
+      border-color: #1a56db;
+      box-shadow: 0 0 0 3px #eff6ff;
+    }
+
+    .kiosk-form .form-label {
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: #1f2937;
+    }
+
+    /* Success Screen */
+    .success-screen {
+      padding: 36px 24px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .success-icon {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      background: #d1fae5;
+      color: #059669;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 0;
+    }
+
+    .success-screen h2 {
+      font-size: 1.25rem;
+      color: #1f2937;
+      font-weight: 700;
+    }
+
+    .success-screen p {
+      color: #6b7280;
+      font-size: 0.9rem;
+    }
+
+    .success-detail {
+      background: #f3f4f6;
+      border-radius: 8px;
+      padding: 14px 16px;
+      width: 100%;
+      text-align: left;
+    }
+
+    .success-detail-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 5px 0;
+      font-size: 0.8rem;
+      border-bottom: 1px solid #e5e7eb;
+    }
+
+    .success-detail-row:last-child {
+      border-bottom: none;
+    }
+
+    .success-detail-row span:first-child {
+      color: #6b7280;
+    }
+
+    .success-detail-row span:last-child {
+      font-weight: 600;
+      color: #1f2937;
+    }
+
+    /* Verification Match */
+    .appt-match {
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      padding: 12px 14px;
+      background: #f9fafb;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    .appt-match:hover {
+      background: #f3f4f6;
+      border-color: #1a56db;
+    }
+
+    .appt-match h4 {
+      color: #1f2937;
+      font-size: 0.9rem;
+      margin: 0 0 3px 0;
+      font-weight: 600;
+    }
+
+    .appt-match p {
+      font-size: 0.75rem;
+      color: #6b7280;
+      margin: 0;
+    }
+
+    .kiosk-footer {
+      padding: 12px 24px;
+      background: #f9fafb;
+      border-top: 1px solid #e5e7eb;
+      text-align: center;
+    }
+
+    .kiosk-footer p {
+      font-size: 0.75rem;
+      color: #9ca3af;
+      margin: 0;
+    }
+
+    /* Duplicate / Error Screen */
+    .error-screen {
+      padding: 36px 24px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .error-icon {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      background: #fee2e2;
+      color: #dc2626;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 0;
+    }
+
+    .error-screen h2 {
+      font-size: 1.2rem;
+      color: #991b1b;
+      font-weight: 700;
+    }
+
+    .error-screen p {
+      color: #6b7280;
+      font-size: 0.9rem;
+    }
+
+    .error-detail {
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+      border-radius: 8px;
+      padding: 14px 16px;
+      width: 100%;
+      text-align: left;
+    }
+
+    .error-detail-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 5px 0;
+      font-size: 0.8rem;
+      border-bottom: 1px solid #fed7d7;
+    }
+
+    .error-detail-row:last-child {
+      border-bottom: none;
+    }
+
+    .error-detail-row span:first-child {
+      color: #991b1b;
+    }
+
+    .error-detail-row span:last-child {
+      font-weight: 600;
+      color: #7f1d1d;
+    }
+
+    .error-countdown {
+      font-size: 0.8rem;
+      color: #6b7280;
+      margin-top: 8px;
+    }
+
+    /* Data Privacy Notice Card */
+    .privacy-card {
+      background: #f8fafc;
+      border: 1.5px solid #cbd5e1;
+      border-radius: 10px;
+      padding: 14px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 4px;
+    }
+
+    .privacy-intro {
+      font-size: 0.76rem;
+      color: #475569;
+      line-height: 1.4;
+      border-bottom: 1px dashed #cbd5e1;
+      padding-bottom: 8px;
+    }
+
+    .privacy-header-wrap {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .privacy-header-title {
+      font-size: 0.84rem;
+      font-weight: 700;
+      color: #071e4a;
+    }
+
+    .privacy-req-badge {
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: #dc2626;
+      background: #fee2e2;
+      padding: 2px 8px;
+      border-radius: 4px;
+      white-space: nowrap;
+    }
+
+    .privacy-scroll-box {
+      max-height: 135px;
+      overflow-y: auto;
+      background: #ffffff;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      padding: 10px 12px;
+      font-size: 0.74rem;
+      color: #334155;
+      line-height: 1.45;
+      text-align: justify;
+    }
+
+    .privacy-scroll-box p {
+      margin: 0 0 8px 0;
+    }
+
+    .privacy-scroll-box p:last-child {
+      margin-bottom: 0;
+    }
+
+    .privacy-options {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 2px;
+    }
+
+    .privacy-opt-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 12px;
+      border: 1.5px solid #cbd5e1;
+      border-radius: 8px;
+      background: #ffffff;
+      cursor: pointer;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: #334155;
+      transition: all 0.15s ease;
+      user-select: none;
+    }
+
+    .privacy-opt-btn:hover {
+      border-color: #94a3b8;
+      background: #f1f5f9;
+    }
+
+    .privacy-opt-btn.selected-agree {
+      border-color: #059669;
+      background: #ecfdf5;
+      color: #065f46;
+      box-shadow: 0 0 0 1px #059669;
+    }
+
+    .privacy-opt-btn.selected-disagree {
+      border-color: #dc2626;
+      background: #fef2f2;
+      color: #991b1b;
+      box-shadow: 0 0 0 1px #dc2626;
+    }
+
+    .privacy-opt-btn input[type="radio"] {
+      accent-color: #059669;
+      width: 16px;
+      height: 16px;
+      cursor: pointer;
+    }
+
+    .privacy-opt-btn.disagree-btn input[type="radio"] {
+      accent-color: #dc2626;
+    }
+
+    .privacy-alert-box {
+      background: #fef2f2;
+      border: 1.5px solid #fca5a5;
+      color: #991b1b;
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      line-height: 1.45;
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+    }
+
+    /* Form Fields Locked / Unlocked States */
+    .form-fields-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      transition: all 0.25s ease;
+    }
+
+    .form-fields-wrap.locked {
+      opacity: 0.4;
+      pointer-events: none;
+      filter: grayscale(0.6);
+      user-select: none;
+    }
+
+    .lock-notice-box {
+      background: #f1f5f9;
+      border: 1px dashed #94a3b8;
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 0.78rem;
+      color: #475569;
+      font-weight: 600;
+      text-align: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+  </style>
+</head>
+
+<body>
+  <header class="kiosk-header" style="background:#071e4a;border-bottom:3px solid #d97706;padding:14px 24px;">
+    <div class="kiosk-brand" style="display:flex;align-items:center;gap:14px;">
+      <div class="kiosk-logo"
+        style="width:44px;height:44px;background:#fff;border-radius:8px;padding:4px;box-shadow:0 2px 6px rgba(0,0,0,0.2);">
+        <img src="/assets/logo.png" alt="SSS Toledo" style="width:100%;height:100%;object-fit:contain;">
+      </div>
+      <div class="kiosk-brand-text">
+        <div style="font-size:0.65rem;font-weight:700;letter-spacing:0.12em;color:#94a3b8;text-transform:uppercase;">
+          REPUBLIC OF THE PHILIPPINES</div>
+        <h2 style="color:#ffffff;font-size:1.05rem;font-weight:800;letter-spacing:-0.01em;margin:1px 0 0 0;">SOCIAL
+          SECURITY SYSTEM</h2>
+        <p style="color:#cbd5e1;font-size:0.75rem;margin:0;font-weight:500;">Toledo Branch • E-Logbook Kiosk</p>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:14px;">
+      <div
+        style="background:rgba(255,255,255,0.1);color:#f1f5f9;padding:4px 10px;border-radius:999px;font-size:0.72rem;font-weight:600;border:1px solid rgba(255,255,255,0.2);">
+        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px;margin-right:4px;">
+          <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+          <circle cx="12" cy="10" r="3" />
+        </svg>Toledo Branch
+      </div>
+      <div class="kiosk-clock" id="kiosk-clock"
+        style="color:#ffffff;font-size:1.15rem;font-weight:700;font-family:monospace;background:rgba(0,0,0,0.25);padding:4px 10px;border-radius:6px;">
+        --:-- --</div>
+    </div>
+  </header>
+
+  <main class="kiosk-main" style="background:#f1f5f9;padding:32px 16px;">
+    <div class="kiosk-panel" id="kiosk-panel"
+      style="border-radius:14px;box-shadow:0 8px 30px rgba(7,30,74,0.08);border:1px solid #cbd5e1;">
+
+      <!-- SCREEN 1: MODE SELECTOR -->
+      <div id="screen-mode">
+        <div class="mode-selector" style="padding:24px 24px 16px 24px;">
+          <h1 style="color:#071e4a;font-size:1.25rem;font-weight:800;">Member Check-In</h1>
+          <p style="color:#64748b;font-size:0.85rem;margin-bottom:18px;">Pumili kung paano kayo mag-che-check in /
+            Please select your entry type:</p>
+          <div class="mode-grid">
+            <button class="mode-btn active" id="mode-walkin" onclick="selectMode('walkin')">
+              <span class="mode-icon"><svg class="icon icon-xl" style="margin:auto;display:block" viewBox="0 0 24 24"
+                  fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path
+                    d="M2 9a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v1a2 2 0 0 0 0 4v1a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-1a2 2 0 0 0 0-4V9z" />
+                </svg></span>
+              <span class="mode-label">Walk-In Member<br><small style="font-size:0.7rem;color:#64748b;">(Queue
+                  Ticket)</small></span>
+            </button>
+            <button class="mode-btn" id="mode-appointment" onclick="selectMode('appointment')">
+              <span class="mode-icon"><svg class="icon icon-xl" style="margin:auto;display:block" viewBox="0 0 24 24"
+                  fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="4" width="18" height="18" rx="2" />
+                  <line x1="16" y1="2" x2="16" y2="6" />
+                  <line x1="8" y1="2" x2="8" y2="6" />
+                  <line x1="3" y1="10" x2="21" y2="10" />
+                </svg></span>
+              <span class="mode-label">Direct / BAS<br><small style="font-size:0.7rem;color:#64748b;">(Branch
+                  Booking)</small></span>
+            </button>
+            <button class="mode-btn" id="mode-portal" onclick="selectMode('portal')">
+              <span class="mode-icon"><svg class="icon icon-xl" style="margin:auto;display:block" viewBox="0 0 24 24"
+                  fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="10" />
+                  <line x1="2" y1="12" x2="22" y2="12" />
+                  <path
+                    d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+                </svg></span>
+              <span class="mode-label">My.SSS Portal<br><small style="font-size:0.7rem;color:#64748b;">(Online
+                  Schedule)</small></span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Walk-In Form -->
+        <div class="kiosk-form" id="form-walkin">
+          <!-- Data Privacy Notice (Question 4 at the Top - Microsoft Forms Style) -->
+          <div class="privacy-card" id="privacy-card-walkin">
+            <div class="privacy-intro">When you submit this form, it will not automatically collect your details like
+              name and email address unless you provide it yourself.</div>
+            <div class="privacy-header-wrap">
+              <div class="privacy-header-title">4. Certification and Agreement on the Data Privacy Notice</div>
+              <div class="privacy-req-badge">* Required</div>
+            </div>
+            <div class="privacy-scroll-box">
+              <p>I authorize SSS to use and access my personal data and records submitted, which may be considered
+                sensitive, to process my E-center transaction, including verification from my source of such information
+                and for establishment, exercise or defense of SSS legal claims against me in case I commit
+                misrepresentation or fraud in the submission of this application.</p>
+              <p>I trust that SSS shall keep confidential and secure all the information using organizational, physical
+                and technical measures and procedures, pursuant to Sec. 24 (c), SS Act of 2018 (R.A. No. 11199) and the
+                Data Privacy Act of 2012 (R.A. No 10173). I was made aware that SSS will not divulge my personal data to
+                any person unless authorized by me or required through a subpoena issued by the courts.</p>
+              <p>However, SSS shall only share my data with other government agencies and with partner private companies
+                like banks, collecting agents, insurance companies or IT solutions contractors through a data sharing
+                agreement or as lawfully permitted under the applicable provision of R.A. No 10173, for the purpose of
+                delivering efficient and effective service and for the attainment of SSS legal mandate of providing
+                social security.</p>
+              <p>Nevertheless, SSS commits that all the forms used in collecting, my information shall be disposed of in
+                accordance with SSS Records Retention and Disposition Schedule to insure against unnecessary disclosure
+                of information.</p>
+              <p><strong>I certify that the information provided are true and correct and I understand that I shall be
+                  held liable under all circumstances for any information, misrepresentation and fraud in this
+                  application.</strong></p>
+            </div>
+            <div class="privacy-options">
+              <label class="privacy-opt-btn agree-btn" id="lbl-privacy-walkin-agree">
+                <input type="radio" name="privacy-walkin" value="agree" onchange="onPrivacyChange('walkin', 'agree')">
+                <span>I Agree</span>
+              </label>
+              <label class="privacy-opt-btn disagree-btn" id="lbl-privacy-walkin-disagree">
+                <input type="radio" name="privacy-walkin" value="disagree"
+                  onchange="onPrivacyChange('walkin', 'disagree')">
+                <span>I Disagree</span>
+              </label>
+            </div>
+            <div id="privacy-alert-walkin" class="privacy-alert-box hidden">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5"
+                style="flex-shrink:0;margin-top:1px;">
+                <circle cx="12" cy="12" r="10" />
+                <line x1="12" y1="8" x2="12" y2="12" />
+                <line x1="12" y1="16" x2="12.01" y2="16" />
+              </svg>
+              <span><strong>Access Blocked:</strong> Under R.A. No. 10173 (Data Privacy Act), consent is mandatory to
+                process check-in. Because you selected "I Disagree", this form cannot proceed. Please approach the PACD
+                counter or security for assistance.</span>
+            </div>
+          </div>
+
+          <div id="lock-notice-walkin" class="lock-notice-box">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+              <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+            </svg>
+            Select "I Agree" above to unlock and fill out your check-in details.
+          </div>
+
+          <!-- Form Fields (Locked until 'I Agree' is selected) -->
+          <div id="walkin-fields" class="form-fields-wrap locked">
+            <div class="form-group">
+              <label class="form-label">Queue Ticket Number <span style="color:#dc2626">*</span></label>
+              <input type="text" class="form-input form-input-lg" id="walkin-queue" placeholder="e.g., 2031"
+                maxlength="6" inputmode="numeric" style="font-weight:700;letter-spacing:0.04em;">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Full Name <span style="color:#dc2626">*</span></label>
+              <input type="text" class="form-input" id="walkin-name" placeholder="">
+            </div>
+            <div class="form-group">
+              <label class="form-label">SSS / CRN Number <span
+                  style="color:#64748b;font-weight:normal;">(Optional)</span></label>
+              <input type="text" class="form-input" id="walkin-sss" placeholder="e.g., 34-1234567-8 or 0033-1234567-8">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Transaction Purpose <span style="color:#dc2626">*</span></label>
+              <select class="form-select" id="walkin-transaction">
+                <option value="">— Select your transaction —</option>
+                <option>Retirement Benefit</option>
+                <option>Sickness Benefit</option>
+                <option>Maternity Benefit</option>
+                <option>Disability Benefit</option>
+                <option>Death / Funeral Claim</option>
+                <option>SSS ID / UMID Application</option>
+                <option>Loan Application (Salary / Calamity)</option>
+                <option>Contribution Inquiry</option>
+                <option>E4 / Member Data Change</option>
+                <option>Others</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Customer Type <span style="color:#64748b;font-weight:normal;">(Optional - for
+                  ARTA CSM)</span></label>
+              <select class="form-select" id="walkin-customertype">
+                <option value="">— Select Customer Type —</option>
+                <option>Employed Member</option>
+                <option>Self-Employed Member</option>
+                <option>Voluntary Member</option>
+                <option>Pensioner / Retirement</option>
+                <option>Disability Pensioner</option>
+                <option>Overseas Filipino Worker (OFW)</option>
+                <option>Non-Working Spouse</option>
+                <option>Employer</option>
+                <option>Employer Representative</option>
+                <option>Household Employee (Kasambahay)</option>
+                <option>Government Employee</option>
+                <option>Beneficiary</option>
+                <option>Prior Registrant / Non-Member</option>
+              </select>
+            </div>
+
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+              <div class="form-group">
+                <label class="form-label">Sex <span style="color:#64748b;font-weight:normal;">(Optional)</span></label>
+                <select class="form-select" id="walkin-sex">
+                  <option value="">— Select —</option>
+                  <option value="Male">Male</option>
+                  <option value="Female">Female</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Age <span style="color:#64748b;font-weight:normal;">(Optional)</span></label>
+                <input type="number" class="form-input" id="walkin-age" placeholder="e.g. 35" min="15" max="110">
+              </div>
+            </div>
+
+            <button class="btn btn-primary btn-lg btn-full" onclick="submitWalkIn()" id="btn-walkin"
+              style="background:#0038A8;font-weight:700;">
+              <svg class="icon icon-md" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                stroke-linecap="round" stroke-linejoin="round">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                <polyline points="22 4 12 14.01 9 11.01" />
+              </svg>
+              Confirm &amp; Check In
+            </button>
+          </div>
+        </div>
+
+        <!-- Appointment Form -->
+        <div class="kiosk-form hidden" id="form-appointment">
+          <!-- Data Privacy Notice (Question 4 at the Top) -->
+          <div class="privacy-card" id="privacy-card-appt">
+            <div class="privacy-intro">When you submit this form, it will not automatically collect your details like
+              name and email address unless you provide it yourself.</div>
+            <div class="privacy-header-wrap">
+              <div class="privacy-header-title">4. Certification and Agreement on the Data Privacy Notice</div>
+              <div class="privacy-req-badge">* Required</div>
+            </div>
+            <div class="privacy-scroll-box">
+              <p>I authorize SSS to use and access my personal data and records submitted, which may be considered
+                sensitive, to process my E-center transaction, including verification from my source of such information
+                and for establishment, exercise or defense of SSS legal claims against me in case I commit
+                misrepresentation or fraud in the submission of this application.</p>
+              <p>I trust that SSS shall keep confidential and secure all the information using organizational, physical
+                and technical measures and procedures, pursuant to Sec. 24 (c), SS Act of 2018 (R.A. No. 11199) and the
+                Data Privacy Act of 2012 (R.A. No 10173). I was made aware that SSS will not divulge my personal data to
+                any person unless authorized by me or required through a subpoena issued by the courts.</p>
+              <p>However, SSS shall only share my data with other government agencies and with partner private companies
+                like banks, collecting agents, insurance companies or IT solutions contractors through a data sharing
+                agreement or as lawfully permitted under the applicable provision of R.A. No 10173, for the purpose of
+                delivering efficient and effective service and for the attainment of SSS legal mandate of providing
+                social security.</p>
+              <p>Nevertheless, SSS commits that all the forms used in collecting, my information shall be disposed of in
+                accordance with SSS Records Retention and Disposition Schedule to insure against unnecessary disclosure
+                of information.</p>
+              <p><strong>I certify that the information provided are true and correct and I understand that I shall be
+                  held liable under all circumstances for any information, misrepresentation and fraud in this
+                  application.</strong></p>
+            </div>
+            <div class="privacy-options">
+              <label class="privacy-opt-btn agree-btn" id="lbl-privacy-appt-agree">
+                <input type="radio" name="privacy-appt" value="agree" onchange="onPrivacyChange('appt', 'agree')">
+                <span>I Agree</span>
+              </label>
+              <label class="privacy-opt-btn disagree-btn" id="lbl-privacy-appt-disagree">
+                <input type="radio" name="privacy-appt" value="disagree" onchange="onPrivacyChange('appt', 'disagree')">
+                <span>I Disagree</span>
+              </label>
+            </div>
+            <div id="privacy-alert-appt" class="privacy-alert-box hidden">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5"
+                style="flex-shrink:0;margin-top:1px;">
+                <circle cx="12" cy="12" r="10" />
+                <line x1="12" y1="8" x2="12" y2="12" />
+                <line x1="12" y1="16" x2="12.01" y2="16" />
+              </svg>
+              <span><strong>Access Blocked:</strong> Under R.A. No. 10173 (Data Privacy Act), consent is mandatory to
+                process check-in. Because you selected "I Disagree", this form cannot proceed. Please approach the PACD
+                counter or security for assistance.</span>
+            </div>
+          </div>
+
+          <div id="lock-notice-appt" class="lock-notice-box">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+              <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+            </svg>
+            Select "I Agree" above to unlock and find your appointment.
+          </div>
+
+          <!-- Form Fields (Locked until 'I Agree' is selected) -->
+          <div id="appt-fields" class="form-fields-wrap locked">
+            <div
+              style="background:#eff6ff;border-radius:8px;padding:11px 14px;font-size:0.8rem;color:#1a56db;font-weight:600;display:flex;align-items:center;gap:8px;">
+              <svg class="icon icon-md" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
+                <rect x="8" y="2" width="8" height="4" rx="1" />
+              </svg>
+              Use your booking details to check in.
+            </div>
+            <div class="form-group">
+              <label class="form-label">Full Name <span style="color:#dc2626">*</span></label>
+              <input type="text" class="form-input" id="appt-name" placeholder="e.g., Juan dela Cruz"
+                onkeydown="if(event.key==='Enter') verifyAppointment()">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Phone Number <span
+                  style="color:#6b7280;font-weight:normal;">(Optional)</span></label>
+              <input type="tel" class="form-input" id="appt-phone" placeholder="e.g., 09171234567" inputmode="numeric"
+                onkeydown="if(event.key==='Enter') verifyAppointment()">
+            </div>
+            <button class="btn btn-primary btn-lg btn-full" onclick="verifyAppointment()" id="btn-appt">
+              <svg class="icon icon-md" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="11" cy="11" r="8" />
+                <line x1="21" y1="21" x2="16.65" y2="16.65" />
+              </svg>
+              Find My Appointment
+            </button>
+
+            <div id="appt-results" class="hidden">
+              <p class="text-sm font-bold" style="color:#1f2937;font-size:0.8rem;font-weight:600;margin-bottom:10px;">
+                Select your appointment:</p>
+              <div id="appt-matches" style="display:flex;flex-direction:column;gap:8px;"></div>
+            </div>
+            <div id="appt-notfound" class="hidden"
+              style="background:#fee2e2;border-radius:8px;padding:11px 14px;font-size:0.8rem;color:#991b1b;font-weight:600;display:flex;align-items:center;gap:8px;">
+              <svg class="icon icon-md" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10" />
+                <line x1="15" y1="9" x2="9" y2="15" />
+                <line x1="9" y1="9" x2="15" y2="15" />
+              </svg>
+              No appointment found. Please contact the branch.
+            </div>
+          </div>
+        </div>
+
+        <!-- Portal Appointment Form -->
+        <div class="kiosk-form hidden" id="form-portal">
+          <!-- Data Privacy Notice (Question 4 at the Top) -->
+          <div class="privacy-card" id="privacy-card-portal">
+            <div class="privacy-intro">When you submit this form, it will not automatically collect your details like
+              name and email address unless you provide it yourself.</div>
+            <div class="privacy-header-wrap">
+              <div class="privacy-header-title">4. Certification and Agreement on the Data Privacy Notice</div>
+              <div class="privacy-req-badge">* Required</div>
+            </div>
+            <div class="privacy-scroll-box">
+              <p>I authorize SSS to use and access my personal data and records submitted, which may be considered
+                sensitive, to process my E-center transaction, including verification from my source of such information
+                and for establishment, exercise or defense of SSS legal claims against me in case I commit
+                misrepresentation or fraud in the submission of this application.</p>
+              <p>I trust that SSS shall keep confidential and secure all the information using organizational, physical
+                and technical measures and procedures, pursuant to Sec. 24 (c), SS Act of 2018 (R.A. No. 11199) and the
+                Data Privacy Act of 2012 (R.A. No 10173). I was made aware that SSS will not divulge my personal data to
+                any person unless authorized by me or required through a subpoena issued by the courts.</p>
+              <p>However, SSS shall only share my data with other government agencies and with partner private companies
+                like banks, collecting agents, insurance companies or IT solutions contractors through a data sharing
+                agreement or as lawfully permitted under the applicable provision of R.A. No 10173, for the purpose of
+                delivering efficient and effective service and for the attainment of SSS legal mandate of providing
+                social security.</p>
+              <p>Nevertheless, SSS commits that all the forms used in collecting, my information shall be disposed of in
+                accordance with SSS Records Retention and Disposition Schedule to insure against unnecessary disclosure
+                of information.</p>
+              <p><strong>I certify that the information provided are true and correct and I understand that I shall be
+                  held liable under all circumstances for any information, misrepresentation and fraud in this
+                  application.</strong></p>
+            </div>
+            <div class="privacy-options">
+              <label class="privacy-opt-btn agree-btn" id="lbl-privacy-portal-agree">
+                <input type="radio" name="privacy-portal" value="agree" onchange="onPrivacyChange('portal', 'agree')">
+                <span>I Agree</span>
+              </label>
+              <label class="privacy-opt-btn disagree-btn" id="lbl-privacy-portal-disagree">
+                <input type="radio" name="privacy-portal" value="disagree"
+                  onchange="onPrivacyChange('portal', 'disagree')">
+                <span>I Disagree</span>
+              </label>
+            </div>
+            <div id="privacy-alert-portal" class="privacy-alert-box hidden">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5"
+                style="flex-shrink:0;margin-top:1px;">
+                <circle cx="12" cy="12" r="10" />
+                <line x1="12" y1="8" x2="12" y2="12" />
+                <line x1="12" y1="16" x2="12.01" y2="16" />
+              </svg>
+              <span><strong>Access Blocked:</strong> Under R.A. No. 10173 (Data Privacy Act), consent is mandatory to
+                process check-in. Because you selected "I Disagree", this form cannot proceed. Please approach the PACD
+                counter or security for assistance.</span>
+            </div>
+          </div>
+
+          <div id="lock-notice-portal" class="lock-notice-box">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+              <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+            </svg>
+            Select "I Agree" above to unlock and enter your portal details.
+          </div>
+
+          <!-- Form Fields (Locked until 'I Agree' is selected) -->
+          <div id="portal-fields" class="form-fields-wrap locked">
+            <div
+              style="background:#fef3c7;border-radius:8px;padding:11px 14px;font-size:0.8rem;color:#92400e;font-weight:600;display:flex;align-items:center;gap:8px;">
+              <svg class="icon icon-md" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10" />
+                <line x1="2" y1="12" x2="22" y2="12" />
+                <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+              </svg>
+              Enter your portal appointment details.
+            </div>
+            <div class="form-group">
+              <label class="form-label">Full Name <span style="color:#dc2626">*</span></label>
+              <input type="text" class="form-input" id="portal-name" placeholder="Enter your full name">
+            </div>
+            <div class="form-group">
+              <label class="form-label">SSS / CRN Number <span
+                  style="color:#64748b;font-weight:normal;">(Optional)</span></label>
+              <input type="text" class="form-input" id="portal-sss" placeholder="e.g., 33-1234567-8 or 0033-1234567-8">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Appointment Time <span style="color:#dc2626">*</span></label>
+              <input type="time" class="form-input" id="portal-time">
+            </div>
+            <button class="btn btn-primary btn-lg btn-full" onclick="submitPortal()" id="btn-portal">
+              <svg class="icon icon-md" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                stroke-linecap="round" stroke-linejoin="round">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                <polyline points="22 4 12 14.01 9 11.01" />
+              </svg>
+              Check In
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- SCREEN 3: DUPLICATE / ALREADY LOGGED -->
+      <div id="screen-duplicate" class="hidden">
+        <div class="error-screen">
+          <div class="error-icon">
+            <svg class="icon icon-3xl" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10" />
+              <line x1="4.93" y1="4.93" x2="19.07" y2="19.07" />
+            </svg>
+          </div>
+          <h2>Duplicate Queue Number</h2>
+          <p style="font-size:0.88rem;color:#b91c1c;font-weight:600;">This queue number has already been registered in
+            the system today.</p>
+          <p style="font-size:0.82rem;margin-top:-8px;">Please approach the guard or branch staff if you believe this is
+            an error.</p>
+          <div class="error-detail" id="duplicate-detail"></div>
+          <p class="error-countdown" id="dup-countdown">Returning to home in 10 seconds...</p>
+          <button class="btn btn-ghost btn-full" onclick="resetKiosk()">
+            <svg class="icon icon-md" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <line x1="19" y1="12" x2="5" y2="12" />
+              <polyline points="12 19 5 12 12 5" />
+            </svg>
+            Return to Home
+          </button>
+        </div>
+      </div>
+
+      <!-- SCREEN 2: SUCCESS -->
+      <div id="screen-success" class="hidden">
+        <div class="success-screen">
+          <div class="success-icon">
+            <svg class="icon icon-3xl" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+              stroke-linecap="round" stroke-linejoin="round">
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+              <polyline points="22 4 12 14.01 9 11.01" />
+            </svg>
+          </div>
+          <h2>Check-In Successful!</h2>
+          <p>You have been logged in. Please proceed to your counter.</p>
+          <div class="success-detail" id="success-detail"></div>
+          <button class="btn btn-ghost btn-full mt-2" onclick="resetKiosk()">
+            <svg class="icon icon-md" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <line x1="19" y1="12" x2="5" y2="12" />
+              <polyline points="12 19 5 12 12 5" />
+            </svg>
+            Back to Start
+          </button>
+        </div>
+      </div>
+
+  <!-- Friendly Invalid Queue Ticket Modal -->
+  <div class="modal-overlay hidden" id="modal-invalid-queue" style="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(7,30,74,0.65);backdrop-filter:blur(4px);z-index:9999;display:none;align-items:center;justify-content:center;padding:20px;">
+    <div class="modal-card" style="background:#ffffff;border-radius:18px;max-width:480px;width:100%;box-shadow:0 25px 50px -12px rgba(0,0,0,0.28);overflow:hidden;">
+      
+      <!-- Top Header Badge -->
+      <div style="background:#eff6ff;border-bottom:1.5px solid #bfdbfe;padding:22px 24px;text-align:center;">
+        <div style="width:54px;height:54px;border-radius:50%;background:#dbeafe;color:#1e40af;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;box-shadow:0 4px 12px rgba(30,64,175,0.15);">
+          <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2.3">
+            <circle cx="12" cy="12" r="10"/>
+            <line x1="12" y1="8" x2="12" y2="12"/>
+            <line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+        </div>
+        <h3 style="font-size:1.18rem;font-weight:800;color:#071e4a;margin:0 0 4px;">Pakisusi ang Numero sa Imong Ticket</h3>
+        <p style="font-size:0.84rem;color:#475569;margin:0;font-weight:600;">Please Check Your Printed Queue Ticket</p>
+      </div>
+
+      <div style="padding:22px 24px;">
+        <p style="font-size:0.9rem;color:#334155;line-height:1.5;margin-top:0;">
+          Ang numero nga imong gisulod (<strong id="invalid-qnum-display" style="color:#dc2626;background:#fee2e2;padding:2px 8px;border-radius:6px;font-size:0.95rem;font-weight:800;"></strong>) wala sa lista sa opisyal nga ticket series sa Toledo Branch karong adlawa.
+        </p>
+
+        <div style="background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:12px;padding:14px 16px;margin-bottom:16px;">
+          <div style="font-size:0.75rem;font-weight:800;letter-spacing:0.06em;color:#64748b;text-transform:uppercase;margin-bottom:10px;">
+            Opisyal nga Ticket Series sa SSS Toledo:
+          </div>
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;font-size:0.84rem;">
+              <span style="display:flex;align-items:center;gap:8px;font-weight:700;color:#0369a1;">
+                <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                PACD / Senior / PWD Assistance
+              </span>
+              <strong style="color:#0369a1;background:#e0f2fe;padding:3px 8px;border-radius:6px;font-weight:800;">000's</strong>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;font-size:0.84rem;">
+              <span style="display:flex;align-items:center;gap:8px;font-weight:700;color:#15803d;">
+                <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/></svg>
+                Main Service Counters (1 to 4 &amp; Side)
+              </span>
+              <strong style="color:#15803d;background:#dcfce7;padding:3px 8px;border-radius:6px;font-weight:800;">2000's &amp; 3000's</strong>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;font-size:0.84rem;">
+              <span style="display:flex;align-items:center;gap:8px;font-weight:700;color:#7c3aed;">
+                <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+                E-Center Web Online Services
+              </span>
+              <strong style="color:#7c3aed;background:#f3e8ff;padding:3px 8px;border-radius:6px;font-weight:800;">4000's</strong>
+            </div>
+          </div>
+        </div>
+
+        <p style="font-size:0.82rem;color:#64748b;line-height:1.45;margin:0 0 18px;">
+          💡 <em>Palihug tan-awa ang gi-print nga papel gikan sa guard. Kung kinahanglan nimo ug tabang, moduol sa PACD Counter.</em>
+        </p>
+
+        <button type="button" class="btn btn-primary btn-full" onclick="closeInvalidQueueModal()" style="background:#0038A8;padding:13px;font-weight:800;font-size:0.95rem;display:flex;align-items:center;justify-content:center;gap:8px;border-radius:10px;cursor:pointer;">
+          <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+          I-type Pag-usab / Re-enter Ticket Number
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <footer class="kiosk-footer">
+    <p>SSS Toledo Branch — Monitoring System v1.0</p>
+  </footer>
+
+  <div class="toast-container" id="toast-container"></div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const socket = io();
+    socket.emit('join:room', 'kiosk');
+
+    // ── Clock ──────────────────────────────────────────────────────────────
+    function updateClock() {
+      const now = new Date();
+      document.getElementById('kiosk-clock').textContent =
+        now.toLocaleTimeString('en-PH', { hour: '2-digit', minute: '2-digit', hour12: true });
+    }
+    updateClock();
+    setInterval(updateClock, 1000);
+
+    // ── Mode Selection ─────────────────────────────────────────────────────
+    let currentMode = 'walkin';
+    function selectMode(mode) {
+      currentMode = mode;
+      document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+      document.getElementById(`mode-${mode}`).classList.add('active');
+      document.querySelectorAll('[id^="form-"]').forEach(f => f.classList.add('hidden'));
+      document.getElementById(`form-${mode}`).classList.remove('hidden');
+      // Reset results
+      document.getElementById('appt-results')?.classList.add('hidden');
+      document.getElementById('appt-notfound')?.classList.add('hidden');
+    }
+    selectMode('walkin');
+
+    // ── Data Privacy Notice Handler ────────────────────────────────────────
+    function onPrivacyChange(mode, val) {
+      const agreeLbl = document.getElementById(`lbl-privacy-${mode}-agree`);
+      const disagreeLbl = document.getElementById(`lbl-privacy-${mode}-disagree`);
+      const alertEl = document.getElementById(`privacy-alert-${mode}`);
+      const fieldsWrap = document.getElementById(`${mode}-fields`);
+      const lockNotice = document.getElementById(`lock-notice-${mode}`);
+      const btn = document.getElementById(`btn-${mode}`);
+
+      if (val === 'agree') {
+        agreeLbl?.classList.add('selected-agree');
+        disagreeLbl?.classList.remove('selected-disagree');
+        alertEl?.classList.add('hidden');
+        fieldsWrap?.classList.remove('locked');
+        lockNotice?.classList.add('hidden');
+        if (btn) btn.disabled = false;
+      } else {
+        agreeLbl?.classList.remove('selected-agree');
+        disagreeLbl?.classList.add('selected-disagree');
+        alertEl?.classList.remove('hidden');
+        fieldsWrap?.classList.add('locked');
+        lockNotice?.classList.remove('hidden');
+        if (btn) btn.disabled = true;
+      }
+    }
+
+    // ── Walk-In Submit ─────────────────────────────────────────────────────
+    async function submitWalkIn() {
+      const privacyConsent = document.querySelector('input[name="privacy-walkin"]:checked')?.value;
+      if (!privacyConsent || privacyConsent !== 'agree') {
+        document.getElementById('privacy-alert-walkin')?.classList.remove('hidden');
+        showToast('You cannot proceed without selecting "I Agree" on the Data Privacy Notice.', 'error');
+        return;
+      }
+
+      const queue = document.getElementById('walkin-queue').value.trim();
+      const name = document.getElementById('walkin-name').value.trim();
+      const sss = document.getElementById('walkin-sss').value.trim();
+      const tx = document.getElementById('walkin-transaction').value;
+      const customerType = document.getElementById('walkin-customertype')?.value || null;
+      const sex = document.getElementById('walkin-sex')?.value || null;
+      const age = document.getElementById('walkin-age')?.value ? parseInt(document.getElementById('walkin-age').value) : null;
+
+      if (!queue || !name || !tx) { showToast('Please fill in all required fields.', 'error'); return; }
+
+      const qNum = parseInt(queue);
+      const isValidRange = (!isNaN(qNum) && (
+        (qNum >= 1 && qNum <= 99) ||
+        (qNum >= 2000 && qNum <= 3999) ||
+        (qNum >= 4000 && qNum <= 4999)
+      ));
+      if (!isValidRange) {
+        showInvalidQueueModal(queue);
+        return;
+      }
+
+      const btn = document.getElementById('btn-walkin');
+      btn.disabled = true; btn.textContent = 'Processing...';
+
+      try {
+        const res = await fetch('/api/members/checkin', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            queue_number: queue,
+            name,
+            sss_number: sss,
+            transaction_type: tx,
+            entry_type: 'walk-in',
+            customer_type: customerType,
+            sex: sex,
+            age: age,
+            dpa_consent: privacyConsent || 'agree'
+          })
+        });
+        const data = await res.json();
+        if (data.success) {
+          showSuccess(data.member);
+        } else if (data.error === 'duplicate') {
+          showDuplicate(queue, data.existing);
+        } else if (data.error && data.error.includes('Invalid queue ticket')) {
+          showInvalidQueueModal(queue);
+        } else {
+          showToast(data.error || 'An error occurred.', 'error');
+        }
+      } catch (e) {
+        showToast('Connection error. Please try again.', 'error');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<svg class="icon icon-md" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> Confirm &amp; Check In';
+      }
+    }
+
+    // ── Appointment Verify ─────────────────────────────────────────────────
+    async function verifyAppointment() {
+      const privacyConsent = document.querySelector('input[name="privacy-appt"]:checked')?.value;
+      if (!privacyConsent || privacyConsent !== 'agree') {
+        document.getElementById('privacy-alert-appt')?.classList.remove('hidden');
+        showToast('You cannot proceed without selecting "I Agree" on the Data Privacy Notice.', 'error');
+        return;
+      }
+
+      const name = document.getElementById('appt-name').value.trim();
+      const phone = document.getElementById('appt-phone').value.trim();
+      if (!name && !phone) { showToast('Please enter your name or phone number.', 'error'); return; }
+
+      try {
+        const res = await fetch('/api/appointments/verify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, phone })
+        });
+        const data = await res.json();
+        const resultsEl = document.getElementById('appt-results');
+        const matchesEl = document.getElementById('appt-matches');
+        const notFound = document.getElementById('appt-notfound');
+
+        if (data.found && data.appointments.length > 0) {
+          matchesEl.innerHTML = '';
+          data.appointments.forEach(appt => {
+            const div = document.createElement('div');
+            div.className = 'appt-match';
+            div.innerHTML = `<h4>${appt.name}</h4><p><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-1px;margin-right:2px;"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> ${appt.appointment_time} &nbsp;|&nbsp; <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-1px;margin-right:2px;"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg> ${appt.counter || "Assigned Counter"} &nbsp;|&nbsp; <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-1px;margin-right:2px;"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> ${appt.clerk_name || "Assigned Clerk"}</p>`;
+            div.onclick = () => confirmAppointmentCheckin(appt);
+            matchesEl.appendChild(div);
+          });
+          resultsEl.classList.remove('hidden');
+          notFound.classList.add('hidden');
+        } else {
+          resultsEl.classList.add('hidden');
+          notFound.classList.remove('hidden');
+        }
+      } catch (e) { showToast('Connection error. Please try again.', 'error'); }
+    }
+
+    async function confirmAppointmentCheckin(appt) {
+      const privacyConsent = document.querySelector('input[name="privacy-appt"]:checked')?.value;
+      if (!privacyConsent || privacyConsent !== 'agree') {
+        document.getElementById('privacy-alert-appt')?.classList.remove('hidden');
+        showToast('You cannot proceed without selecting "I Agree" on the Data Privacy Notice.', 'error');
+        return;
+      }
+
+      try {
+        // First create member record
+        const memberRes = await fetch('/api/members/checkin', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: appt.name, sss_number: null,
+            transaction_type: 'Direct Appointment', entry_type: 'direct-appointment',
+            queue_number: null
+          })
+        });
+        const memberData = await memberRes.json();
+        if (!memberData.success) { showToast('Error checking in. Please try again.', 'error'); return; }
+
+        // Mark appointment as arrived
+        await fetch(`/api/appointments/${appt.id}/arrived`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ member_id: memberData.member.id })
+        });
+
+        showSuccess({ ...memberData.member, clerk_name: appt.clerk_name, counter: appt.counter, appointment_time: appt.appointment_time });
+      } catch (e) { showToast('Connection error. Please try again.', 'error'); }
+    }
+
+    // ── Portal Submit ──────────────────────────────────────────────────────
+    async function submitPortal() {
+      const privacyConsent = document.querySelector('input[name="privacy-portal"]:checked')?.value;
+      if (!privacyConsent || privacyConsent !== 'agree') {
+        document.getElementById('privacy-alert-portal')?.classList.remove('hidden');
+        showToast('You cannot proceed without selecting "I Agree" on the Data Privacy Notice.', 'error');
+        return;
+      }
+
+      const name = document.getElementById('portal-name').value.trim();
+      const sss = document.getElementById('portal-sss').value.trim();
+      const time = document.getElementById('portal-time').value;
+      if (!name || !time) { showToast('Please fill in all required fields.', 'error'); return; }
+
+      try {
+        const res = await fetch('/api/appointments/portal/checkin', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, sss_number: sss, appointment_time: time })
+        });
+        const data = await res.json();
+        if (data.success) showSuccess({ ...data.member, routed_to: 'Portal / Side Counter', appointment_time: time });
+        else showToast(data.error || 'An error occurred.', 'error');
+      } catch (e) { showToast('Connection error. Please try again.', 'error'); }
+    }
+
+    // ── Show Success Screen ────────────────────────────────────────────────
+    function showSuccess(member) {
+      const routeLabels = {
+        'pacd': 'PACD',
+        'counter-pool': 'Main Counters (1–4 / Side)',
+        'ecenter': 'E-Center',
+        'portal-pool': 'Side Counter / All Counters'
+      };
+      const dest = routeLabels[member.routed_to] || member.routed_to || 'Your Assigned Counter';
+
+      document.getElementById('success-detail').innerHTML = `
+        <div class="success-detail-row"><span>Name</span><span>${member.name}</span></div>
+        ${member.queue_number ? `<div class="success-detail-row"><span>Queue Number</span><span>${member.queue_number}</span></div>` : ''}
+        ${member.transaction_type ? `<div class="success-detail-row"><span>Transaction</span><span>${member.transaction_type}</span></div>` : ''}
+        <div class="success-detail-row"><span>Routed To</span><span style="color:var(--accent);font-weight:700;">${dest}</span></div>
+        ${member.appointment_time ? `<div class="success-detail-row"><span>Appointment Time</span><span>${member.appointment_time}</span></div>` : ''}
+        ${member.clerk_name ? `<div class="success-detail-row"><span>Assigned Clerk</span><span>${member.clerk_name}</span></div>` : ''}
+      `;
+      document.getElementById('screen-mode').classList.add('hidden');
+      document.getElementById('screen-success').classList.remove('hidden');
+      // Auto-reset after 15 seconds
+      setTimeout(resetKiosk, 15000);
+    }
+
+    function resetKiosk() {
+      document.getElementById('screen-success').classList.add('hidden');
+      document.getElementById('screen-duplicate').classList.add('hidden');
+      document.getElementById('screen-mode').classList.remove('hidden');
+      // Clear all inputs
+      document.querySelectorAll('.form-input, .form-select').forEach(i => i.value = '');
+      document.getElementById('appt-results')?.classList.add('hidden');
+      document.getElementById('appt-notfound')?.classList.add('hidden');
+
+      // Clear privacy selections, lock form fields & restore lock notice
+      document.querySelectorAll('input[type="radio"][name^="privacy-"]').forEach(r => r.checked = false);
+      document.querySelectorAll('.privacy-opt-btn').forEach(b => {
+        b.classList.remove('selected-agree', 'selected-disagree');
+      });
+      document.querySelectorAll('.privacy-alert-box').forEach(a => a.classList.add('hidden'));
+      document.querySelectorAll('.form-fields-wrap').forEach(w => w.classList.add('locked'));
+      document.querySelectorAll('.lock-notice-box').forEach(n => n.classList.remove('hidden'));
+
+      selectMode('walkin');
+    }
+
+    // ── Duplicate Screen ───────────────────────────────────────────────────
+    let dupTimer = null;
+    function showDuplicate(queueNumber, existing) {
+      const statusLabels = {
+        'waiting': 'Waiting in Queue',
+        'being-served': 'Currently Being Served',
+        'on-hold': 'On Hold (For Verification)',
+        'done': 'Transaction Completed'
+      };
+      document.getElementById('duplicate-detail').innerHTML = `
+        <div class="error-detail-row"><span>Queue Number</span><span>${queueNumber}</span></div>
+        <div class="error-detail-row"><span>Logged Under</span><span>${existing?.name || '—'}</span></div>
+        <div class="error-detail-row"><span>Current Status</span><span>${statusLabels[existing?.status] || existing?.status || '—'}</span></div>
+      `;
+      document.getElementById('screen-mode').classList.add('hidden');
+      document.getElementById('screen-duplicate').classList.remove('hidden');
+
+      // Auto-reset countdown
+      let secs = 10;
+      if (dupTimer) clearInterval(dupTimer);
+      document.getElementById('dup-countdown').textContent = `Returning to home in ${secs} seconds...`;
+      dupTimer = setInterval(() => {
+        secs--;
+        document.getElementById('dup-countdown').textContent = `Returning to home in ${secs} seconds...`;
+        if (secs <= 0) { clearInterval(dupTimer); resetKiosk(); }
+      }, 1000);
+    }
+
+    // ── Invalid Queue Series Modal Handler ─────────────────────────────────
+    function showInvalidQueueModal(queueNum) {
+      document.getElementById('invalid-qnum-display').textContent = queueNum || '—';
+      const modal = document.getElementById('modal-invalid-queue');
+      modal.classList.remove('hidden');
+      modal.style.display = 'flex';
+    }
+
+    function closeInvalidQueueModal() {
+      const modal = document.getElementById('modal-invalid-queue');
+      modal.classList.add('hidden');
+      modal.style.display = 'none';
+      const input = document.getElementById('walkin-queue');
+      if (input) {
+        input.focus();
+        input.select();
+      }
+    }
+
+    // ── Toast ──────────────────────────────────────────────────────────────
+    function showToast(msg, type = 'info') {
+      const c = document.getElementById('toast-container');
+      const t = document.createElement('div');
+      t.className = `toast ${type}`;
+      t.textContent = msg;
+      c.appendChild(t);
+      setTimeout(() => { t.style.animation = 'fadeOut 0.3s ease forwards'; setTimeout(() => t.remove(), 300); }, 3500);
+    }
+  </script>
+</body>
+
+</html>

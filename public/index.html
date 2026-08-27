@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SSS Toledo — Service & Queue Monitoring System</title>
+  <link rel="stylesheet" href="/assets/css/styles.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=IBM+Plex+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --sss-navy: #071E4A;
+      --sss-blue: #0A3871;
+      --sss-accent: #0056B3;
+      --sss-gold: #FCD34D;
+      --sss-gold-dark: #D97706;
+      --bg-page: #F0F4F8;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg-page);
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      color: #1E293B;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── Topbar ── */
+    .topbar {
+      background: var(--sss-navy);
+      color: #fff;
+      padding: 0 28px;
+      height: 68px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 3px solid var(--sss-gold);
+      box-shadow: 0 4px 20px rgba(7, 30, 74, 0.18);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .topbar-brand {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .topbar-logo {
+      width: 42px;
+      height: 42px;
+      background: #fff;
+      border-radius: 10px;
+      padding: 3px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .topbar-logo img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
+    .topbar-gov-republic {
+      font-size: 0.62rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      color: #94A3B8;
+      text-transform: uppercase;
+      line-height: 1.1;
+    }
+
+    .topbar-title {
+      font-size: 1rem;
+      font-weight: 800;
+      letter-spacing: 0.02em;
+      color: #FFFFFF;
+      line-height: 1.2;
+    }
+
+    .topbar-subtitle {
+      font-size: 0.72rem;
+      color: #CBD5E1;
+      font-weight: 500;
+    }
+
+    .topbar-right {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .topbar-clock {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: #F8FAFC;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 6px 14px;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      letter-spacing: 0.04em;
+    }
+
+    .badge-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: #059669;
+      color: #fff;
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 5px 12px;
+      border-radius: 999px;
+      box-shadow: 0 2px 6px rgba(5, 150, 105, 0.3);
+    }
+
+    /* ── Hero Section ── */
+    .hero-wrap {
+      background: linear-gradient(135deg, #071E4A 0%, #0A3871 50%, #0056B3 100%);
+      color: #fff;
+      padding: 42px 24px 48px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    }
+
+    .hero-wrap::after {
+      content: '';
+      position: absolute;
+      top: -50%;
+      right: -10%;
+      width: 500px;
+      height: 500px;
+      background: radial-gradient(circle, rgba(252, 211, 77, 0.12) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .hero-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 28px;
+      flex-wrap: wrap;
+      position: relative;
+      z-index: 1;
+    }
+
+    .hero-text h1 {
+      font-size: 1.85rem;
+      font-weight: 900;
+      letter-spacing: -0.02em;
+      line-height: 1.2;
+      color: #FFFFFF;
+    }
+
+    .hero-text p {
+      font-size: 0.95rem;
+      color: #E2E8F0;
+      margin-top: 8px;
+      max-width: 620px;
+      line-height: 1.5;
+    }
+
+    .hero-branch-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(252, 211, 77, 0.15);
+      border: 1px solid rgba(252, 211, 77, 0.4);
+      color: #FDE68A;
+      padding: 4px 12px;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      margin-bottom: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .hero-stats {
+      display: flex;
+      gap: 16px;
+      background: rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      border-radius: 16px;
+      padding: 16px 20px;
+    }
+
+    .stat-box {
+      text-align: center;
+      padding: 0 12px;
+    }
+    .stat-box:not(:last-child) {
+      border-right: 1px solid rgba(255, 255, 255, 0.15);
+    }
+    .stat-val {
+      font-size: 1.6rem;
+      font-weight: 800;
+      color: #FCD34D;
+      font-family: 'IBM Plex Mono', monospace;
+    }
+    .stat-lbl {
+      font-size: 0.68rem;
+      font-weight: 600;
+      color: #CBD5E1;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-top: 2px;
+    }
+
+    /* ── Main Portals Grid ── */
+    .main-wrap {
+      flex: 1;
+      max-width: 1200px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 36px 24px 48px;
+    }
+
+    .section-eyebrow {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 24px;
+    }
+
+    .section-title {
+      font-size: 1.15rem;
+      font-weight: 800;
+      color: #0F172A;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .section-title svg {
+      color: #0056B3;
+    }
+
+    .portals-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 22px;
+    }
+
+    /* ── Portal Card ── */
+    .portal-card {
+      background: #FFFFFF;
+      border-radius: 16px;
+      border: 1px solid #E2E8F0;
+      box-shadow: 0 4px 14px rgba(15, 23, 42, 0.04);
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      text-decoration: none;
+      color: inherit;
+      position: relative;
+      overflow: hidden;
+      transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .portal-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 14px 30px rgba(7, 30, 74, 0.12);
+      border-color: #93C5FD;
+    }
+
+    .portal-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: var(--card-color, #0056B3);
+      transition: height 0.2s;
+    }
+
+    .portal-card:hover::before {
+      height: 6px;
+    }
+
+    .card-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+
+    .card-icon-wrap {
+      width: 52px;
+      height: 52px;
+      border-radius: 14px;
+      background: var(--card-bg, #EFF6FF);
+      color: var(--card-color, #0056B3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      border: 1px solid var(--card-border, #BFDBFE);
+    }
+
+    .card-badge {
+      font-size: 0.7rem;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: var(--card-bg, #EFF6FF);
+      color: var(--card-color, #0056B3);
+      border: 1px solid var(--card-border, #BFDBFE);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .card-title {
+      font-size: 1.15rem;
+      font-weight: 800;
+      color: #0F172A;
+      margin-bottom: 6px;
+      line-height: 1.3;
+    }
+
+    .card-desc {
+      font-size: 0.85rem;
+      color: #64748B;
+      line-height: 1.5;
+      margin-bottom: 20px;
+      flex: 1;
+    }
+
+    .card-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-top: 14px;
+      border-top: 1px solid #F1F5F9;
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: var(--card-color, #0056B3);
+    }
+
+    .card-btn-text {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: gap 0.2s;
+    }
+
+    .portal-card:hover .card-btn-text {
+      gap: 10px;
+    }
+
+    /* ── Footer ── */
+    .footer {
+      background: #FFFFFF;
+      border-top: 1px solid #E2E8F0;
+      padding: 20px 24px;
+      text-align: center;
+      font-size: 0.78rem;
+      color: #64748B;
+      margin-top: auto;
+    }
+
+    .footer-links {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+      margin-top: 6px;
+      font-weight: 600;
+    }
+
+    .footer-links a {
+      color: #0056B3;
+      text-decoration: none;
+    }
+    .footer-links a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ── Topbar ── -->
+  <header class="topbar">
+    <div class="topbar-brand">
+      <div class="topbar-logo">
+        <img src="/assets/logo.png" alt="SSS Logo">
+      </div>
+      <div>
+        <div class="topbar-gov-republic">REPUBLIC OF THE PHILIPPINES</div>
+        <div class="topbar-title">SOCIAL SECURITY SYSTEM</div>
+        <div class="topbar-subtitle">Toledo Branch • <span style="color:#FCD34D;font-weight:700;">Service Portal Hub</span></div>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <div class="topbar-clock" id="live-clock">--:-- --</div>
+      <span class="badge-status">
+        <span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#fff;animation:pulse 2s infinite;"></span>
+        Branch Online
+      </span>
+    </div>
+  </header>
+
+  <!-- ── Hero Banner ── -->
+  <section class="hero-wrap">
+    <div class="hero-container">
+      <div class="hero-text">
+        <div class="hero-branch-pill">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:4px;"><path d="M3 21h18"/><path d="M3 10h18"/><path d="M5 10v11"/><path d="M19 10v11"/><path d="M9 10v11"/><path d="M15 10v11"/><path d="M12 2L2 7h20L12 2z"/></svg>Branch Monitoring &amp; Queue Management
+        </div>
+        <h1>SSS Toledo Service Portal Hub</h1>
+        <p>
+          Welcome to the unified terminal gateway. Select your assigned station below to launch the self-service kiosk, counter service queue, PACD helpdesk, E-Center, or administrative live monitoring.
+        </p>
+      </div>
+
+      <div class="hero-stats">
+        <div class="stat-box">
+          <div class="stat-val" id="stat-checkins">0</div>
+          <div class="stat-lbl">Check-Ins Today</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-val" id="stat-served">0</div>
+          <div class="stat-lbl">Served Today</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-val" id="stat-waiting" style="color:#6EE7B7;">0</div>
+          <div class="stat-lbl">Currently Waiting</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Main Portals Section ── -->
+  <main class="main-wrap">
+    <div class="section-eyebrow">
+      <div class="section-title">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="3" width="7" height="7"></rect>
+          <rect x="14" y="3" width="7" height="7"></rect>
+          <rect x="14" y="14" width="7" height="7"></rect>
+          <rect x="3" y="14" width="7" height="7"></rect>
+        </svg>
+        Branch Terminal Gateway
+      </div>
+      <span style="font-size:0.8rem;color:#64748B;font-weight:600;">5 Dedicated Stations</span>
+    </div>
+
+    <div class="portals-grid">
+
+      <!-- 1. Kiosk Portal -->
+      <a href="/kiosk" class="portal-card" style="--card-color:#16A34A; --card-bg:#F0FDF4; --card-border:#BBF7D0;">
+        <div class="card-top">
+          <div class="card-icon-wrap">
+            <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+          </div>
+          <span class="card-badge">Public Kiosk</span>
+        </div>
+        <h3 class="card-title">Member E-Logbook Kiosk</h3>
+        <p class="card-desc">
+          Self-service check-in kiosk for arriving members. Supports Priority lanes, standard walk-ins, and automated BAS appointment QR/Name verification.
+        </p>
+        <div class="card-footer">
+          <span style="font-size:0.75rem;color:#64748B;font-weight:500;">Series: 1000, 2000, 3000, Appts</span>
+          <span class="card-btn-text">
+            Launch Kiosk
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+          </span>
+        </div>
+      </a>
+
+      <!-- 2. Clerk Counter Portal -->
+      <a href="/clerk" class="portal-card" style="--card-color:#0056B3; --card-bg:#EFF6FF; --card-border:#BFDBFE;">
+        <div class="card-top">
+          <div class="card-icon-wrap">
+            <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          </div>
+          <span class="card-badge">Staff Desk</span>
+        </div>
+        <h3 class="card-title">Counter Officer Portal</h3>
+        <p class="card-desc">
+          Dedicated desk dashboard for Main Counters 1–4 and Side Counter. Serves walk-ins, calls appointments, logs durations, on-hold returning members, and daily service logs.
+        </p>
+        <div class="card-footer">
+          <span style="font-size:0.75rem;color:#64748B;font-weight:500;">Counters 1–4 &amp; Side Counter</span>
+          <span class="card-btn-text">
+            Open Counter
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+          </span>
+        </div>
+      </a>
+
+      <!-- 3. PACD Portal -->
+      <a href="/pacd" class="portal-card" style="--card-color:#D97706; --card-bg:#FFFBEB; --card-border:#FDE68A;">
+        <div class="card-top">
+          <div class="card-icon-wrap">
+            <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="1"/><path d="M9 21V9h6v12"/><path d="M3 9h18"/></svg>
+          </div>
+          <span class="card-badge">Helpdesk</span>
+        </div>
+        <h3 class="card-title">Public Assistance &amp; Complaints (PACD)</h3>
+        <p class="card-desc">
+          Front-line service desk for general member inquiries, verification, preliminary triage, member re-routing, and departmental referral printing.
+        </p>
+        <div class="card-footer">
+          <span style="font-size:0.75rem;color:#64748B;font-weight:500;">Series 001–999</span>
+          <span class="card-btn-text">
+            Open PACD
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+          </span>
+        </div>
+      </a>
+
+      <!-- 4. E-Center Portal -->
+      <a href="/ecenter" class="portal-card" style="--card-color:#7C3AED; --card-bg:#F5F3FF; --card-border:#DDD6FE;">
+        <div class="card-top">
+          <div class="card-icon-wrap">
+            <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+          </div>
+          <span class="card-badge">Digital Hub</span>
+        </div>
+        <h3 class="card-title">E-Center &amp; Online Assistance</h3>
+        <p class="card-desc">
+          Online services station for My.SSS portal registration, password resets, and online submissions. Features 1-click login for OJT student assistants.
+        </p>
+        <div class="card-footer">
+          <span style="font-size:0.75rem;color:#64748B;font-weight:500;">Series 4000 (OJT &amp; Staff)</span>
+          <span class="card-btn-text">
+            Open E-Center
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+          </span>
+        </div>
+      </a>
+
+      <!-- 5. Citizen Rating Tablet -->
+      <a href="/rate" class="portal-card" style="--card-color:#D97706; --card-bg:#FFFBEB; --card-border:#FDE68A;">
+        <div class="card-top">
+          <div class="card-icon-wrap" style="background:#FEF3C7;color:#B45309;border-color:#FCD34D;">
+            <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          </div>
+          <span class="card-badge" style="background:#FEF3C7;color:#B45309;border-color:#FCD34D;">Citizen Facing</span>
+        </div>
+        <h3 class="card-title">Citizen CSAT &amp; ARTA Survey Tablet</h3>
+        <p class="card-desc">
+          Customer-facing rating tablet at counters. Automatically displays 4-emoji CSAT, 1-10 NPS scale, root-cause tags, and DPA compliance when a clerk finishes serving.
+        </p>
+        <div class="card-footer">
+          <span style="font-size:0.75rem;color:#64748B;font-weight:500;">Counters 1–4, Side, PACD, E-Center</span>
+          <span class="card-btn-text">
+            Launch Tablet View
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+          </span>
+        </div>
+      </a>
+
+      <!-- 6. Admin Panel -->
+      <a href="/admin" class="portal-card" style="--card-color:#0F172A; --card-bg:#F8FAFC; --card-border:#CBD5E1;">
+        <div class="card-top">
+          <div class="card-icon-wrap">
+            <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+          </div>
+          <span class="card-badge" style="background:#0F172A;color:#fff;border-color:#0F172A;">Admin Access</span>
+        </div>
+        <h3 class="card-title">Branch Management &amp; Analytics</h3>
+        <p class="card-desc">
+          Executive monitoring dashboard with live queue visualization, ARTA CSM metrics, staff leaderboard, hourly arrival heatmaps, and Excel report exports.
+        </p>
+        <div class="card-footer">
+          <span style="font-size:0.75rem;color:#64748B;font-weight:500;">Live Web Dashboard &amp; Reports</span>
+          <span class="card-btn-text">
+            Open Admin Panel
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+          </span>
+        </div>
+      </a>
+
+    </div>
+  </main>
+
+  <!-- ── Footer ── -->
+  <footer class="footer">
+    <div><strong>Social Security System — Toledo Branch</strong> • E-Logbook &amp; Queue Management System</div>
+    <div class="footer-links">
+      <a href="/kiosk">Kiosk</a> •
+      <a href="/clerk">Clerk Counter</a> •
+      <a href="/pacd">PACD</a> •
+      <a href="/ecenter">E-Center</a> •
+      <a href="/admin">Admin Dashboard</a>
+    </div>
+  </footer>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    // Live Clock
+    function updateClock() {
+      const now = new Date();
+      document.getElementById('live-clock').textContent = now.toLocaleTimeString('en-PH', {
+        hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true
+      });
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
+
+    // Live Stats Fetcher
+    async function loadStats() {
+      try {
+        const [repRes, memRes] = await Promise.all([
+          fetch('/api/reports/daily'),
+          fetch('/api/members')
+        ]);
+        const repData = await repRes.json();
+        const memData = await memRes.json();
+        
+        const checkins = Array.isArray(memData) ? memData.length : 0;
+        const waiting = Array.isArray(memData) ? memData.filter(m => m.status === 'waiting').length : 0;
+        const served = (repData && repData.summary && repData.summary.total_served) || 0;
+
+        document.getElementById('stat-checkins').textContent = checkins;
+        document.getElementById('stat-served').textContent = served;
+        document.getElementById('stat-waiting').textContent = waiting;
+      } catch (e) {
+        console.error('Failed to fetch stats:', e);
+      }
+    }
+    loadStats();
+
+    // Socket.io Real-time Refresh
+    const socket = io();
+    socket.on('member:checkin', () => loadStats());
+    socket.on('member:claimed', () => loadStats());
+    socket.on('member:concluded', () => loadStats());
+  </script>
+</body>
+</html>

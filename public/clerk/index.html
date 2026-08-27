@@ -1,0 +1,2345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SSS Toledo — Clerk Dashboard</title>
+  <link rel="stylesheet" href="/assets/css/styles.css">
+  <style>
+    body { background: var(--bg); display: flex; flex-direction: column; min-height: 100vh; }
+
+    /* ── Login Screen ── */
+    .login-screen {
+      flex: 1; display: flex; align-items: center; justify-content: center;
+      min-height: 100vh; padding: 20px;
+      background: linear-gradient(145deg, #0f172a 0%, #1e3a8a 60%, #1a56db 100%);
+    }
+    .login-card {
+      background: #fff; border-radius: 16px; padding: 48px 44px;
+      width: 100%; max-width: 440px;
+      box-shadow: 0 24px 64px rgba(0,0,0,0.35);
+    }
+    .login-brand {
+      display: flex; align-items: center; gap: 14px; margin-bottom: 32px;
+    }
+    .login-logo {
+      width: 52px; height: 52px; border-radius: 10px;
+      background: #fff; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+    }
+    .login-brand-text .brand-title   { font-size: 1rem; font-weight: 800; color: #111827; line-height: 1.2; }
+    .login-brand-text .brand-sub     { font-size: 0.75rem; color: #6b7280; margin-top: 1px; }
+    .login-divider { height: 1px; background: #e5e7eb; margin-bottom: 28px; }
+    .login-heading { font-size: 1.4rem; font-weight: 800; color: #111827; margin-bottom: 4px; }
+    .login-sub     { font-size: 0.85rem; color: #6b7280; margin-bottom: 28px; }
+
+    /* Form fields */
+    .login-field { margin-bottom: 18px; position: relative; }
+    .login-label {
+      display: block; font-size: 0.78rem; font-weight: 700; color: #374151;
+      margin-bottom: 6px; letter-spacing: 0.02em;
+    }
+    .login-input {
+      width: 100%; padding: 11px 14px; border: 1.5px solid #d1d5db;
+      border-radius: 8px; font-size: 0.95rem; font-family: inherit;
+      color: #111827; background: #fff; outline: none; box-sizing: border-box;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .login-input:focus {
+      border-color: #1a56db; box-shadow: 0 0 0 3px rgba(26,86,219,0.12);
+    }
+    .login-input::placeholder { color: #9ca3af; }
+    /* Password wrapper */
+    .pw-wrap { position: relative; }
+    .pw-wrap .login-input { padding-right: 44px; }
+    .pw-toggle {
+      position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+      background: none; border: none; cursor: pointer; color: #9ca3af;
+      padding: 4px; display: flex; align-items: center;
+      transition: color 0.15s;
+    }
+    .pw-toggle:hover { color: #1a56db; }
+
+    /* Autocomplete dropdown */
+    .ac-dropdown {
+      position: absolute; top: 100%; left: 0; right: 0; z-index: 200;
+      background: #fff; border: 1.5px solid #d1d5db; border-top: none;
+      border-radius: 0 0 8px 8px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+      max-height: 220px; overflow-y: auto; display: none;
+    }
+    .ac-option {
+      display: flex; align-items: center; gap: 12px;
+      padding: 10px 14px; cursor: pointer; transition: background 0.1s;
+    }
+    .ac-option:hover, .ac-option.ac-active { background: #eff6ff; }
+    .ac-avatar {
+      width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0;
+      background: #dbeafe; color: #1a56db;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 0.75rem;
+    }
+    .ac-option:hover .ac-avatar, .ac-option.ac-active .ac-avatar {
+      background: #1a56db; color: #fff;
+    }
+    .ac-name    { font-size: 0.88rem; font-weight: 600; color: #111827; }
+    .ac-counter { font-size: 0.74rem; color: #6b7280; }
+
+    /* Sign In button */
+    .login-btn {
+      width: 100%; padding: 12px; border: none; border-radius: 8px;
+      background: #1a56db; color: #fff; font-size: 0.95rem; font-weight: 700;
+      font-family: inherit; cursor: pointer; transition: background 0.15s, transform 0.1s;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      margin-top: 8px;
+    }
+    .login-btn:hover { background: #1447c0; }
+    .login-btn:active { transform: scale(0.98); }
+    .login-btn:disabled { background: #93c5fd; cursor: not-allowed; transform: none; }
+    .login-error-box {
+      background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px;
+      padding: 10px 14px; color: #991b1b; font-size: 0.82rem; font-weight: 600;
+      margin-top: 14px; display: none;
+    }
+
+
+    /* ── Dashboard Layout ── */
+    .dashboard { flex: 1; display: flex; flex-direction: column; }
+    .dashboard-body {
+      display: grid; grid-template-columns: 1fr 360px;
+      gap: 0; flex: 1; height: calc(100vh - 60px); overflow: hidden;
+    }
+    .queue-panel { padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 16px; }
+    .action-panel {
+      background: #fff; border-left: 1px solid #e5e7eb;
+      padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 16px;
+    }
+
+    /* ── Active Member Panel ── */
+    .active-member {
+      background: #1a56db;
+      border-radius: 12px; padding: 18px; color: #fff;
+    }
+    .active-member-label { font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; opacity: 0.85; }
+    .active-member-name  { font-size: 1.2rem; font-weight: 700; margin: 6px 0; }
+    .active-member-sss   { font-size: 0.8rem; opacity: 0.85; font-family: monospace; }
+    .active-member-meta  { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+    .active-chip { background: rgba(255,255,255,0.2); padding: 3px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: 600; }
+    .timer { font-size: 1.1rem; font-weight: 700; margin-top: 12px; font-variant-numeric: tabular-nums; }
+
+    /* ── Member List ── */
+    .member-list { display: flex; flex-direction: column; gap: 8px; }
+
+    /* ── Action Panel Sections ── */
+    .action-section { display: flex; flex-direction: column; gap: 10px; }
+    .action-title { font-size: 0.75rem; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em; padding-bottom: 6px; border-bottom: 1px solid #e5e7eb; }
+
+    /* ── Walk-Up Modal ── */
+    .reroute-select {
+      width: 100%; padding: 10px 12px; border: 1px solid #d1d5db;
+      border-radius: 8px; font-family: inherit; font-size: 0.9rem;
+    }
+
+    @media (max-width: 900px) {
+      .dashboard-body { grid-template-columns: 1fr; }
+      .action-panel { border-left: none; border-top: 1px solid #e5e7eb; }
+    }
+
+    /* ── Service Log Overlay ── */
+    .log-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.3);
+      z-index: 1000; display: flex; justify-content: flex-end;
+      opacity: 0; pointer-events: none; transition: opacity 0.2s;
+    }
+    .log-overlay.open { opacity: 1; pointer-events: all; }
+    .log-panel {
+      width: min(780px, 100vw); height: 100vh; background: #fff;
+      display: flex; flex-direction: column;
+      transform: translateX(100%); transition: transform 0.25s;
+      box-shadow: -4px 0 12px rgba(0,0,0,0.1);
+    }
+    .log-overlay.open .log-panel { transform: translateX(0); }
+    .log-header {
+      padding: 16px 20px; border-bottom: 1px solid #e5e7eb;
+      display: flex; align-items: center; justify-content: space-between;
+      background: #f9fafb; flex-shrink: 0;
+    }
+    .log-header h2 { font-size: 1rem; font-weight: 700; color: #1f2937; }
+    .log-header p  { font-size: 0.75rem; color: #6b7280; margin-top: 2px; }
+    .log-summary {
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;
+      padding: 12px 16px; background: #f9fafb; border-bottom: 1px solid #e5e7eb;
+      flex-shrink: 0;
+    }
+    .log-stat { background: #fff; border-radius: 8px; padding: 10px 12px; text-align: center; border: 1px solid #e5e7eb; }
+    .log-stat .val { font-size: 1.2rem; font-weight: 700; color: #1a56db; }
+    .log-stat .lbl { font-size: 0.65rem; color: #6b7280; font-weight: 600; text-transform: uppercase; }
+    .log-body { flex: 1; overflow-y: auto; padding: 12px 16px; }
+    .log-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+    .log-table th {
+      text-align: left; padding: 8px 10px; font-size: 0.7rem;
+      font-weight: 600; text-transform: uppercase; color: #6b7280;
+      border-bottom: 1px solid #e5e7eb; white-space: nowrap;
+    }
+    .log-table td { padding: 10px; border-bottom: 1px solid #e5e7eb; vertical-align: top; }
+    .log-table tr:last-child td { border-bottom: none; }
+    .log-table tr:hover td { background: #f9fafb; }
+    .log-footer {
+      padding: 12px 16px; border-top: 1px solid #e5e7eb;
+      display: flex; gap: 10px; justify-content: flex-end; flex-shrink: 0;
+    }
+
+    /* Print styles */
+    @media print {
+      body > *:not(#log-print-area) { display: none !important; }
+      #log-print-area {
+        display: block !important; position: fixed; inset: 0;
+        background: #fff; padding: 32px; font-family: Arial, sans-serif; font-size: 11pt;
+      }
+      .no-print { display: none !important; }
+    }
+    #log-print-area { display: none; }
+
+    /* ── Profile Panel ── */
+    .profile-overlay {
+      position: fixed; inset: 0; z-index: 9000;
+      display: flex; justify-content: flex-end;
+      background: rgba(0,0,0,0); pointer-events: none;
+      transition: background 0.25s;
+    }
+    .profile-overlay.open { background: rgba(0,0,0,0.45); pointer-events: all; }
+    .profile-panel {
+      width: min(460px, 100vw); height: 100vh; background: #fff;
+      display: flex; flex-direction: column; overflow: hidden;
+      transform: translateX(100%); transition: transform 0.28s cubic-bezier(0.4,0,0.2,1);
+      box-shadow: -6px 0 24px rgba(0,0,0,0.14);
+    }
+    .profile-overlay.open .profile-panel { transform: translateX(0); }
+    .profile-hero {
+      background: linear-gradient(135deg, #1e40af, #1a56db);
+      padding: 28px 24px 22px; color: #fff; flex-shrink: 0;
+    }
+    .profile-avatar {
+      width: 68px; height: 68px; border-radius: 50%;
+      background: rgba(255,255,255,0.22); border: 3px solid rgba(255,255,255,0.4);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.6rem; font-weight: 900; margin-bottom: 12px;
+      letter-spacing: -1px;
+    }
+    .profile-name { font-size: 1.3rem; font-weight: 800; }
+    .profile-counter {
+      display: inline-flex; align-items: center; gap: 5px;
+      font-size: 0.8rem; opacity: 0.8; margin-top: 4px;
+    }
+    .profile-body { flex: 1; overflow-y: auto; padding: 0; }
+    .profile-section {
+      padding: 18px 20px;
+      border-bottom: 1px solid #f1f5f9;
+    }
+    .profile-section-title {
+      font-size: 0.68rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.06em; color: #94a3b8; margin-bottom: 12px;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .profile-stats-grid {
+      display: grid; grid-template-columns: repeat(3,1fr); gap: 8px;
+    }
+    .profile-stat {
+      background: #f8fafc; border-radius: 10px; padding: 12px 8px;
+      text-align: center; border: 1px solid #e2e8f0;
+    }
+    .profile-stat .ps-val { font-size: 1.4rem; font-weight: 900; color: #1e40af; }
+    .profile-stat .ps-lbl { font-size: 0.62rem; font-weight: 700; color: #64748b; text-transform: uppercase; margin-top: 2px; }
+    .rating-row { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+    .rating-bar-wrap { flex: 1; background: #f1f5f9; border-radius: 999px; height: 7px; overflow: hidden; }
+    .rating-bar { height: 100%; border-radius: 999px; }
+    .rating-label { width: 52px; font-size: 0.72rem; font-weight: 600; }
+    .rating-count { width: 22px; text-align: right; font-size: 0.78rem; font-weight: 700; color: #374151; }
+    /* Upload zone */
+    .upload-zone {
+      border: 2px dashed #cbd5e1; border-radius: 12px; padding: 20px 16px;
+      text-align: center; cursor: pointer; transition: all 0.2s;
+      background: #f8fafc;
+    }
+    .upload-zone:hover { border-color: #1a56db; background: #eff6ff; }
+    .upload-zone svg { color: #94a3b8; margin-bottom: 6px; }
+    .upload-zone .uz-text { font-size: 0.82rem; font-weight: 600; color: #475569; }
+    .upload-zone .uz-sub  { font-size: 0.72rem; color: #94a3b8; margin-top: 2px; }
+    .upload-result {
+      margin-top: 10px; padding: 8px 12px; border-radius: 8px;
+      font-size: 0.8rem; font-weight: 600; display: none;
+    }
+    /* Appointment list */
+    .appt-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 9px 0; border-bottom: 1px solid #f1f5f9;
+    }
+    .appt-item:last-child { border-bottom: none; }
+    .appt-time {
+      font-size: 0.78rem; font-weight: 700; color: #1e40af;
+      background: #eff6ff; padding: 3px 7px; border-radius: 6px; flex-shrink: 0;
+    }
+    .appt-name { font-size: 0.83rem; font-weight: 600; flex: 1; }
+    .appt-phone { font-size: 0.72rem; color: #94a3b8; }
+    .appt-badge {
+      font-size: 0.68rem; font-weight: 700; padding: 2px 7px;
+      border-radius: 999px; flex-shrink: 0;
+    }
+    .appt-badge.arrived  { background: #f0fdf4; color: #15803d; }
+    .appt-badge.waiting  { background: #fffbeb; color: #b45309; }
+    .appt-badge.noshow   { background: #fef2f2; color: #b91c1c; }
+    .appt-badge.served   { background: #eff6ff; color: #1e40af; border: 1px solid #bfdbfe; }
+  </style>
+</head>
+<body>
+
+<!-- ── LOGIN SCREEN ──────────────────────────────────────────── -->
+<div class="login-screen" id="login-screen">
+  <div class="login-card">
+
+    <!-- Brand header -->
+    <div class="login-brand">
+      <div class="login-logo">
+        <img src="/assets/logo.png" alt="SSS" style="width:100%;height:100%;object-fit:contain;">
+      </div>
+      <div class="login-brand-text">
+        <div class="brand-title">SSS Toledo Branch</div>
+        <div class="brand-sub">Monitoring System &mdash; Staff Portal</div>
+      </div>
+    </div>
+
+    <div class="login-divider"></div>
+
+    <div class="login-heading">Sign In</div>
+    <p class="login-sub">Enter your name and password to access your dashboard.</p>
+
+    <!-- Name field with autocomplete -->
+    <div class="login-field" id="name-field-wrap">
+      <label class="login-label" for="login-name">Full Name</label>
+      <input
+        type="text" id="login-name" class="login-input"
+        placeholder="Start typing your name…"
+        autocomplete="off"
+        oninput="filterDropdown()"
+        onkeydown="dropdownKeyNav(event)"
+        onfocus="filterDropdown()"
+      >
+      <div class="ac-dropdown" id="ac-dropdown"></div>
+    </div>
+
+    <!-- Active Station / Desk Selection -->
+    <div class="login-field">
+      <label class="login-label" for="login-station">Assigned Counter / Station Desk</label>
+      <select id="login-station" class="login-input" style="background:#fff;cursor:pointer;font-weight:600;">
+        <option value="Counter 1">Counter 1 (Main Counter)</option>
+        <option value="Counter 2">Counter 2 (Main Counter)</option>
+        <option value="Counter 3">Counter 3 (Main Counter)</option>
+        <option value="Counter 4">Counter 4 (Main Counter)</option>
+        <option value="Side Counter">Side Counter (Priority &amp; Verification)</option>
+      </select>
+    </div>
+
+    <!-- Password field -->
+    <div class="login-field">
+      <label class="login-label" for="login-password">Password</label>
+      <div class="pw-wrap">
+        <input
+          type="password" id="login-password" class="login-input"
+          placeholder="Enter your password"
+          autocomplete="current-password"
+          onkeydown="if(event.key==='Enter') submitLogin()"
+        >
+        <button type="button" class="pw-toggle" id="pw-toggle" onclick="togglePasswordVisibility()" tabindex="-1" title="Show/hide password">
+          <svg id="pw-eye-show" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          <svg id="pw-eye-hide" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none;"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Sign In button -->
+    <button class="login-btn" id="login-btn" onclick="submitLogin()">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+      Sign In
+    </button>
+
+    <div class="login-error-box" id="login-error"></div>
+
+  </div>
+</div>
+
+<!-- ── DASHBOARD ──────────────────────────────────────────────────── -->
+<div class="dashboard hidden" id="dashboard">
+  <nav class="topbar">
+    <div class="topbar-brand">
+      <div class="topbar-logo" style="width:38px;height:38px;background:#fff;border-radius:8px;padding:3px;box-shadow:0 1px 4px rgba(0,0,0,0.2);">
+        <img src="/assets/logo.png" alt="SSS Toledo" style="width:100%;height:100%;object-fit:contain;">
+      </div>
+      <div class="topbar-gov-title">
+        <div class="topbar-gov-republic">REPUBLIC OF THE PHILIPPINES</div>
+        <div class="topbar-title" id="topbar-title" style="font-weight:800;letter-spacing:-0.01em;">SOCIAL SECURITY SYSTEM</div>
+        <div class="topbar-subtitle" id="topbar-subtitle" style="font-size:0.72rem;color:#cbd5e1;font-weight:500;">
+          Toledo Branch • <span id="topbar-clerk-badge" style="color:#fcd34d;font-weight:700;">Counter Portal</span>
+        </div>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <div class="topbar-clock" id="dash-clock"></div>
+      <!-- My Tasks button -->
+      <button class="btn btn-ghost btn-sm" onclick="openMyTasks()" style="background:rgba(245,158,11,0.2);color:#fde68a;border-color:rgba(245,158,11,0.4);" title="Assigned MSS Tasks">
+        <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+        Tasks <span id="my-task-badge" style="background:#dc2626;color:#fff;font-size:0.65rem;font-weight:800;padding:1px 6px;border-radius:999px;margin-left:4px;display:none;">0</span>
+      </button>
+      <!-- Profile button -->
+      <button class="btn btn-ghost btn-sm" onclick="openProfile()" style="background:rgba(255,255,255,0.1);color:#fff;border-color:rgba(255,255,255,0.2);" title="My Profile">
+        <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        Profile
+      </button>
+      <button class="btn btn-ghost btn-sm" onclick="openServiceLog()" style="background:rgba(255,255,255,0.1);color:#fff;border-color:rgba(255,255,255,0.2);" title="Today's Service Log">
+        <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="13" y2="16"/></svg>
+        Service Log
+      </button>
+      <button class="btn btn-ghost btn-sm" onclick="logout()" style="background:rgba(239,68,68,0.2);color:#fca5a5;border-color:rgba(239,68,68,0.4);">
+        <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Sign Out
+      </button>
+    </div>
+  </nav>
+
+  <!-- ── PROFILE OVERLAY ────────────────────────────────────────────────── -->
+  <div class="profile-overlay" id="profile-overlay" onclick="closeProfileIfBackdrop(event)">
+    <div class="profile-panel">
+
+      <!-- Hero -->
+      <div class="profile-hero">
+        <button onclick="closeProfile()" style="float:right;background:rgba(255,255,255,0.15);border:none;color:#fff;border-radius:8px;padding:4px 10px;cursor:pointer;font-size:0.8rem;font-weight:600;">Close</button>
+        <div class="profile-avatar" id="profile-avatar">?</div>
+        <div class="profile-name" id="profile-name">—</div>
+        <div class="profile-counter">
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+          <span id="profile-counter">—</span>
+        </div>
+      </div>
+
+      <div class="profile-body">
+
+        <!-- Today's Stats -->
+        <div class="profile-section">
+          <div class="profile-section-title">
+            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+            Today's Performance
+          </div>
+          <div class="profile-stats-grid">
+            <div class="profile-stat"><div class="ps-val" id="ps-served">0</div><div class="ps-lbl">Served</div></div>
+            <div class="profile-stat"><div class="ps-val" style="color:#15803d;" id="ps-finished">0</div><div class="ps-lbl">Finished</div></div>
+            <div class="profile-stat"><div class="ps-val" style="color:#b45309;font-size:1.1rem;" id="ps-avgdur">—</div><div class="ps-lbl">Avg Duration</div></div>
+          </div>
+          <!-- Rating breakdown -->
+          <div style="margin-top:14px;">
+            <div class="rating-row">
+              <div class="rating-label" style="color:#15803d;">Happy</div>
+              <div class="rating-bar-wrap"><div class="rating-bar" id="bar-happy" style="background:#15803d;width:0%;"></div></div>
+              <div class="rating-count" id="cnt-happy">0</div>
+            </div>
+            <div class="rating-row">
+              <div class="rating-label" style="color:#b45309;">Neutral</div>
+              <div class="rating-bar-wrap"><div class="rating-bar" id="bar-neutral" style="background:#f59e0b;width:0%;"></div></div>
+              <div class="rating-count" id="cnt-neutral">0</div>
+            </div>
+            <div class="rating-row">
+              <div class="rating-label" style="color:#b91c1c;">Sad</div>
+              <div class="rating-bar-wrap"><div class="rating-bar" id="bar-sad" style="background:#ef4444;width:0%;"></div></div>
+              <div class="rating-count" id="cnt-sad">0</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Export Daily Transaction History -->
+        <div class="profile-section" style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:14px;">
+          <div class="profile-section-title" style="margin-bottom:6px;display:flex;align-items:center;gap:6px;">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="#16a34a" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Daily Transaction History (.xlsx)
+          </div>
+          <p style="font-size:0.75rem;color:#64748b;margin-bottom:10px;">Download your full itemized service log with member details, timestamps, and ratings in Excel format.</p>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <input type="date" id="profile-history-date" class="form-input" style="flex:1;padding:7px 10px;font-size:0.8rem;border:1.5px solid #cbd5e1;border-radius:6px;background:#fff;">
+            <button class="btn btn-primary" onclick="exportMyHistoryExcel()" style="background:#16a34a;border-color:#16a34a;padding:7px 14px;font-size:0.8rem;white-space:nowrap;display:flex;align-items:center;gap:6px;">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Download Excel
+            </button>
+          </div>
+        </div>
+
+        <!-- My Appointments -->
+        <div class="profile-section">
+          <div class="profile-section-title">
+            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            My Appointments Today
+            <span id="profile-appt-count" style="margin-left:auto;background:#eff6ff;color:#1e40af;padding:1px 8px;border-radius:999px;font-size:0.68rem;">0</span>
+          </div>
+
+          <!-- Upload Zone -->
+          <div class="upload-zone" onclick="document.getElementById('appt-file-input').click()" id="upload-zone">
+            <input type="file" id="appt-file-input" accept=".xlsx,.xls" style="display:none;" onchange="uploadMyAppointments(this)">
+            <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.5" style="display:block;margin:0 auto 6px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            <div class="uz-text">Upload My Appointments</div>
+            <div class="uz-sub">Click to select Excel file (.xlsx)</div>
+          </div>
+          <div id="upload-result" class="upload-result"></div>
+
+          <!-- Clear button -->
+          <div style="margin-top:10px;display:flex;justify-content:flex-end;">
+            <button class="btn btn-ghost btn-sm" onclick="clearMyAppointments()" style="color:#b91c1c;border-color:#fecaca;font-size:0.75rem;">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+              Clear Today's Schedule
+            </button>
+          </div>
+
+          <!-- Appointment list -->
+          <div id="profile-appt-list" style="margin-top:14px;">
+            <div style="text-align:center;color:#94a3b8;font-size:0.8rem;padding:12px;">No appointments uploaded yet.</div>
+          </div>
+        </div>
+
+        <!-- Excel Format Guide -->
+        <div class="profile-section">
+          <div class="profile-section-title">
+            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            Excel Format Guide
+          </div>
+          <table style="width:100%;border-collapse:collapse;font-size:0.75rem;">
+            <thead>
+              <tr style="background:#f8fafc;">
+                <th style="padding:6px 8px;text-align:left;border-bottom:1px solid #e2e8f0;color:#64748b;">Col A</th>
+                <th style="padding:6px 8px;text-align:left;border-bottom:1px solid #e2e8f0;color:#64748b;">Col B</th>
+                <th style="padding:6px 8px;text-align:left;border-bottom:1px solid #e2e8f0;color:#64748b;">Col C</th>
+                <th style="padding:6px 8px;text-align:left;border-bottom:1px solid #e2e8f0;color:#64748b;">Col D</th>
+                <th style="padding:6px 8px;text-align:left;border-bottom:1px solid #e2e8f0;color:#64748b;">Col E</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td style="padding:6px 8px;border-bottom:1px solid #f1f5f9;font-weight:700;">Name</td>
+                <td style="padding:6px 8px;border-bottom:1px solid #f1f5f9;">Phone</td>
+                <td style="padding:6px 8px;border-bottom:1px solid #f1f5f9;">Email</td>
+                <td style="padding:6px 8px;border-bottom:1px solid #f1f5f9;font-weight:700;">Time</td>
+                <td style="padding:6px 8px;border-bottom:1px solid #f1f5f9;color:#94a3b8;">(Optional)</td>
+              </tr>
+            </tbody>
+          </table>
+          <p style="font-size:0.7rem;color:#94a3b8;margin-top:8px;">Row 1 is treated as a header and skipped. Time format: <strong>9:00 AM</strong> or <strong>09:00</strong>.</p>
+        </div>
+
+      </div><!-- /profile-body -->
+    </div><!-- /profile-panel -->
+  </div><!-- /profile-overlay -->
+
+  <!-- ── SERVICE LOG OVERLAY ──────────────────────────────────────────────── -->
+  <div class="log-overlay" id="log-overlay" onclick="closeLogIfBackdrop(event)">
+    <div class="log-panel">
+      <div class="log-header">
+        <div>
+          <h2>Service Log</h2>
+          <p id="log-header-sub">Loading...</p>
+        </div>
+        <div style="display:flex;gap:8px;">
+          <button class="btn btn-ghost btn-sm no-print" onclick="closeServiceLog()" style="color:#6b7280;border-color:#d1d5db;">Close</button>
+        </div>
+      </div>
+      <div class="log-summary" id="log-summary"></div>
+      <div class="log-body">
+        <table class="log-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Queue</th>
+              <th>Name</th>
+              <th>SSS Number</th>
+              <th>Entry Type</th>
+              <th>Transaction Type</th>
+              <th>Check-in</th>
+              <th>Duration</th>
+              <th>Outcome</th>
+              <th>Satisfaction</th>
+              <th>Remarks</th>
+              <th>Instructions for Member</th>
+            </tr>
+          </thead>
+          <tbody id="log-tbody"></tbody>
+        </table>
+        <div id="log-empty" class="hidden" style="text-align:center;padding:60px 20px;color:#6b7280;">
+          <div style="margin-bottom:12px;display:flex;justify-content:center;"><svg class="icon icon-4xl" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="13" y2="16"/></svg></div>
+          <p>No transactions recorded yet today.</p>
+        </div>
+      </div>
+      <div class="log-footer no-print">
+        <button class="btn btn-ghost" onclick="closeServiceLog()">Close</button>
+        <button class="btn btn-ghost" onclick="exportClerkLogToExcel()" style="border-color:#16a34a;color:#16a34a;gap:6px;display:flex;align-items:center;">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Export to Excel (.xlsx)
+        </button>
+        <button class="btn btn-primary" onclick="printServiceLog()">Print Daily Report</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── MY TASKS OVERLAY ────────────────────────────────────────────────── -->
+  <div class="log-overlay" id="tasks-overlay" onclick="if(event.target===this) closeMyTasks()">
+    <div class="log-panel" style="max-width:680px;">
+      <div class="log-header" style="background:#071e4a;color:#fff;">
+        <div>
+          <h2 style="color:#fff;display:flex;align-items:center;gap:8px;">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+            My MSS Assignments &amp; Deadlines
+          </h2>
+          <p id="tasks-header-sub" style="color:#cbd5e1;font-size:0.8rem;">Internal task assignments from MSS Supervisor</p>
+        </div>
+        <button class="btn btn-ghost btn-sm" onclick="closeMyTasks()" style="color:#fff;border-color:rgba(255,255,255,0.3);">Close</button>
+      </div>
+
+      <div class="log-body" style="padding:20px;">
+        <div id="my-tasks-list" style="display:flex;flex-direction:column;gap:12px;">
+          <div style="text-align:center;color:#64748b;padding:32px;">Loading tasks...</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Task Complete Modal -->
+  <div class="modal-overlay hidden" id="task-complete-modal" style="z-index:1100;">
+    <div class="modal" style="max-width:440px;">
+      <div class="modal-header">
+        <h3 style="display:flex;align-items:center;gap:8px;color:#15803d;">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          Mark Assignment Completed
+        </h3>
+        <button class="btn btn-ghost btn-sm" onclick="document.getElementById('task-complete-modal').classList.add('hidden')">✕</button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size:0.85rem;margin:0 0 12px 0;">Record accomplishment notes for: <strong id="complete-task-title"></strong></p>
+        <div class="form-group">
+          <label class="form-label" style="font-size:0.8rem;font-weight:700;color:#374151;">Accomplishment Notes / Remarks *</label>
+          <textarea id="complete-task-notes" class="form-input" rows="3" placeholder="e.g. Encoded all 25 E-4 records with supporting docs uploaded."></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" onclick="document.getElementById('task-complete-modal').classList.add('hidden')">Cancel</button>
+        <button class="btn btn-primary" onclick="submitCompleteTask()" style="background:#15803d;border-color:#15803d;">Submit Accomplishment</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Hidden print area -->
+  <div id="log-print-area"></div>
+
+  <div class="dashboard-body">
+    <!-- Left: Queue Panel -->
+    <div class="queue-panel">
+      <!-- Walk-in Pool -->
+      <div>
+        <div class="section-header">
+          <span class="section-header-icon"><svg class="icon icon-md" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 9a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v1a2 2 0 0 0 0 4v1a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-1a2 2 0 0 0 0-4V9z"/></svg></span>
+          <span class="section-header-title">Walk-In Pool</span>
+          <span class="section-header-count" id="walkin-count">0</span>
+        </div>
+        <div class="member-list" id="walkin-list">
+          <div class="empty-state"><div class="empty-state-icon"></div><p>No walk-in members waiting</p></div>
+        </div>
+      </div>
+
+      <!-- Portal Appointments -->
+      <div>
+        <div class="section-header">
+          <span class="section-header-icon"><svg class="icon icon-md" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></span>
+          <span class="section-header-title">Portal Appointments</span>
+          <span class="section-header-count" id="portal-count">0</span>
+        </div>
+        <div class="member-list" id="portal-list">
+          <div class="empty-state"><div class="empty-state-icon"></div><p>No portal appointments today</p></div>
+        </div>
+      </div>
+
+      <!-- My Appointments -->
+      <div>
+        <div class="section-header">
+          <span class="section-header-icon"><svg class="icon icon-md" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></span>
+          <span class="section-header-title">My Appointments</span>
+          <span class="section-header-count" id="appt-count">0</span>
+        </div>
+        <div class="member-list" id="appt-list">
+          <div class="empty-state"><div class="empty-state-icon"></div><p>No appointments today</p></div>
+        </div>
+      </div>
+
+      <!-- Returning Members (For Verification - Same Day) -->
+      <div id="onhold-queue-section">
+        <div class="section-header" style="background:#fef3c7;border-left:3px solid #f59e0b;">
+          <span class="section-header-icon"><svg class="icon icon-md" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg></span>
+          <span class="section-header-title" style="color:#92400e;">Returning Members</span>
+          <span class="section-header-count" id="onhold-count" style="background:#f59e0b;color:#fff;">0</span>
+        </div>
+        <div class="member-list" id="onhold-list">
+          <div class="empty-state"><div class="empty-state-icon"></div><p>No returning members</p></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right: Action Panel -->
+    <div class="action-panel">
+      <!-- No active member -->
+      <div id="no-active" style="text-align:center;padding:40px 20px;color:#6b7280;">
+        <div style="margin-bottom:12px;opacity:0.3;display:flex;justify-content:center;">
+          <svg class="icon icon-3xl" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        </div>
+        <p style="font-size:0.85rem;">Click a member from the queue to begin serving</p>
+      </div>
+
+      <!-- Active member panel -->
+      <div id="active-panel" class="hidden">
+        <div class="active-member" id="active-member-card">
+          <div class="active-member-label">Currently Serving</div>
+          <div class="active-member-name" id="am-name">—</div>
+          <div class="active-member-sss"  id="am-sss">—</div>
+          <div class="active-member-meta">
+            <span class="active-chip" id="am-queue"></span>
+            <span class="active-chip" id="am-tx"></span>
+          </div>
+          <div class="timer" id="am-timer">00:00</div>
+        </div>
+
+        <!-- Member SSS Number Field (Editable by Clerk) -->
+        <div class="action-section" style="background:#f8fafc;border:1.5px solid #cbd5e1;border-radius:10px;padding:12px 14px;">
+          <label style="font-size:0.75rem;font-weight:700;color:#071e4a;display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+            <span>Member SSS Number <span style="color:#64748b;font-weight:500;">(for Log &amp; Reports)</span></span>
+            <span id="sss-badge-status" style="font-size:0.68rem;font-weight:700;color:#059669;"></span>
+          </label>
+          <input type="text" id="active-sss-input" class="form-input" placeholder="e.g., 34-1234567-8" maxlength="15" style="font-weight:700;letter-spacing:0.04em;background:#fff;color:#071e4a;">
+        </div>
+
+        <!-- On-Hold hidden placeholder (state kept in JS, visual moved to queue panel) -->
+        <div id="onhold-panel" class="hidden"></div>
+
+        <!-- Transaction Type -->
+        <div class="action-section">
+          <div class="action-title">Transaction Type</div>
+          <!-- E-Logbook preview (read-only) -->
+          <div id="tx-logbook-preview" style="
+            display:flex;align-items:center;gap:8px;
+            background:#f8fafc;border:1px solid #e2e8f0;
+            border-radius:8px;padding:9px 12px;margin-bottom:10px;
+            font-size:0.8rem;
+          ">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#64748b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;">
+              <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
+              <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+            </svg>
+            <span style="color:#64748b;font-weight:500;">Member declared:</span>
+            <span id="tx-logbook-val" style="font-weight:700;color:#1e40af;">—</span>
+          </div>
+          <!-- Clerk's confirmed type -->
+          <label style="font-size:0.75rem;font-weight:600;color:#374151;display:block;margin-bottom:5px;">Confirmed Transaction Type <span style="color:var(--danger)">*</span></label>
+          <select class="form-select" id="tx-type-select" style="width:100%;font-size:0.85rem;">
+            <option value="">— Select Confirmed Transaction Type —</option>
+
+            <optgroup label="E-4 &amp; Member Data Modifications">
+              <option value="E-4 (Correction of DOB/Name) SIMPLE &amp; COMPLEX">E-4 (Correction of DOB/Name) SIMPLE &amp; COMPLEX</option>
+              <option value="E-4 (Additional BENEF)">E-4 (Additional BENEF)</option>
+              <option value="Member Web Registration">Member Web Registration</option>
+              <option value="Member Web Password Reset">Member Web Password Reset</option>
+              <option value="Pensioners Data Change Update (PDCR)">Pensioners Data Change Update (PDCR)</option>
+              <option value="Cancellation of Multiple SS number">Cancellation of Multiple SS number</option>
+              <option value="Processing - Cancellation of SS Num">Processing - Cancellation of SS Num</option>
+              <option value="Encoding of T to P">Encoding of T to P</option>
+              <option value="DOC Encoding and Correction">DOC Encoding and Correction</option>
+              <option value="Manual Verification - DOC Change">Manual Verification - DOC Change</option>
+              <option value="Requests Membership Records/Micro">Requests Membership Records/Micro</option>
+            </optgroup>
+
+            <optgroup label="Employer &amp; Coverage (R-1, R1-A, R-8)">
+              <option value="R-1">R-1</option>
+              <option value="R1-A (Initial) ER">R1-A (Initial) ER</option>
+              <option value="R1-A (Initial) EE">R1-A (Initial) EE</option>
+              <option value="R1-A (Subsequent) ER">R1-A (Subsequent) ER</option>
+              <option value="R1-A (Subsequent) EE">R1-A (Subsequent) EE</option>
+              <option value="Processing of R-8 (SIMPLE AND COMPLEX)">Processing of R-8 (SIMPLE AND COMPLEX)</option>
+              <option value="Affidavit of Separated EE's (w/ loans)">Affidavit of Separated EE's (w/ loans)</option>
+            </optgroup>
+
+            <optgroup label="Contributions &amp; PRN">
+              <option value="Manual Verification - Contribution">Manual Verification - Contribution</option>
+              <option value="PRN Generation (contributions &amp; Loans)">PRN Generation (contributions &amp; Loans)</option>
+              <option value="PRN Issuance">PRN Issuance</option>
+              <option value="Auto Debit Arrangement (ADA)">Auto Debit Arrangement (ADA)</option>
+              <option value="PESO/Flexi Fund">PESO/Flexi Fund</option>
+              <option value="WISP">WISP</option>
+              <option value="LR Monitoring - Unpostables">LR Monitoring - Unpostables</option>
+            </optgroup>
+
+            <optgroup label="Loans &amp; Repayments">
+              <option value="Educational Loan (Initial &amp; Subsequent)">Educational Loan (Initial &amp; Subsequent)</option>
+              <option value="Manual Verification - Loan Repayments">Manual Verification - Loan Repayments</option>
+              <option value="Replacement of Check (Salary Loan)">Replacement of Check (Salary Loan)</option>
+            </optgroup>
+
+            <optgroup label="Benefits &amp; Claims (SS &amp; EC)">
+              <option value="Funeral- SS">Funeral- SS</option>
+              <option value="Funeral- EC">Funeral- EC</option>
+              <option value="Death Initial (SS)">Death Initial (SS)</option>
+              <option value="Death initial (EC)">Death initial (EC)</option>
+              <option value="Death Adjustment (SS)">Death Adjustment (SS)</option>
+              <option value="Death Adjustment (EC)">Death Adjustment (EC)</option>
+              <option value="Retirement Initial">Retirement Initial</option>
+              <option value="Retirement- Adjustment">Retirement- Adjustment</option>
+              <option value="Disability Initial (SS)">Disability Initial (SS)</option>
+              <option value="Disability Initial (EC)">Disability Initial (EC)</option>
+              <option value="Disability Adjustment (SS)">Disability Adjustment (SS)</option>
+              <option value="Disability Adjustment (EC)">Disability Adjustment (EC)</option>
+              <option value="EC Medical Reimbursement">EC Medical Reimbursement</option>
+              <option value="PE/Domiciliary Medical Services">PE/Domiciliary Medical Services</option>
+              <option value="Replacement of Check (Death)">Replacement of Check (Death)</option>
+              <option value="Replacement of Check (Disability)">Replacement of Check (Disability)</option>
+              <option value="Replacement of Check (Retirement)">Replacement of Check (Retirement)</option>
+              <option value="Replacement of Check (Sickness)">Replacement of Check (Sickness)</option>
+              <option value="Replacement of Check (Maternity)">Replacement of Check (Maternity)</option>
+            </optgroup>
+
+            <optgroup label="Inquiries &amp; Verifications">
+              <option value="Annual Confirmation of Pensioners (ACOP)">Annual Confirmation of Pensioners (ACOP)</option>
+              <option value="Inquiry/Verification- Contribution">Inquiry/Verification- Contribution</option>
+              <option value="Inquiry/Verification- Loan Repayment">Inquiry/Verification- Loan Repayment</option>
+              <option value="Inquiry/ Verification- SOA">Inquiry/ Verification- SOA</option>
+              <option value="Inquiry/ Verifications- Loans">Inquiry/ Verifications- Loans</option>
+              <option value="Inquiry/ Verifications- Death">Inquiry/ Verifications- Death</option>
+              <option value="Inquiry/ Verifications- Disability">Inquiry/ Verifications- Disability</option>
+              <option value="Inquiry/ Verifications- Retirement">Inquiry/ Verifications- Retirement</option>
+              <option value="Inquiry/ Verifications- Sickness">Inquiry/ Verifications- Sickness</option>
+              <option value="Inquiry/Verifications - Maternity">Inquiry/Verifications - Maternity</option>
+              <option value="Inquiry/Verifications- Others/Members Data Update">Inquiry/Verifications- Others/Members Data Update</option>
+            </optgroup>
+
+            <optgroup label="UMID, Cards &amp; Certifications">
+              <option value="Releasing of UMID">Releasing of UMID</option>
+              <option value="Blue Card">Blue Card</option>
+              <option value="Forms Issuance">Forms Issuance</option>
+              <option value="Special Certification/LOI">Special Certification/LOI</option>
+              <option value="L-501">L-501</option>
+            </optgroup>
+
+            <optgroup label="Reviews, Transmittals, Complaints &amp; Others">
+              <option value="DAEM Review">DAEM Review</option>
+              <option value="Transmittals">Transmittals</option>
+              <option value="Correspondences (all communications, req for investigaton, replies to emails, debit &amp; credit memo, all kinds of certifications, rejection &amp; denial letters etc)">Correspondences (all communications, req for investigaton, replies to emails, debit &amp; credit memo, all kinds of certifications, rejection &amp; denial letters etc)</option>
+              <option value="Complaints (all type of complaints on LR repayments, LR and contribution posting, all non-receipt complaints, delay, unsatisfaction and all other complaints)">Complaints (all type of complaints on LR repayments, LR and contribution posting, all non-receipt complaints, delay, unsatisfaction and all other complaints)</option>
+            </optgroup>
+          </select>
+        </div>
+
+        <!-- Transaction Outcome -->
+        <div class="action-section">
+          <div class="action-title">Transaction Outcome</div>
+          <div class="outcome-group">
+            <button class="outcome-btn" id="out-finished" onclick="selectOutcome('finished')">
+              <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> Finished
+            </button>
+            <button class="outcome-btn" id="out-rejected" onclick="selectOutcome('rejected')">
+              <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg> Rejected
+            </button>
+            <button class="outcome-btn" id="out-for-verification" onclick="selectOutcome('for-verification')">
+              <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg> For Verification
+            </button>
+            <button class="outcome-btn" id="out-for-appointment" onclick="selectOutcome('for-appointment')">
+              <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> For Appointment
+            </button>
+          </div>
+        </div>
+
+        <!-- Citizen Evaluation on Tablet -->
+        <div class="action-section" id="rating-section" style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:12px 14px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;">
+            <div style="font-size:0.78rem;font-weight:700;color:var(--text-dark);display:flex;align-items:center;gap:6px;">
+              <svg viewBox="0 0 20 20" width="15" height="15" fill="#0284c7"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+              Citizen CSAT Rating
+            </div>
+            <span class="badge" style="background:#e0f2fe;color:#0369a1;font-size:0.72rem;font-weight:700;">ARTA Compliant</span>
+          </div>
+          <p style="font-size:0.75rem;color:var(--text-muted);margin-top:4px;line-height:1.35;">
+            The member will rate this service directly on the counter tablet screen upon conclusion.
+          </p>
+        </div>
+
+        <!-- Clerk Instructions for Member -->
+        <div class="action-section" id="instructions-section">
+          <div class="action-title">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px;margin-right:4px;color:#1a56db;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+            Instructions for Member
+          </div>
+          <div class="quick-tags" style="margin-bottom:7px;">
+            <button class="quick-tag" onclick="addInstruction('Return with complete documents')">+ Return w/ Documents</button>
+            <button class="quick-tag" onclick="addInstruction('Proceed to cashier for payment')">+ Go to Cashier</button>
+            <button class="quick-tag" onclick="addInstruction('Check SSS portal for status update')">+ Check SSS Portal</button>
+            <button class="quick-tag" onclick="addInstruction('Await SMS/email notification')">+ Await Notification</button>
+            <button class="quick-tag" onclick="addInstruction('Schedule a follow-up appointment')">+ Schedule Follow-Up</button>
+            <button class="quick-tag" onclick="addInstruction('No further action required')">+ No Further Action</button>
+          </div>
+          <textarea class="form-textarea" id="instructions-input" maxlength="250" placeholder="Optional — note what the member should do next..." rows="2"></textarea>
+        </div>
+
+        <!-- Actions -->
+        <div class="action-section">
+          <button class="btn btn-success btn-full btn-lg" id="btn-conclude" onclick="concludeTransaction()">
+            <svg class="icon icon-md" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+            Conclude Transaction
+          </button>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+            <button class="btn btn-ghost btn-sm" onclick="showRerouteModal()">
+              <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/><line x1="4" y1="4" x2="9" y2="9"/></svg>
+              Re-Route
+            </button>
+            <button class="btn btn-ghost btn-sm" onclick="showReferModal()">
+              <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg>
+              Refer
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Add Walk-Up -->
+      <div style="margin-top:auto;">
+        <button class="btn btn-ghost btn-full btn-sm" onclick="showWalkupModal()">
+          <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Add Walk-Up Member
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── MODALS ──────────────────────────────────────────────────────── -->
+<!-- Re-Route Modal -->
+<div class="modal-overlay hidden" id="reroute-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3><svg class="icon icon-md" style="vertical-align:-3px;margin-right:6px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/><line x1="4" y1="4" x2="9" y2="9"/></svg>Re-Route (Correction)</h3>
+      <button class="btn btn-ghost btn-sm" onclick="closeModal('reroute-modal')"><svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:0.85rem;">The guard gave this member the wrong ticket series. Select the correct destination:</p>
+      <select class="reroute-select" id="reroute-dest">
+        <option value="pacd">PACD</option>
+        <option value="counter-pool">Main Counters (1–4 / Side)</option>
+        <option value="ecenter">E-Center</option>
+        <option value="portal-pool">Portal Pool</option>
+      </select>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('reroute-modal')">Cancel</button>
+      <button class="btn btn-primary" onclick="submitReroute()">Re-Route Member</button>
+    </div>
+  </div>
+</div>
+
+<!-- Refer Modal -->
+<div class="modal-overlay hidden" id="refer-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>
+        <svg class="icon icon-md" style="vertical-align:-3px;margin-right:6px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg>
+        Refer to Department
+      </h3>
+      <button class="btn btn-ghost btn-sm" onclick="closeModal('refer-modal')">
+        <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:0.85rem;">This member has been served and now needs another department. They will receive a referral slip and must get a new queue number from the guard.</p>
+      <select class="reroute-select" id="refer-dest">
+        <option value="pacd">PACD</option>
+        <option value="counter-pool">Main Counters (1–4 / Side)</option>
+        <option value="ecenter">E-Center</option>
+      </select>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('refer-modal')">Cancel</button>
+      <button class="btn btn-warning" onclick="submitRefer()">Print Referral Slip</button>
+    </div>
+  </div>
+</div>
+
+<!-- Walk-Up Modal -->
+<div class="modal-overlay hidden" id="walkup-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>
+        <svg class="icon icon-md" style="vertical-align:-3px;margin-right:6px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Add Walk-Up Member
+      </h3>
+      <button class="btn btn-ghost btn-sm" onclick="closeModal('walkup-modal')">
+        <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Queue Number</label>
+        <input type="text" class="form-input" id="wu-queue" placeholder="e.g., 2031">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Full Name *</label>
+        <input type="text" class="form-input" id="wu-name" placeholder="Member's full name">
+      </div>
+      <div class="form-group">
+        <label class="form-label">SSS Number</label>
+        <input type="text" class="form-input" id="wu-sss" placeholder="e.g., 33-1234567-8">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Transaction Type *</label>
+        <select class="form-select" id="wu-tx">
+          <option value="">— Select —</option>
+          <option>Retirement Benefit</option>
+          <option>Sickness Benefit</option>
+          <option>Maternity Benefit</option>
+          <option>Disability Benefit</option>
+          <option>Death / Funeral Claim</option>
+          <option>SSS ID / UMID Application</option>
+          <option>Loan Application (Salary / Calamity)</option>
+          <option>Contribution Inquiry</option>
+          <option>E4 / Record Update</option>
+          <option>Others</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('walkup-modal')">Cancel</button>
+      <button class="btn btn-primary" onclick="submitWalkup()">Add & Serve Now</button>
+    </div>
+  </div>
+</div>
+
+<!-- Hand-Off Modal -->
+<div class="modal-overlay hidden" id="handoff-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>
+        <svg class="icon icon-md" style="vertical-align:-3px;margin-right:6px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        Hand Off Appointment
+      </h3>
+      <button class="btn btn-ghost btn-sm" onclick="closeModal('handoff-modal')">
+        <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:0.85rem;color:#374151;">
+        Transfer <strong id="handoff-appt-name"></strong>'s appointment to another clerk.
+        They will see this member in their own <em>My Appointments</em> list.
+      </p>
+      <input type="hidden" id="handoff-appt-id">
+      <label style="font-size:0.8rem;font-weight:600;color:#374151;display:block;margin-bottom:6px;">Assign to:</label>
+      <select class="reroute-select" id="handoff-clerk-select">
+        <option value="">— Select clerk —</option>
+      </select>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('handoff-modal')">Cancel</button>
+      <button class="btn btn-primary" onclick="submitHandoff()">Hand Off</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast-container" id="toast-container"></div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+  // ── State ────────────────────────────────────────────────────────────────
+  let clerk = null;
+  let activeMember = null;
+  let activeTransactionId = null;
+  let activeAppointmentId = null;  // set when serving a BAS appointment
+  let timerInterval = null;
+  let timerStart = null;
+  let selectedOutcome = null;
+  let selectedRating = null;
+  let onHoldMember = null;
+
+  const socket = io();
+
+  // ── Clock ────────────────────────────────────────────────────────────────
+  function updateClock() {
+    document.getElementById('dash-clock').textContent =
+      new Date().toLocaleTimeString('en-PH', { hour: '2-digit', minute: '2-digit', hour12: true });
+  }
+  setInterval(updateClock, 1000);
+  updateClock();
+
+  // ── Autocomplete & Login ──────────────────────────────────────────────────
+  let allClerks = [];
+  let selectedClerkId = null;
+  let acActiveIdx = -1;
+
+  async function initLogin() {
+    try {
+      const r = await fetch('/api/clerks?all=true');
+      const all = await r.json();
+      allClerks = all.filter(c => c.is_active && c.counter !== 'Admin');
+      updateCounterAvailability();
+    } catch(e) { console.error('Failed to load clerks:', e); }
+  }
+  initLogin();
+
+  async function updateCounterAvailability() {
+    try {
+      const res = await fetch('/api/transactions/stations/presence');
+      const activeList = await res.json();
+      const select = document.getElementById('login-station');
+      if (!select) return;
+
+      const counters = [
+        { value: 'Counter 1', label: 'Counter 1 (Main Counter)' },
+        { value: 'Counter 2', label: 'Counter 2 (Main Counter)' },
+        { value: 'Counter 3', label: 'Counter 3 (Main Counter)' },
+        { value: 'Counter 4', label: 'Counter 4 (Main Counter)' },
+        { value: 'Side Counter', label: 'Side Counter (Priority & Verification)' }
+      ];
+
+      const currentVal = select.value;
+      select.innerHTML = counters.map(c => {
+        const occ = activeList.find(a => a.station === c.value);
+        if (occ) {
+          return `<option value="${c.value}" style="color:#b91c1c;font-weight:600;">${c.label} — <svg viewBox="0 0 16 16" width="11" height="11" style="display:inline;vertical-align:middle;margin-right:3px;" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="7" width="10" height="7" rx="1.5"/><path d="M5 7V5a3 3 0 0 1 6 0v2"/></svg>Occupied (${occ.clerkName})</option>`;
+        } else {
+          return `<option value="${c.value}" style="color:#15803d;font-weight:600;">${c.label} — <svg viewBox="0 0 10 10" width="10" height="10" style="display:inline;vertical-align:middle;margin-right:3px;"><circle cx="5" cy="5" r="4" fill="#15803d"/></svg>Available</option>`;
+        }
+      }).join('');
+
+      if (currentVal) select.value = currentVal;
+    } catch(e) {}
+  }
+  socket.on('stations:presence', () => updateCounterAvailability());
+
+  function filterDropdown() {
+    const input = document.getElementById('login-name');
+    const query = input.value.trim().toLowerCase();
+    const drop  = document.getElementById('ac-dropdown');
+    acActiveIdx = -1;
+
+    const filtered = query
+      ? allClerks.filter(c => c.name.toLowerCase().includes(query))
+      : allClerks;
+
+    if (filtered.length === 0) { drop.style.display = 'none'; drop.innerHTML = ''; return; }
+    drop.innerHTML = filtered.map((c) => {
+      const init = c.name.split(' ').slice(0,2).map(w => w[0]).join('').toUpperCase();
+      return `<div class="ac-option" data-id="${c.id}" data-name="${c.name}" onmousedown="selectClerk(${c.id},'${c.name.replace(/'/g,'\\&apos;')}')">
+        <div class="ac-avatar">${init}</div>
+        <div><div class="ac-name">${c.name}</div><div class="ac-counter">${c.counter}</div></div>
+      </div>`;
+    }).join('');
+    drop.style.display = 'block';
+  }
+
+  function selectClerk(id, name) {
+    selectedClerkId = id;
+    document.getElementById('login-name').value = name;
+    document.getElementById('ac-dropdown').style.display = 'none';
+    document.getElementById('login-password').focus();
+  }
+
+  function dropdownKeyNav(e) {
+    const drop  = document.getElementById('ac-dropdown');
+    const items = drop.querySelectorAll('.ac-option');
+    if (!items.length) { if (e.key === 'Enter') submitLogin(); return; }
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      acActiveIdx = Math.min(acActiveIdx + 1, items.length - 1);
+      items.forEach((el, i) => el.classList.toggle('ac-active', i === acActiveIdx));
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      acActiveIdx = Math.max(acActiveIdx - 1, 0);
+      items.forEach((el, i) => el.classList.toggle('ac-active', i === acActiveIdx));
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      if (acActiveIdx >= 0 && items[acActiveIdx]) {
+        const el = items[acActiveIdx];
+        selectClerk(+el.dataset.id, el.dataset.name);
+      } else {
+        submitLogin();
+      }
+    } else if (e.key === 'Escape') {
+      drop.style.display = 'none';
+    }
+  }
+
+  document.addEventListener('click', e => {
+    const wrap = document.getElementById('name-field-wrap');
+    if (wrap && !wrap.contains(e.target)) {
+      const d = document.getElementById('ac-dropdown');
+      if (d) d.style.display = 'none';
+    }
+  });
+
+  function togglePasswordVisibility() {
+    const input = document.getElementById('login-password');
+    const show  = document.getElementById('pw-eye-show');
+    const hide  = document.getElementById('pw-eye-hide');
+    if (input.type === 'password') {
+      input.type = 'text'; show.style.display = 'none'; hide.style.display = '';
+    } else {
+      input.type = 'password'; show.style.display = ''; hide.style.display = 'none';
+    }
+  }
+
+  function showLoginError(msg) {
+    const el = document.getElementById('login-error');
+    el.textContent = msg; el.style.display = 'block';
+    setTimeout(() => { el.style.display = 'none'; }, 4000);
+  }
+
+  async function submitLogin() {
+    const nameInput = document.getElementById('login-name').value.trim();
+    const password  = document.getElementById('login-password').value;
+    const btn       = document.getElementById('login-btn');
+
+    if (!selectedClerkId) {
+      const match = allClerks.find(c => c.name.toLowerCase() === nameInput.toLowerCase());
+      if (!match) { showLoginError('Clerk not found. Please select your name from the list.'); return; }
+      selectedClerkId = match.id;
+    }
+    if (!password) { showLoginError('Please enter your password.'); return; }
+
+    btn.disabled = true;
+    btn.innerHTML = `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" style="animation:spin 0.8s linear infinite"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg> Signing in…`;
+
+    try {
+      const selectedStation = document.getElementById('login-station')?.value || 'Counter 1';
+      const res = await fetch('/api/clerks/login', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ clerk_id: selectedClerkId, pin: password, station: selectedStation, selected_counter: selectedStation })
+      });
+      const data = await res.json();
+      if (data.success) {
+        sessionStorage.setItem('clerk_station', selectedStation);
+        sessionStorage.setItem('clerk_session', JSON.stringify(data.clerk));
+        activateDashboard(data.clerk);
+      } else {
+        showLoginError(data.error || 'Incorrect password. Please try again.');
+        document.getElementById('login-password').value = '';
+        document.getElementById('login-password').focus();
+        updateCounterAvailability();
+      }
+    } catch(e) {
+      showLoginError('Connection error. Please try again.');
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg> Sign In`;
+    }
+  }
+
+  function logout() {
+    const activeStation = sessionStorage.getItem('clerk_station') || (clerk ? clerk.active_station : null);
+    if (activeStation) socket.emit('station:logout', { station: activeStation });
+    sessionStorage.removeItem('clerk_session');
+    sessionStorage.removeItem('clerk_station');
+    clerk = null;
+    location.reload();
+  }
+
+  // Session Restore
+  const savedClerk = sessionStorage.getItem('clerk_session');
+  if (savedClerk) {
+    try {
+      const saved = JSON.parse(savedClerk);
+      fetch('/api/clerks?all=true').then(r=>r.json()).then(clerks=>{
+        const still = clerks.find(c=>c.id===saved.id && c.is_active);
+        if (still) activateDashboard(saved);
+        else sessionStorage.removeItem('clerk_session');
+      }).catch(()=>{});
+    } catch(e) { sessionStorage.removeItem('clerk_session'); }
+  }
+
+  // ── Session Restore (survive page refresh) ───────────────────────────────
+  function activateDashboard(clerkData) {
+    clerk = clerkData;
+    const activeStation = sessionStorage.getItem('clerk_station') || clerkData.active_station || clerkData.counter || 'Counter 1';
+    clerk.active_station = activeStation;
+    
+    document.getElementById('login-screen').classList.add('hidden');
+    document.getElementById('dashboard').classList.remove('hidden');
+    const badge = document.getElementById('topbar-clerk-badge');
+    if (badge) badge.textContent = `${clerk.name} (${activeStation})`;
+    document.getElementById('profile-name').textContent = clerk.name;
+    document.getElementById('profile-counter').textContent = activeStation;
+    
+    socket.emit('join:room', 'counter-pool');
+    socket.emit('join:room', 'portal-pool');
+    socket.emit('join:room', `clerk-${clerk.id}`);
+    socket.emit('join:room', 'admin');
+    socket.emit('station:login', { station: activeStation, clerkId: clerk.id, clerkName: clerk.name });
+    loadQueues();
+    loadMyAppointments();
+    loadOnHoldMember(); // restore on-hold panel from DB after refresh
+    updateMyTaskBadge();
+    checkOngoingTransaction(); // restore active transaction from DB after accidental refresh
+  }
+
+  // ── Restore Ongoing Transaction (survive accidental page refresh) ────────
+  async function checkOngoingTransaction() {
+    if (!clerk) return;
+    try {
+      const res = await fetch(`/api/members/current-serving?clerk_id=${clerk.id}&counter=${encodeURIComponent(clerk.active_station || '')}`);
+      const data = await res.json();
+      if (data && data.hasActive && data.member) {
+        activeMember = data.member;
+        activeTransactionId = data.transaction_id;
+
+        // Restore start time from original transaction
+        if (data.service_start_time) {
+          timerStart = new Date(data.service_start_time.replace(' ', 'T'));
+          if (isNaN(timerStart.getTime())) timerStart = new Date(data.service_start_time);
+        } else {
+          timerStart = new Date();
+        }
+
+        showActivePanel(data.member);
+        showToast(`✓ Resumed ongoing transaction for ${data.member.name}`, 'info');
+      }
+    } catch (e) {
+      console.error('Error checking ongoing transaction:', e);
+    }
+  }
+
+  function closeModal(id) {
+    const modal = document.getElementById(id);
+    if (modal) modal.classList.add('hidden');
+  }
+
+  // Restore/render all on-hold members this clerk put on hold
+  async function loadOnHoldMember() {
+    if (!clerk) return;
+    const r = await fetch('/api/members');
+    const members = await r.json();
+    const held = members.filter(m => m.status === 'on-hold' && m.claimed_by === clerk.id);
+
+    const list = document.getElementById('onhold-list');
+    const count = document.getElementById('onhold-count');
+    count.textContent = held.length;
+
+    if (held.length === 0) {
+      list.innerHTML = '<div class="empty-state"><div class="empty-state-icon"><svg class="icon icon-2xl icon-muted" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/></svg></div><p>No returning members</p></div>';
+      onHoldMember = null;
+      return;
+    }
+
+    list.innerHTML = '';
+    held.forEach(m => {
+      const waitMins = Math.floor((new Date() - new Date(m.check_in_time)) / 60000);
+      const div = document.createElement('div');
+      div.className = 'member-card';
+      div.style.cssText = 'border-left: 3px solid var(--warning); cursor: pointer;';
+      div.innerHTML = `
+        <div class="member-queue" style="background:var(--warning);"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/></svg></div>
+        <div class="member-info">
+          <div class="member-name">${m.name}</div>
+          <div class="member-sss">${m.sss_number || 'No SSS Number'}</div>
+          <div class="member-meta">
+            <span class="badge badge-yellow">⏳ Awaiting Return</span>
+            <span class="member-time" style="color:var(--warning);">⏱ ${waitMins}min</span>
+          </div>
+        </div>
+        <button class="btn btn-warning btn-sm" style="flex-shrink:0;white-space:nowrap;" onclick="event.stopPropagation();resumeSpecificMember(${m.id})">
+          ▶ Member Returned
+        </button>`;
+      div.onclick = () => resumeSpecificMember(m.id);
+      list.appendChild(div);
+    });
+
+    // Keep onHoldMember pointing to the first one for backward compatibility
+    onHoldMember = held[0];
+  }
+
+  const savedSession = sessionStorage.getItem('clerk_session');
+  if (savedSession) {
+    try {
+      const saved = JSON.parse(savedSession);
+      fetch('/api/clerks?all=true')
+        .then(r => r.json())
+        .then(clerks => {
+          const stillActive = clerks.find(c => c.id === saved.id && c.is_active);
+          if (stillActive) {
+            activateDashboard({ id: stillActive.id, name: stillActive.name, counter: stillActive.counter });
+          } else { sessionStorage.removeItem('clerk_session'); }
+        })
+        .catch(() => sessionStorage.removeItem('clerk_session'));
+    } catch(e) { sessionStorage.removeItem('clerk_session'); }
+  }
+
+  // ── Load Queues ──────────────────────────────────────────────────────────
+  async function loadQueues() {
+    // Walk-in pool
+    const r1 = await fetch('/api/members/pool/counter-pool');
+    const walkins = await r1.json();
+    renderList('walkin-list', walkins, 'walkin-count', 'walk-in');
+
+    // Portal pool
+    const r2 = await fetch('/api/appointments/portal');
+    const portals = await r2.json();
+    renderPortalList(portals);
+  }
+
+  let myAppointmentsCache = {}; // id -> appointment object
+
+  async function loadMyAppointments() {
+    if (!clerk) return;
+    const r = await fetch(`/api/appointments/clerk/${clerk.id}`);
+    const appts = await r.json();
+    myAppointmentsCache = {};
+    appts.forEach(a => { myAppointmentsCache[a.id] = a; });
+    renderAppointmentList(appts);
+  }
+
+  // Safe wrappers called from onclick (no inline JSON needed)
+  function serveApptById(id) {
+    const a = myAppointmentsCache[id];
+    if (a) serveAppointmentMember(a);
+  }
+  function handoffApptById(id) {
+    const a = myAppointmentsCache[id];
+    if (a) showHandoffModal(id, a.name);
+  }
+
+  function renderList(containerId, members, countId, type) {
+    const container = document.getElementById(containerId);
+    const count = document.getElementById(countId);
+    if (count) count.textContent = members.length;
+    if (members.length === 0) {
+      container.innerHTML = `<div class="empty-state"><div class="empty-state-icon"><svg class="icon icon-2xl icon-muted" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2"/></svg></div><p>No members waiting</p></div>`;
+      return;
+    }
+    container.innerHTML = '';
+    members.forEach(m => container.appendChild(createMemberCard(m)));
+  }
+
+  function renderPortalList(appts) {
+    const container = document.getElementById('portal-list');
+    const count = document.getElementById('portal-count');
+    const waiting = appts.filter(a => a.arrival_status === 'in-lobby');
+    count.textContent = waiting.length;
+    if (waiting.length === 0) {
+      container.innerHTML = `<div class="empty-state"><div class="empty-state-icon"><svg class="icon icon-2xl icon-muted" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></div><p>No portal appointments arrived</p></div>`;
+      return;
+    }
+    container.innerHTML = '';
+    waiting.forEach(a => {
+      const div = document.createElement('div');
+      div.className = 'member-card';
+      div.innerHTML = `
+        <div class="member-queue" style="background:var(--warning)"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></div>
+        <div class="member-info">
+          <div class="member-name">${a.name}</div>
+          <div class="member-sss">Portal Appointment</div>
+          <div class="member-meta"><span class="badge badge-yellow">${a.appointment_time}</span></div>
+        </div>`;
+      div.onclick = () => servePortalMember(a);
+      container.appendChild(div);
+    });
+  }
+
+  function renderAppointmentList(appts) {
+    const container = document.getElementById('appt-list');
+    const count = document.getElementById('appt-count');
+    const visible = appts.filter(a => a.arrival_status !== 'done');
+    count.textContent = visible.filter(a => a.arrival_status === 'in-lobby').length;
+    if (visible.length === 0) {
+      container.innerHTML = `<div class="empty-state"><div class="empty-state-icon"><svg class="icon icon-2xl icon-muted" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div><p>No appointments today</p></div>`;
+      return;
+    }
+    container.innerHTML = '';
+    visible.forEach(a => {
+      const isInLobby = a.arrival_status === 'in-lobby';
+      const isNoShow  = a.arrival_status === 'no-show';
+      const statusBg    = isInLobby ? '#f0fdf4' : isNoShow ? '#fef2f2' : '#f8fafc';
+      const statusColor = isInLobby ? '#15803d'  : isNoShow ? '#b91c1c' : '#6b7280';
+      const statusLabel = isInLobby ? 'In Lobby'    : isNoShow ? 'No Show' : 'Not Arrived';
+
+      const div = document.createElement('div');
+      div.className = 'member-card';
+      div.style.cssText = 'flex-direction:column;align-items:stretch;gap:8px;';
+
+      // Main row
+      const row = document.createElement('div');
+      row.style.cssText = 'display:flex;align-items:center;gap:10px;';
+      row.innerHTML = `
+        <div class="member-queue" style="background:#8b5cf6;flex-shrink:0;"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
+        <div class="member-info" style="flex:1;">
+          <div class="member-name">${a.name}</div>
+          <div class="member-meta">
+            <span style="display:inline-block;padding:2px 8px;border-radius:999px;font-size:0.7rem;font-weight:700;background:${statusBg};color:${statusColor};">${statusLabel}</span>
+            <span class="badge badge-gray">${a.appointment_time}</span>
+            ${a.is_late ? `<span style="display:inline-block;padding:2px 8px;border-radius:999px;font-size:0.7rem;font-weight:700;background:#fef2f2;color:#b91c1c;border:1px solid #fecaca;">⏰ Late</span>` : ''}
+          </div>
+        </div>`;
+      div.appendChild(row);
+
+      if (isInLobby) {
+        const btnRow = document.createElement('div');
+        btnRow.style.cssText = 'display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;';
+
+        const serveBtn = document.createElement('button');
+        serveBtn.className = 'btn btn-primary btn-sm';
+        serveBtn.style.cssText = 'font-size:0.72rem;padding:5px 0;';
+        serveBtn.innerHTML = `<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> Serve`;
+        serveBtn.addEventListener('click', () => serveAppointmentMember(a));
+
+        const handoffBtn = document.createElement('button');
+        handoffBtn.className = 'btn btn-ghost btn-sm';
+        handoffBtn.style.cssText = 'font-size:0.72rem;padding:5px 0;';
+        handoffBtn.innerHTML = `<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> Hand Off`;
+        handoffBtn.addEventListener('click', () => showHandoffModal(a.id, a.name));
+
+        const noshowBtn = document.createElement('button');
+        noshowBtn.className = 'btn btn-ghost btn-sm';
+        noshowBtn.style.cssText = 'font-size:0.72rem;padding:5px 0;color:var(--danger);border-color:var(--danger);';
+        noshowBtn.innerHTML = `<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg> No Show`;
+        noshowBtn.addEventListener('click', () => markNoShow(a.id));
+
+        btnRow.appendChild(serveBtn);
+        btnRow.appendChild(handoffBtn);
+        btnRow.appendChild(noshowBtn);
+        div.appendChild(btnRow);
+      }
+
+      if (isNoShow) {
+        const note = document.createElement('div');
+        note.style.cssText = 'font-size:0.72rem;color:#b91c1c;text-align:center;';
+        note.textContent = 'Marked as no-show — not counted in today’s queue';
+        div.appendChild(note);
+      }
+
+      container.appendChild(div);
+    });
+  }
+
+  function createMemberCard(m) {
+    const div = document.createElement('div');
+    div.className = 'member-card';
+    div.id = `member-${m.id}`;
+    const waitMins = Math.floor((new Date() - new Date(m.check_in_time)) / 60000);
+    div.innerHTML = `
+      <div class="member-queue">${m.queue_number || '—'}</div>
+      <div class="member-info">
+        <div class="member-name">${m.name}</div>
+        <div class="member-sss">${m.sss_number || 'No SSS Number'}</div>
+        <div class="member-meta">
+          <span class="badge badge-blue">${m.transaction_type}</span>
+          <span class="member-time">⏱ ${waitMins}min wait</span>
+        </div>
+      </div>`;
+    div.onclick = () => claimMember(m);
+    return div;
+  }
+
+  // ── Claim / Serve Member ─────────────────────────────────────────────────
+  async function claimMember(member) {
+    const activeCounter = clerk ? (clerk.active_station || clerk.counter || 'Counter 1') : 'Counter 1';
+    try {
+      const res = await fetch(`/api/members/${member.id}/claim`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ clerk_id: clerk.id, counter: activeCounter })
+      });
+      const data = await res.json();
+      if (data.success) {
+        activeMember = data.member;
+        activeTransactionId = data.transaction_id;
+        showActivePanel(member);
+      } else { showToast(data.error || 'Could not claim member.', 'error'); }
+    } catch (e) { showToast('Connection error.', 'error'); }
+  }
+
+  async function servePortalMember(appt) {
+    if (activeMember) { showToast('Please conclude the current transaction first.', 'error'); return; }
+    if (appt.member_id) {
+      const activeCounter = clerk ? (clerk.active_station || clerk.counter || 'Counter 1') : 'Counter 1';
+      const res = await fetch(`/api/members/${appt.member_id}/claim`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ clerk_id: clerk.id, counter: activeCounter })
+      });
+      const data = await res.json();
+      if (data.success) {
+        activeMember = data.member;
+        activeTransactionId = data.transaction_id;
+        activeAppointmentId = appt.id;
+        showActivePanel({ ...data.member, name: appt.name });
+      } else {
+        claimMember({ id: appt.member_id, name: appt.name, transaction_type: appt.transaction_type || 'Portal Appointment' });
+      }
+    }
+  }
+
+  async function serveAppointmentMember(appt) {
+    if (activeMember) { showToast('Please conclude the current transaction first.', 'error'); return; }
+    if (appt.member_id) {
+      const activeCounter = clerk ? (clerk.active_station || clerk.counter || 'Counter 1') : 'Counter 1';
+      const res = await fetch(`/api/members/${appt.member_id}/claim`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ clerk_id: clerk.id, counter: activeCounter })
+      });
+      const data = await res.json();
+      if (data.success) {
+        activeMember = data.member;
+        activeTransactionId = data.transaction_id;
+        activeAppointmentId = appt.id;  // track for marking done
+        showActivePanel({ ...data.member, name: appt.name });
+      }
+    }
+  }
+
+  function showActivePanel(member) {
+    document.getElementById('no-active').classList.add('hidden');
+    document.getElementById('active-panel').classList.remove('hidden');
+    document.getElementById('am-name').textContent = member.name;
+    document.getElementById('am-sss').textContent = member.sss_number || 'No SSS Number';
+    document.getElementById('am-queue').textContent = member.queue_number ? `#${member.queue_number}` : 'Appointment';
+    document.getElementById('am-tx').textContent = member.transaction_type || '';
+
+    // SSS Number Input & Status
+    const sssInput = document.getElementById('active-sss-input');
+    const sssStatus = document.getElementById('sss-badge-status');
+    if (sssInput) {
+      sssInput.value = member.sss_number || '';
+      if (sssStatus) {
+        sssStatus.textContent = member.sss_number ? 'Verified from Check-In' : 'Enter SSS Number if available';
+        sssStatus.style.color = member.sss_number ? '#059669' : '#d97706';
+      }
+    }
+
+    // Populate transaction type preview (e-logbook) and pre-select dropdown
+    const declared = member.transaction_type || '';
+    document.getElementById('tx-logbook-val').textContent = declared || 'Not specified';
+    // Try to match declared type to an option in the dropdown
+    const sel = document.getElementById('tx-type-select');
+    sel.value = '';
+    for (const opt of sel.options) {
+      if (opt.value && declared.toLowerCase().includes(opt.value.toLowerCase())) {
+        sel.value = opt.value; break;
+      }
+    }
+
+    selectedOutcome = null; selectedRating = null;
+    document.querySelectorAll('.outcome-btn').forEach(b => b.classList.remove('selected', 'finished', 'rejected', 'for-verification', 'for-appointment'));
+    document.querySelectorAll('.rating-btn').forEach(b => b.classList.remove('selected', 'happy', 'neutral', 'sad'));
+    if (document.getElementById('instructions-input')) document.getElementById('instructions-input').value = '';
+    startTimer();
+    loadQueues();
+  }
+
+  // ── Timer ────────────────────────────────────────────────────────────────
+  function startTimer(customStart) {
+    if (timerInterval) clearInterval(timerInterval);
+    timerStart = customStart || timerStart || new Date();
+    timerInterval = setInterval(() => {
+      const elapsed = Math.max(0, Math.floor((new Date() - timerStart) / 1000));
+      const m = String(Math.floor(elapsed / 60)).padStart(2, '0');
+      const s = String(elapsed % 60).padStart(2, '0');
+      document.getElementById('am-timer').textContent = `${m}:${s}`;
+    }, 1000);
+  }
+
+  // ── Conclude Transaction ─────────────────────────────────────────────────
+  function selectOutcome(outcome) {
+    selectedOutcome = outcome;
+    document.querySelectorAll('.outcome-btn').forEach(b => b.classList.remove('selected', 'finished', 'rejected', 'for-verification', 'for-appointment'));
+    document.getElementById(`out-${outcome}`).classList.add('selected', outcome);
+    // Only 'for-verification' skips the rating — member wasn't fully served yet.
+    // 'for-appointment' = member WAS served, just needs a follow-up booking → rating required.
+    const showRating = outcome !== 'for-verification';
+    document.getElementById('rating-section').style.opacity = showRating ? '1' : '0.4';
+    document.getElementById('rating-section').style.pointerEvents = showRating ? 'auto' : 'none';
+  }
+
+  function selectRating(rating) {
+    selectedRating = rating;
+    document.querySelectorAll('.rating-btn').forEach(b => b.classList.remove('selected', 'happy', 'neutral', 'sad'));
+    document.getElementById(`rate-${rating}`).classList.add('selected', rating);
+  }
+
+  function addTag(tag) {
+    const input = document.getElementById('instructions-input');
+    if (!input) return;
+    const current = input.value.trim();
+    const newVal = current ? `${current}, ${tag}` : tag;
+    if (newVal.length <= 250) { input.value = newVal; }
+  }
+
+  function addInstruction(text) {
+    const input = document.getElementById('instructions-input');
+    if (!input) return;
+    const current = input.value.trim();
+    input.value = current ? `${current}; ${text}` : text;
+  }
+
+  function updateCharCount() {
+    const input = document.getElementById('instructions-input');
+    if (!input) return;
+    const len = input.value.length;
+    const countEl = document.getElementById('char-count');
+    if (countEl) {
+      countEl.textContent = `${len} / 250`;
+      countEl.style.color = len > 220 ? 'var(--danger)' : 'var(--text-muted)';
+    }
+  }
+
+  async function concludeTransaction() {
+    if (!selectedOutcome) { showToast('Please select a transaction outcome.', 'error'); return; }
+    if (!activeTransactionId) { showToast('No active transaction found.', 'error'); return; }
+
+    const confirmedType = document.getElementById('tx-type-select').value;
+    if (!confirmedType) { showToast('Please select the confirmed transaction type.', 'error'); return; }
+
+    const sssVal = document.getElementById('active-sss-input') ? document.getElementById('active-sss-input').value.trim() : '';
+
+    // For verification — put on hold
+    if (selectedOutcome === 'for-verification') {
+      await fetch(`/api/members/${activeMember.id}/hold`, { method: 'POST' });
+      clearActivePanel();
+      showToast(`${activeMember.name} sent to Returning Members — awaiting same-day return.`, 'info');
+      loadOnHoldMember();
+      return;
+    }
+
+    const btn = document.getElementById('btn-conclude');
+    btn.disabled = true;
+    btn.innerHTML = `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" style="animation:spin 0.8s linear infinite"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg> Saving…`;
+
+    try {
+      const res = await fetch(`/api/transactions/${activeTransactionId}/conclude`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          outcome: selectedOutcome,
+          remarks: document.getElementById('instructions-input') ? document.getElementById('instructions-input').value.trim() : null,
+          clerk_instructions: document.getElementById('instructions-input') ? document.getElementById('instructions-input').value.trim() : '',
+          member_id: activeMember.id,
+          confirmed_transaction_type: confirmedType,
+          sss_number: sssVal || null
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        showToast('Transaction concluded successfully.', 'success');
+        // If this was a BAS appointment, mark it done so it leaves the In Lobby list
+        if (activeAppointmentId) {
+          fetch(`/api/appointments/${activeAppointmentId}/done`, { method: 'POST' }).catch(() => {});
+        }
+        clearActivePanel();
+        loadQueues();
+      } else { showToast(data.error || 'Error concluding transaction.', 'error'); }
+    } catch (e) {
+      console.error('Error concluding:', e);
+      showToast('Connection error.', 'error');
+    }
+    finally {
+      btn.disabled = false;
+      btn.innerHTML = `<svg class="icon icon-md" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> Conclude Transaction`;
+    }
+  }
+
+  function clearActivePanel() {
+    if (timerInterval) clearInterval(timerInterval);
+    activeMember = null; activeTransactionId = null; activeAppointmentId = null;
+    selectedOutcome = null; selectedRating = null;
+    document.getElementById('active-panel').classList.add('hidden');
+    document.getElementById('no-active').classList.remove('hidden');
+    // Clear all inputs for next member
+    if (document.getElementById('instructions-input')) document.getElementById('instructions-input').value = '';
+    document.querySelectorAll('.outcome-btn').forEach(b => b.classList.remove('selected','finished','rejected','for-verification','for-appointment'));
+    document.querySelectorAll('.rating-btn').forEach(b => b.classList.remove('selected','happy','neutral','sad'));
+  }
+
+  async function markNoShow(apptId) {
+    if (!confirm('Mark this member as No Show? This cannot be undone.')) return;
+    await fetch(`/api/appointments/${apptId}/noshow`, { method: 'POST' });
+    showToast('Member marked as No Show.', 'info');
+    loadMyAppointments();
+  }
+
+  function showHandoffModal(apptId, apptName) {
+    document.getElementById('handoff-appt-id').value = apptId;
+    document.getElementById('handoff-appt-name').textContent = apptName;
+    // Populate clerk dropdown excluding self
+    fetch('/api/clerks').then(r => r.json()).then(clerks => {
+      const sel = document.getElementById('handoff-clerk-select');
+      sel.innerHTML = '<option value="">— Select clerk —</option>' +
+        clerks
+          .filter(c => c.id !== clerk.id && c.is_active && c.counter !== 'Admin')
+          .map(c => `<option value="${c.id}">${c.name} (${c.counter})</option>`)
+          .join('');
+      document.getElementById('handoff-modal').classList.remove('hidden');
+    });
+  }
+
+  async function submitHandoff() {
+    const apptId = document.getElementById('handoff-appt-id').value;
+    const newClerkId = document.getElementById('handoff-clerk-select').value;
+    if (!newClerkId) { showToast('Please select a clerk.', 'error'); return; }
+    const res = await fetch(`/api/appointments/${apptId}/handoff`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ new_clerk_id: newClerkId })
+    });
+    const data = await res.json();
+    if (data.success) {
+      showToast('Appointment handed off successfully.', 'success');
+      closeModal('handoff-modal');
+      loadMyAppointments();
+    } else { showToast('Failed to hand off.', 'error'); }
+  }
+
+  async function resumeMember() {
+    if (!onHoldMember) return;
+    await resumeSpecificMember(onHoldMember.id);
+  }
+
+  async function resumeSpecificMember(memberId) {
+    if (activeMember && activeMember.status === 'being-served') {
+      showToast('Please conclude the current transaction first.', 'error');
+      return;
+    }
+    try {
+      const activeStation = sessionStorage.getItem('clerk_station') || (clerk ? clerk.active_station : null) || (clerk ? clerk.counter : 'Counter 1');
+      const res = await fetch(`/api/members/${memberId}/resume`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          clerk_id: clerk.id,
+          counter: activeStation
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        activeMember = data.member;
+        activeTransactionId = data.transaction_id;
+        showActivePanel(data.member);
+        loadOnHoldMember();
+        loadQueues();
+        showToast(`Resumed service for ${data.member.name}.`, 'success');
+      } else {
+        showToast(data.error || 'Could not resume member.', 'error');
+        loadOnHoldMember();
+      }
+    } catch(e) {
+      showToast('Connection error.', 'error');
+    }
+  }
+
+  // ── Modals ───────────────────────────────────────────────────────────────
+  function showRerouteModal() {
+    if (!activeMember) { showToast('No active member to re-route.', 'error'); return; }
+    document.getElementById('reroute-modal').classList.remove('hidden');
+  }
+  function showReferModal() {
+    if (!activeMember) { showToast('No active member to refer.', 'error'); return; }
+    document.getElementById('refer-modal').classList.remove('hidden');
+  }
+  function showWalkupModal() { document.getElementById('walkup-modal').classList.remove('hidden'); }
+  function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+
+  async function submitReroute() {
+    const dest = document.getElementById('reroute-dest').value;
+    await fetch(`/api/members/${activeMember.id}/reroute`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ new_destination: dest })
+    });
+    closeModal('reroute-modal');
+    clearActivePanel();
+    showToast('Member re-routed. They will be called by name at the destination.', 'info');
+    loadQueues();
+  }
+
+  function submitRefer() {
+    const dest = document.getElementById('refer-dest').value;
+    const destinations = { pacd: 'PACD', 'counter-pool': 'Main Counters', ecenter: 'E-Center' };
+    closeModal('refer-modal');
+    // Print referral slip
+    const w = window.open('', '_blank', 'width=400,height=300');
+    w.document.write(`<html><body style="font-family:Arial;padding:20px;text-align:center">
+      <h3>SSS TOLEDO BRANCH — DEPARTMENTAL REFERRAL</h3><hr>
+      <p><strong>Member:</strong> ${activeMember.name}</p>
+      <p><strong>Referred To:</strong> ${destinations[dest]}</p>
+      <p><strong>Referred By:</strong> ${clerk.counter} (${clerk.name})</p>
+      <p><strong>Time:</strong> ${new Date().toLocaleTimeString('en-PH')}</p><hr>
+      <p>Please present this to the guard for your new queue number.</p>
+      <script>window.print();window.close();<\/script></body></html>`);
+    concludeTransaction();
+  }
+
+  async function submitWalkup() {
+    const name = document.getElementById('wu-name').value.trim();
+    const tx   = document.getElementById('wu-tx').value;
+    if (!name || !tx) { showToast('Please fill in required fields.', 'error'); return; }
+    const res = await fetch('/api/members/checkin', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        queue_number: document.getElementById('wu-queue').value.trim() || null,
+        name, sss_number: document.getElementById('wu-sss').value.trim() || null,
+        transaction_type: tx, entry_type: 'walk-in'
+      })
+    });
+    const data = await res.json();
+    if (data.success) {
+      closeModal('walkup-modal');
+      claimMember(data.member);
+      showToast('Walk-up member added and assigned to you.', 'success');
+    }
+  }
+
+  // ── Socket Events ────────────────────────────────────────────────────────
+  socket.on('member:checkin', () => loadQueues());
+  socket.on('member:claimed', () => { loadQueues(); loadOnHoldMember(); });
+  socket.on('member:updated', () => { loadQueues(); loadOnHoldMember(); });
+  socket.on('appointment:arrived', () => loadMyAppointments());
+  socket.on('appointments:refresh', () => loadMyAppointments());
+  socket.on('connect', () => document.getElementById('conn-badge')?.classList.remove('hidden'));
+  socket.on('disconnect', () => showToast('Connection lost. Reconnecting...', 'error'));
+
+  // ── Service Log ──────────────────────────────────────────────────────────
+  async function openServiceLog() {
+    if (!clerk) return;
+    document.getElementById('log-overlay').classList.add('open');
+    document.getElementById('log-header-sub').textContent = 'Loading...';
+    document.getElementById('log-tbody').innerHTML = '';
+    document.getElementById('log-summary').innerHTML = '';
+    document.getElementById('log-empty').classList.add('hidden');
+
+    const today = new Date().toISOString().split('T')[0];
+    const res = await fetch(`/api/reports/clerk/${clerk.id}/today?date=${today}`);
+    const data = await res.json();
+
+    const dateLabel = new Date().toLocaleDateString('en-PH', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+    document.getElementById('log-header-sub').textContent = `${clerk.name} — ${clerk.counter} | ${dateLabel}`;
+
+    // Summary cards
+    const s = data.summary;
+    const satIcon = `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3H14z"/><path d="M7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg>`;
+    const neuIcon = `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/></svg>`;
+    const unsIcon = `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3H10z"/><path d="M17 2h2.67A2.31 2.31 0 0 1 22 4v7a2.31 2.31 0 0 1-2.33 2H17"/></svg>`;
+    document.getElementById('log-summary').innerHTML = `
+      <div class="log-stat"><div class="val">${s.total}</div><div class="lbl">Total Served</div></div>
+      <div class="log-stat"><div class="val" style="color:var(--success)">${s.finished}</div><div class="lbl">Finished</div></div>
+      <div class="log-stat"><div class="val" style="color:var(--warning)">${s.avg_duration ? parseFloat(s.avg_duration).toFixed(2) : '—'} min</div><div class="lbl">Avg Duration</div></div>
+      <div class="log-stat"><div class="val" style="display:flex;gap:8px;align-items:center;justify-content:center;font-size:0.9rem;">
+        <span style="display:flex;align-items:center;gap:3px;color:var(--success);font-weight:700;">${satIcon}${s.happy}</span>
+        <span style="display:flex;align-items:center;gap:3px;color:var(--warning);font-weight:700;">${neuIcon}${s.neutral}</span>
+        <span style="display:flex;align-items:center;gap:3px;color:var(--danger);font-weight:700;">${unsIcon}${s.sad}</span>
+      </div><div class="lbl">Satisfaction</div></div>`;
+
+    if (data.records.length === 0) {
+      document.getElementById('log-empty').classList.remove('hidden');
+      return;
+    }
+
+    const outcomeMap = {
+      'finished':         { label:'Finished',         bg:'#f0fdf4', color:'#15803d' },
+      'rejected':         { label:'Rejected',         bg:'#fef2f2', color:'#b91c1c' },
+      'for-appointment':  { label:'For Appointment',  bg:'#eff6ff', color:'#1d4ed8' },
+      'for-verification': { label:'For Verification', bg:'#fffbeb', color:'#b45309' },
+    };
+    const ratingMap = {
+      'happy':   { label:'Satisfied',   bg:'#f0fdf4', color:'#15803d' },
+      'neutral': { label:'Neutral',     bg:'#fffbeb', color:'#b45309' },
+      'sad':     { label:'Unsatisfied', bg:'#fef2f2', color:'#b91c1c' },
+    };
+    const entryMap = {
+      'walk-in':            { label:'Walk-In',           bg:'#eff6ff', color:'#1d4ed8' },
+      'portal-appointment': { label:'Portal Appointment', bg:'#fff7ed', color:'#c2410c' },
+      'portal-pool':        { label:'Portal Appointment', bg:'#fff7ed', color:'#c2410c' },
+      'portal':             { label:'Portal Appointment', bg:'#fff7ed', color:'#c2410c' },
+      'direct-appointment': { label:'BAS Appointment',   bg:'#fdf4ff', color:'#7e22ce' },
+      'appointment':        { label:'BAS Appointment',   bg:'#fdf4ff', color:'#7e22ce' },
+      'direct':             { label:'BAS Appointment',   bg:'#fdf4ff', color:'#7e22ce' },
+    };
+    const chip = (cfg) => cfg
+      ? `<span style="display:inline-block;padding:2px 8px;border-radius:999px;font-size:0.72rem;font-weight:700;background:${cfg.bg};color:${cfg.color};">${cfg.label}</span>`
+      : '<span style="color:#9ca3af;font-size:0.78rem">—</span>';
+
+    const tbody = document.getElementById('log-tbody');
+    tbody.innerHTML = '';
+    data.records.forEach((r, i) => {
+      const checkIn = r.check_in_time ? new Date(r.check_in_time).toLocaleTimeString('en-PH', { hour:'2-digit', minute:'2-digit', hour12:true }) : '—';
+      const dur = r.duration_minutes ? `${parseFloat(r.duration_minutes).toFixed(1)} min` : '—';
+      const txType = r.confirmed_transaction_type || r.transaction_type || '—';
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td style="color:var(--text-muted);font-size:0.75rem;">${i + 1}</td>
+        <td><strong>${r.queue_number || '—'}</strong></td>
+        <td style="font-weight:600;">${r.name}</td>
+        <td style="font-family:monospace;font-size:0.78rem;">${r.sss_number || '—'}</td>
+        <td>${chip(entryMap[r.entry_type])}${r.is_late ? ' <span style="display:inline-flex;align-items:center;gap:3px;padding:1px 6px;border-radius:999px;font-size:0.68rem;font-weight:700;background:#fef2f2;color:#b91c1c;border:1px solid #fecaca;vertical-align:middle;"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Late</span>' : ''}</td>
+        <td style="font-size:0.8rem;">${txType}</td>
+        <td style="font-size:0.78rem;">${checkIn}</td>
+        <td style="font-size:0.78rem;">${dur}</td>
+        <td>${chip(outcomeMap[r.outcome])}</td>
+        <td>${chip(ratingMap[r.rating])}</td>
+        <td style="font-size:0.75rem;max-width:180px;">${r.feedback_reason ? `<span style="display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:999px;font-size:0.72rem;font-weight:700;background:#fff1f2;color:#e11d48;border:1px solid #fecdd3;"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> ${r.feedback_reason}</span>` : (r.remarks ? `<span style="color:var(--text-muted);">${r.remarks}</span>` : '<span style="color:#9ca3af">—</span>')}</td>
+        <td style="font-size:0.75rem;color:#1d4ed8;font-style:italic;">${r.clerk_instructions || '<span style="color:#9ca3af">—</span>'}</td>`;
+      tbody.appendChild(tr);
+    });
+  }
+
+  function closeServiceLog() {
+    document.getElementById('log-overlay').classList.remove('open');
+  }
+  function closeLogIfBackdrop(e) {
+    if (e.target === document.getElementById('log-overlay')) closeServiceLog();
+  }
+
+  function exportClerkLogToExcel() {
+    if (!clerk) return;
+    const today = new Date().toISOString().split('T')[0];
+    window.location.href = `/api/reports/export/excel?clerk_id=${clerk.id}&date=${today}`;
+  }
+
+  // ── Toast ────────────────────────────────────────────────────────────────
+  function showToast(msg, type = 'info') {
+    const c = document.getElementById('toast-container');
+    const t = document.createElement('div');
+    t.className = `toast ${type}`;
+    t.textContent = msg;
+    c.appendChild(t);
+    setTimeout(() => { t.style.animation = 'fadeOut 0.3s ease forwards'; setTimeout(() => t.remove(), 300); }, 4000);
+  }
+
+  function printServiceLog() {
+    if (!clerk) return;
+    const today = new Date().toLocaleDateString('en-PH', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+    const rows = Array.from(document.getElementById('log-tbody').querySelectorAll('tr'))
+      .map(r => Array.from(r.querySelectorAll('td')).map(td => td.textContent.trim()).join('</td><td>'))
+      .map(r => `<tr><td>${r}</td></tr>`).join('');
+
+    const summaryEl = document.getElementById('log-summary');
+    const totals = summaryEl.querySelectorAll('.log-stat');
+
+    document.getElementById('log-print-area').innerHTML = `
+      <div style="text-align:center;margin-bottom:20px;border-bottom:2px solid #000;padding-bottom:12px;">
+        <h2 style="margin:0;font-size:14pt;">SOCIAL SECURITY SYSTEM</h2>
+        <h3 style="margin:4px 0;font-size:12pt;">SSS Toledo Branch</h3>
+        <p style="margin:0;font-size:10pt;">Daily Service Log — ${today}</p>
+        <p style="margin:4px 0;font-size:10pt;"><strong>Clerk/Officer:</strong> ${clerk.name} &nbsp;|&nbsp; <strong>Counter:</strong> ${clerk.counter}</p>
+      </div>
+      <table style="width:100%;border-collapse:collapse;font-size:9pt;margin-bottom:16px;">
+        <tr style="background:#f0f0f0;">
+          <th style="border:1px solid #ccc;padding:5px 6px;text-align:left;">#</th>
+          <th style="border:1px solid #ccc;padding:5px 6px;text-align:left;">Queue</th>
+          <th style="border:1px solid #ccc;padding:5px 6px;text-align:left;">Name</th>
+          <th style="border:1px solid #ccc;padding:5px 6px;text-align:left;">SSS Number</th>
+          <th style="border:1px solid #ccc;padding:5px 6px;text-align:left;">Transaction Type</th>
+          <th style="border:1px solid #ccc;padding:5px 6px;text-align:left;">Check-in</th>
+          <th style="border:1px solid #ccc;padding:5px 6px;text-align:left;">Duration</th>
+          <th style="border:1px solid #ccc;padding:5px 6px;text-align:left;">Outcome</th>
+          <th style="border:1px solid #ccc;padding:5px 6px;text-align:left;">Rating</th>
+          <th style="border:1px solid #ccc;padding:5px 6px;text-align:left;">Remarks</th>
+        </tr>
+        ${rows || '<tr><td colspan="10" style="text-align:center;padding:12px;">No records for today.</td></tr>'}
+      </table>
+      <div style="display:flex;gap:24px;font-size:9pt;border-top:1px solid #ccc;padding-top:10px;">
+        ${Array.from(totals).map(s => `<span><strong>${s.querySelector('.lbl').textContent}:</strong> ${s.querySelector('.val').textContent}</span>`).join('')}
+      </div>
+      <div style="margin-top:40px;font-size:9pt;display:flex;justify-content:space-between;">
+        <div style="text-align:center;border-top:1px solid #000;width:200px;padding-top:4px;">Clerk's Signature over Printed Name</div>
+        <div style="text-align:center;border-top:1px solid #000;width:200px;padding-top:4px;">Supervisor's Signature</div>
+      </div>`;
+
+    window.print();
+  }
+
+  // \u2500\u2500 Profile Panel \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+    function exportMyHistoryExcel() {
+    if (!clerk) return;
+    const dateInput = document.getElementById('profile-history-date')?.value || new Date().toISOString().split('T')[0];
+    window.location.href = `/api/reports/export/excel?clerk_id=${clerk.id}&date=${dateInput}`;
+  }
+
+  function exportClerkLogToExcel() {
+    if (!clerk) return;
+    const dateInput = new Date().toISOString().split('T')[0];
+    window.location.href = `/api/reports/export/excel?clerk_id=${clerk.id}&date=${dateInput}`;
+  }
+
+  function openProfile() {
+    if (!clerk) return;
+    document.getElementById('profile-overlay').classList.add('open');
+    const dateInp = document.getElementById('profile-history-date');
+    if (dateInp && !dateInp.value) dateInp.value = new Date().toISOString().split('T')[0];
+    loadProfile();
+  }
+  function closeProfile() {
+    document.getElementById('profile-overlay').classList.remove('open');
+  }
+  function closeProfileIfBackdrop(e) {
+    if (e.target === document.getElementById('profile-overlay')) closeProfile();
+  }
+
+  async function loadProfile() {
+    if (!clerk) return;
+    const initials = clerk.name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+    document.getElementById('profile-avatar').textContent  = initials;
+    document.getElementById('profile-name').textContent    = clerk.name;
+    document.getElementById('profile-counter').textContent = clerk.counter;
+
+    try {
+      const r = await fetch(`/api/clerks/${clerk.id}/profile`);
+      const data = await r.json();
+      const s = data.stats || {};
+      const total = s.total_served || 0;
+      document.getElementById('ps-served').textContent   = total;
+      document.getElementById('ps-finished').textContent = s.finished || 0;
+      document.getElementById('ps-avgdur').textContent   = s.avg_duration ? `${parseFloat(s.avg_duration).toFixed(2)}m` : '\u2014';
+      const ratings = (s.happy||0) + (s.neutral||0) + (s.sad||0) || 1;
+      document.getElementById('cnt-happy').textContent   = s.happy   || 0;
+      document.getElementById('cnt-neutral').textContent = s.neutral || 0;
+      document.getElementById('cnt-sad').textContent     = s.sad     || 0;
+      document.getElementById('bar-happy').style.width   = `${((s.happy||0)/ratings*100).toFixed(1)}%`;
+      document.getElementById('bar-neutral').style.width = `${((s.neutral||0)/ratings*100).toFixed(1)}%`;
+      document.getElementById('bar-sad').style.width     = `${((s.sad||0)/ratings*100).toFixed(1)}%`;
+    } catch(e) { console.error('Profile stats error:', e); }
+
+    loadProfileAppointments();
+  }
+
+  async function loadProfileAppointments() {
+    if (!clerk) return;
+    try {
+      const r    = await fetch(`/api/appointments/clerk/${clerk.id}`);
+      const appts = await r.json();
+      const list  = document.getElementById('profile-appt-list');
+      const badge = document.getElementById('profile-appt-count');
+      badge.textContent = appts.length;
+      if (appts.length === 0) {
+        list.innerHTML = '<div style="text-align:center;color:#94a3b8;font-size:0.8rem;padding:12px;">No appointments uploaded yet.</div>';
+        return;
+      }
+      list.innerHTML = appts.map(a => {
+        let sc = 'waiting', sl = 'Waiting';
+        if (a.arrival_status === 'done' || a.arrival_status === 'served') {
+          sc = 'served'; sl = '<svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px;margin-right:3px;"><polyline points="20 6 9 17 4 12"/></svg>Served';
+        } else if (a.arrival_status === 'in-lobby') {
+          sc = 'arrived'; sl = 'In Lobby';
+        } else if (a.arrival_status === 'no-show') {
+          sc = 'noshow'; sl = 'No-Show';
+        }
+        return `<div class="appt-item" style="${a.arrival_status === 'done' ? 'background:#f8fafc;' : ''}">
+          <div class="appt-time">${a.appointment_time}</div>
+          <div style="flex:1;">
+            <div class="appt-name" style="${a.arrival_status === 'done' ? 'color:#475569;' : ''}">${a.name}</div>
+            ${a.phone_number ? `<div class="appt-phone">${a.phone_number}</div>` : ''}
+          </div>
+          <div class="appt-badge ${sc}">${sl}</div>
+        </div>`;
+      }).join('');
+    } catch(e) { console.error('Appointment list error:', e); }
+  }
+
+  async function uploadMyAppointments(input) {
+    if (!clerk || !input.files[0]) return;
+    const resultEl = document.getElementById('upload-result');
+    resultEl.style.cssText = 'display:block;background:#eff6ff;color:#1e40af;margin-top:10px;padding:8px 12px;border-radius:8px;font-size:0.8rem;font-weight:600;';
+    resultEl.textContent = 'Uploading\u2026';
+    const form = new FormData();
+    form.append('file', input.files[0]);
+    try {
+      const r = await fetch(`/api/appointments/clerk/${clerk.id}/import`, { method: 'POST', body: form });
+      const data = await r.json();
+      if (data.success) {
+        resultEl.style.background = '#f0fdf4'; resultEl.style.color = '#15803d';
+        resultEl.textContent = `\u2713 Imported ${data.imported} appointment${data.imported !== 1 ? 's' : ''}${data.skipped ? ` (${data.skipped} skipped)` : ''}.`;
+        showToast(`${data.imported} appointments uploaded.`, 'success');
+        loadProfileAppointments();
+      } else {
+        resultEl.style.background = '#fef2f2'; resultEl.style.color = '#b91c1c';
+        resultEl.textContent = `Error: ${data.error}`;
+      }
+    } catch(e) {
+      resultEl.style.background = '#fef2f2'; resultEl.style.color = '#b91c1c';
+      resultEl.textContent = 'Connection error. Please try again.';
+    }
+    input.value = '';
+    setTimeout(() => { resultEl.style.display = 'none'; }, 6000);
+  }
+
+  async function clearMyAppointments() {
+    if (!clerk) return;
+    if (!confirm("Clear all your direct appointments for today?")) return;
+    try {
+      await fetch(`/api/appointments/clerk/${clerk.id}/today`, { method: 'DELETE' });
+      showToast("Today's schedule cleared.", 'info');
+      loadProfileAppointments();
+    } catch(e) { showToast('Error clearing schedule.', 'error'); }
+  }
+
+  // ── MY MSS TASKS DRAWER ──────────────────────────────────────────────────
+  let myAssignedTasks = [];
+  let completingTaskId = null;
+
+  async function updateMyTaskBadge() {
+    if (!clerk) return;
+    try {
+      const r = await fetch(`/api/tasks/my/${clerk.id}`);
+      const data = await r.json();
+      myAssignedTasks = data.tasks || [];
+      const badge = document.getElementById('my-task-badge');
+      if (badge) {
+        if (data.activeCount > 0) {
+          badge.textContent = data.activeCount;
+          badge.style.display = 'inline-block';
+        } else {
+          badge.style.display = 'none';
+        }
+      }
+    } catch(e) {}
+  }
+
+  function openMyTasks() {
+    if (!clerk) return;
+    document.getElementById('tasks-overlay').classList.add('open');
+    loadMyTasksList();
+  }
+
+  function closeMyTasks() {
+    document.getElementById('tasks-overlay').classList.remove('open');
+  }
+
+  async function loadMyTasksList() {
+    if (!clerk) return;
+    const container = document.getElementById('my-tasks-list');
+    container.innerHTML = '<div style="text-align:center;color:#64748b;padding:24px;">Loading assignments...</div>';
+
+    try {
+      const r = await fetch(`/api/tasks/my/${clerk.id}`);
+      const data = await r.json();
+      myAssignedTasks = data.tasks || [];
+
+      if (!myAssignedTasks.length) {
+        container.innerHTML = `
+          <div style="text-align:center;padding:36px;color:#64748b;background:#f8fafc;border-radius:12px;border:1px dashed #cbd5e1;">
+            <svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="#94a3b8" stroke-width="1.5" style="margin-bottom:8px;"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+            <div style="font-weight:700;color:#334155;font-size:0.95rem;">No Pending Tasks Assigned</div>
+            <div style="font-size:0.8rem;margin-top:2px;">You are all caught up on internal MSS assignments.</div>
+          </div>`;
+        return;
+      }
+
+      container.innerHTML = '';
+      myAssignedTasks.forEach(t => {
+        const priorityColors = {
+          critical: { bg: '#fee2e2', text: '#b91c1c', border: '#fca5a5', label: 'CRITICAL' },
+          urgent: { bg: '#fef3c7', text: '#b45309', border: '#fde68a', label: 'URGENT' },
+          normal: { bg: '#eff6ff', text: '#1e40af', border: '#bfdbfe', label: 'NORMAL' }
+        };
+        const p = priorityColors[t.priority] || priorityColors.normal;
+
+        const statusBadges = {
+          pending: '<span class="badge badge-amber" style="font-size:0.72rem;"><svg viewBox="0 0 10 10" width="10" height="10" style="display:inline;vertical-align:middle;margin-right:3px;"><circle cx="5" cy="5" r="4" fill="#d97706"/></svg>Pending</span>',
+          ongoing: '<span class="badge badge-blue" style="font-size:0.72rem;"><svg viewBox="0 0 10 10" width="10" height="10" style="display:inline;vertical-align:middle;margin-right:3px;"><circle cx="5" cy="5" r="4" fill="#2563eb"/></svg>In Progress</span>',
+          completed: '<span class="badge badge-green" style="font-size:0.72rem;"><svg viewBox="0 0 10 10" width="10" height="10" style="display:inline;vertical-align:middle;margin-right:3px;"><circle cx="5" cy="5" r="4" fill="#15803d"/></svg>Completed</span>',
+          overdue: '<span class="badge badge-red" style="font-size:0.72rem;"><svg viewBox="0 0 10 10" width="10" height="10" style="display:inline;vertical-align:middle;margin-right:3px;"><circle cx="5" cy="5" r="4" fill="#dc2626"/></svg>Overdue</span>'
+        };
+
+        const item = document.createElement('div');
+        item.style.cssText = `
+          background: #ffffff;
+          border-radius: 10px;
+          border: 1.5px solid ${t.status === 'overdue' ? '#fca5a5' : '#e2e8f0'};
+          padding: 14px;
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+          box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+        `;
+
+        item.innerHTML = `
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">
+            <div style="display:flex;gap:6px;align-items:center;">
+              <span style="font-size:0.68rem;font-weight:700;padding:2px 6px;border-radius:4px;background:${p.bg};color:${p.text};border:1px solid ${p.border};">${p.label}</span>
+              <span class="badge badge-gray" style="font-size:0.68rem;">${t.category}</span>
+            </div>
+            <div>${statusBadges[t.status] || ''}</div>
+          </div>
+
+          <div>
+            <div style="font-weight:700;font-size:0.92rem;color:#0f172a;margin-bottom:4px;">${t.title}</div>
+            <div style="font-size:0.8rem;color:#64748b;line-height:1.4;">${t.description || 'No detailed notes.'}</div>
+          </div>
+
+          <div style="display:flex;justify-content:space-between;align-items:center;padding-top:8px;border-top:1px solid #f1f5f9;font-size:0.78rem;">
+            <span style="color:#64748b;">Target Deadline: <strong style="color:${t.status === 'overdue' ? '#dc2626' : '#1e40af'};">${t.target_date}</strong></span>
+            
+            <div style="display:flex;gap:6px;">
+              ${t.status !== 'completed' ? `
+                ${t.status !== 'ongoing' ? `
+                  <button class="btn btn-ghost btn-sm" onclick="setMyTaskStatus(${t.id}, 'ongoing')" style="font-size:0.75rem;color:#1e40af;border-color:#bfdbfe;background:#eff6ff;">▶ Start Working</button>
+                ` : ''}
+                <button class="btn btn-primary btn-sm" onclick="openCompleteTaskModal(${t.id}, '${t.title.replace(/'/g, "\\'")}')" style="font-size:0.75rem;background:#15803d;border-color:#15803d;">✓ Mark Done</button>
+              ` : `
+                <span style="color:#15803d;font-weight:700;font-size:0.75rem;">✓ Accomplished at ${t.completed_at}</span>
+              `}
+            </div>
+          </div>
+        `;
+        container.appendChild(item);
+      });
+    } catch(e) {
+      container.innerHTML = '<div style="color:#b91c1c;padding:16px;">Failed to load assignments.</div>';
+    }
+  }
+
+  async function setMyTaskStatus(id, status) {
+    try {
+      const r = await fetch(`/api/tasks/${id}/status`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status })
+      });
+      const d = await r.json();
+      if (d.success) {
+        showToast('Task status updated.', 'info');
+        loadMyTasksList();
+        updateMyTaskBadge();
+      }
+    } catch(e) {
+      showToast('Network error.', 'error');
+    }
+  }
+
+  function openCompleteTaskModal(id, title) {
+    completingTaskId = id;
+    document.getElementById('complete-task-title').textContent = title;
+    document.getElementById('complete-task-notes').value = '';
+    document.getElementById('task-complete-modal').classList.remove('hidden');
+  }
+
+  async function submitCompleteTask() {
+    const notes = document.getElementById('complete-task-notes').value.trim();
+    if (!notes) {
+      showToast('Please provide a brief accomplishment remark.', 'error');
+      return;
+    }
+
+    try {
+      const r = await fetch(`/api/tasks/${completingTaskId}/status`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'completed', accomplishment_notes: notes })
+      });
+      const d = await r.json();
+      if (d.success) {
+        document.getElementById('task-complete-modal').classList.add('hidden');
+        showToast('MSS assignment accomplished!', 'success');
+        loadMyTasksList();
+        updateMyTaskBadge();
+      }
+    } catch(e) {
+      showToast('Network error.', 'error');
+    }
+  }
+
+  // Socket task refresh for personnel
+  socket.on('task:created', () => updateMyTaskBadge());
+  socket.on('task:updated', () => updateMyTaskBadge());
+  socket.on('task:deleted', () => updateMyTaskBadge());
+</script>
+</body>
+</html>

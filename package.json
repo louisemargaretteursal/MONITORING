@@ -1,0 +1,16 @@
+{
+  "name": "sss-toledo-monitoring",
+  "version": "1.0.0",
+  "description": "SSS Toledo Branch Smart Monitoring & Transaction Routing System",
+  "main": "server.js",
+  "scripts": {
+    "start": "node --experimental-sqlite server.js",
+    "dev": "node --experimental-sqlite server.js"
+  },
+  "dependencies": {
+    "exceljs": "^4.4.0",
+    "express": "^4.18.2",
+    "multer": "^1.4.5-lts.1",
+    "socket.io": "^4.7.4"
+  }
+}
