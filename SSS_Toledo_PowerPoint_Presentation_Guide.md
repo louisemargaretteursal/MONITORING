@@ -116,7 +116,19 @@
 | **MSS Assignment Tracking** | Sticky notes and verbal delegation | **Digital MSS Task Ledger** with automated overdue detection |
 
 > 🗣️ **Speaker Script (Coach 2):**
-> *"As shown in this operational comparison, our frontline Member Services Section faces major blind spots every day. In particular, for appointment bookings, clerks cannot see who has actually arrived in the lobby. For My.SSS portal appointments, our branch doesn't even have a prior masterlist—we only know a member has an appointment when they show a paper printout or a phone screenshot at the counter. With our new system, appointed members simply check in at the kiosk, immediately alerting the assigned MSR or portal queue that they are waiting in the lobby. Here is OJT 1 to introduce our proposed solution."*
+> *"In particular, for appointed members, our counter personnel face a significant blind spot. For direct bookings, clerks cannot see who among the scheduled members has actually arrived in the lobby versus who is absent. Even more challenging, for My.SSS portal appointments, our branch has no advance masterlist at all — we only know a member booked an appointment when they reach the counter and show a printed paper slip or a phone screenshot.
+>
+> With our new system, appointed members simply tap their name or portal details at the entrance kiosk, immediately alerting the assigned MSR or portal queue that they are physically in the lobby and ready to be served.
+>
+> So here is a simple comparison:
+> - Before, members write on paper at the entrance — now, they check in on a small screen in fifteen seconds.
+> - Before, staff ask the member's details again — now, the member's name and details are already on the counter screen before they even sit down.
+> - Before, we track appointments using printed schedules — now, the system tells us the moment an appointed member walks in the door, including portal bookings.
+> - Before, we count tickets by hand for one to two hours — now, the count happens automatically and can be sent to Excel in one click.
+> - Before, we hand out paper survey forms — now, members rate their visit right at the counter on a small tablet.
+> - And before, we assign tasks by sticky note — now, everything is written down in one shared task list with due dates.
+>
+> Salamat, Coach 2. We needed a simple, local tool that connects our paper tickets straight to our counter screens, without touching the main SSS system and without any monthly cloud bills. OJT 1, ikaw naman."*
 
 ---
 
