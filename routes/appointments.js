@@ -393,32 +393,43 @@ module.exports = (io, upload) => {
 
   // POST add a portal appointment via kiosk
   router.post('/portal/checkin', (req, res) => {
-    const { name, sss_number, appointment_time } = req.body;
+    const {
+      name, sss_number, appointment_time, transaction_type,
+      customer_type, sex, age, region, dpa_consent
+    } = req.body;
     const today = new Date().toISOString().split('T')[0];
 
     if (!name || !appointment_time) {
       return res.status(400).json({ error: 'Name and appointment time are required.' });
     }
 
-    // Create member record
-    const memberResult = db.prepare(`
-      INSERT INTO members (name, sss_number, transaction_type, routed_to, entry_type)
-      VALUES (?, ?, ?, ?, ?)
-    `).run(name, sss_number || null, 'Portal Appointment', 'portal-pool', 'portal-appointment');
+    const txType = transaction_type || 'Portal Appointment';
 
+    // Create member record with specific transaction purpose and ARTA demographics
+    const memberResult = db.prepare(`
+      INSERT INTO members (
+        name, sss_number, transaction_type, routed_to, entry_type,
+        customer_type, sex, age, region, dpa_consent
+      )
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(
+      name, sss_number || null, txType, 'portal-pool', 'portal-appointment',
+      customer_type || null, sex || null, age ? parseInt(age) : null,
+      region || 'Region VII - Central Visayas', dpa_consent || 'agree'
+    );
 
     // Create appointment record
     const apptResult = db.prepare(`
-      INSERT INTO appointments (name, appointment_time, type, arrival_status, member_id, date)
-      VALUES (?, ?, 'portal', 'in-lobby', ?, ?)
-    `).run(name, appointment_time, memberResult.lastInsertRowid, today);
+      INSERT INTO appointments (name, appointment_time, type, arrival_status, member_id, date, service)
+      VALUES (?, ?, 'portal', 'in-lobby', ?, ?, ?)
+    `).run(name, appointment_time, memberResult.lastInsertRowid, today, txType);
 
     const appt = db.prepare('SELECT * FROM appointments WHERE id = ?').get(apptResult.lastInsertRowid);
     const member = db.prepare('SELECT * FROM members WHERE id = ?').get(memberResult.lastInsertRowid);
 
-    io.to('portal-pool').emit('appointment:arrived', appt);
-    io.to('counter-pool').emit('appointment:arrived', appt);
-    io.to('admin').emit('appointment:arrived', appt);
+    io.to('portal-pool').emit('appointment:arrived', { ...appt, member });
+    io.to('counter-pool').emit('appointment:arrived', { ...appt, member });
+    io.to('admin').emit('appointment:arrived', { ...appt, member });
 
     res.json({ success: true, appointment: appt, member });
   });
