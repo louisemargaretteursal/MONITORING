@@ -201,13 +201,13 @@ module.exports = (io, activeStations) => {
       WHERE m.date = ? AND m.status = 'being-served'
     `).all(today);
 
-    // Active long-wait alerts (> 20 mins)
+    // Active long-wait alerts (> 15 mins ARTA standard)
     const longWaiting = db.prepare(`
       SELECT id, name, queue_number, transaction_type, routed_to, check_in_time,
              ROUND((julianday('now', 'localtime') - julianday(check_in_time)) * 24 * 60, 1) as wait_minutes
       FROM members
       WHERE date = ? AND status = 'waiting'
-        AND ((julianday('now', 'localtime') - julianday(check_in_time)) * 24 * 60) >= 20
+        AND ((julianday('now', 'localtime') - julianday(check_in_time)) * 24 * 60) >= 15
       ORDER BY wait_minutes DESC
     `).all(today);
 
