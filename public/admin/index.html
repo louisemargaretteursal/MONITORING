@@ -3066,19 +3066,31 @@
       const result = document.getElementById('import-result');
       result.textContent = 'Importing...';
       result.className = '';
+      result.classList.remove('hidden');
       try {
         const r = await fetch('/api/appointments/import', { method: 'POST', body: form });
         const d = await r.json();
         if (d.success) {
-          result.className = 'badge badge-green';
-          result.textContent = `✓ Successfully imported ${d.imported} appointments!`;
+          if (d.warning) {
+            result.style.background = '#fef3c7';
+            result.style.color = '#92400e';
+            result.style.border = '1.5px solid #fde68a';
+            result.style.display = 'block';
+            result.innerHTML = `<strong>${d.warning}</strong><br><span style="font-size:0.75rem;opacity:0.9;">Total records saved: ${d.imported}.</span>`;
+            showToast('Schedule imported with date notice.', 'info');
+          } else {
+            result.className = 'badge badge-green';
+            result.style.cssText = 'display:block;padding:10px 14px;background:#f0fdf4;color:#15803d;border:1px solid #bbf7d0;border-radius:8px;font-size:0.85rem;font-weight:700;';
+            result.textContent = `✓ Successfully imported ${d.imported} appointments for today!`;
+            showToast(`Imported ${d.imported} appointments for today.`, 'success');
+          }
           loadAppointments();
         } else {
-          result.className = 'badge badge-red';
+          result.style.cssText = 'display:block;padding:10px 14px;background:#fef2f2;color:#991b1b;border:1px solid #fecaca;border-radius:8px;font-size:0.85rem;font-weight:700;';
           result.textContent = `Error: ${d.error}`;
         }
       } catch (e) {
-        result.className = 'badge badge-red';
+        result.style.cssText = 'display:block;padding:10px 14px;background:#fef2f2;color:#991b1b;border:1px solid #fecaca;border-radius:8px;font-size:0.85rem;font-weight:700;';
         result.textContent = 'Import failed. Please check your network and Excel format.';
       }
       input.value = '';

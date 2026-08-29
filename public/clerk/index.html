@@ -2348,20 +2348,33 @@
       const r = await fetch(`/api/appointments/clerk/${clerk.id}/import`, { method: 'POST', body: form });
       const data = await r.json();
       if (data.success) {
-        resultEl.style.background = '#f0fdf4'; resultEl.style.color = '#15803d';
-        resultEl.textContent = `\u2713 Imported ${data.imported} appointment${data.imported !== 1 ? 's' : ''}${data.skipped ? ` (${data.skipped} skipped)` : ''}.`;
-        showToast(`${data.imported} appointments uploaded.`, 'success');
+        if (data.warning) {
+          resultEl.style.background = '#fef3c7';
+          resultEl.style.color = '#92400e';
+          resultEl.style.border = '1.5px solid #fde68a';
+          resultEl.innerHTML = `<strong>${data.warning}</strong><br><span style="font-size:0.72rem;opacity:0.9;">Total records saved: ${data.imported}.</span>`;
+          showToast('Schedule uploaded with date notice.', 'info');
+        } else {
+          resultEl.style.background = '#f0fdf4';
+          resultEl.style.color = '#15803d';
+          resultEl.style.border = '1px solid #bbf7d0';
+          resultEl.textContent = `✓ Imported ${data.imported} appointment${data.imported !== 1 ? 's' : ''} for today!`;
+          showToast(`${data.imported} appointments uploaded for today.`, 'success');
+        }
         loadProfileAppointments();
       } else {
-        resultEl.style.background = '#fef2f2'; resultEl.style.color = '#b91c1c';
+        resultEl.style.background = '#fef2f2';
+        resultEl.style.color = '#b91c1c';
+        resultEl.style.border = '1px solid #fecaca';
         resultEl.textContent = `Error: ${data.error}`;
       }
     } catch(e) {
-      resultEl.style.background = '#fef2f2'; resultEl.style.color = '#b91c1c';
+      resultEl.style.background = '#fef2f2';
+      resultEl.style.color = '#b91c1c';
       resultEl.textContent = 'Connection error. Please try again.';
     }
     input.value = '';
-    setTimeout(() => { resultEl.style.display = 'none'; }, 6000);
+    setTimeout(() => { resultEl.style.display = 'none'; }, 9000);
   }
 
   async function clearMyAppointments() {

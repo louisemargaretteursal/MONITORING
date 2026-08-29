@@ -275,13 +275,23 @@ module.exports = (io, upload) => {
           // Insert new appointment
           insertAppt.run(r.name, r.phone || null, r.email || null, r.time, r.clerkId, apptDate, r.service || null, r.duration || 15, r.bookingStatus || 'Confirmed');
         }
-        imported++;
-      });
+      const uniqueDates = [...new Set(rows.map(r => r.date || today))];
+      const pastDates = uniqueDates.filter(d => d < today);
+      const futureDates = uniqueDates.filter(d => d > today);
 
-      io.to('admin').emit('appointments:imported', { count: imported, date: today });
+      let warning = null;
+      if (pastDates.length > 0 && futureDates.length === 0 && !uniqueDates.includes(today)) {
+        warning = `⚠️ Past Date Notice: The uploaded file is for past date (${pastDates.join(', ')}). These records will not appear in today's live queue.`;
+      } else if (futureDates.length > 0 && !uniqueDates.includes(today)) {
+        warning = `📅 Advance Booking Notice: File is scheduled for future date (${futureDates.join(', ')}). They will automatically activate on that day and will not show in today's live queue (${today}).`;
+      } else if (pastDates.length > 0 || futureDates.length > 0) {
+        warning = `ℹ️ Multi-Date Notice: File has dates (${uniqueDates.join(', ')}). Only today's records (${today}) appear in today's live queue.`;
+      }
+
+      io.to('admin').emit('appointments:imported', { count: imported, date: today, dates: uniqueDates });
       io.emit('appointments:refresh');
 
-      res.json({ success: true, imported, skipped });
+      res.json({ success: true, imported, skipped, dates: uniqueDates, warning });
     } catch (err) {
       console.error('Excel import error:', err);
       res.status(500).json({ error: 'Failed to read Excel file. Please check the format.' });
@@ -419,14 +429,27 @@ module.exports = (io, upload) => {
         imported++;
       });
 
+      const uniqueDates = [...new Set(rows.map(r => r.date || today))];
+      const pastDates = uniqueDates.filter(d => d < today);
+      const futureDates = uniqueDates.filter(d => d > today);
+
+      let warning = null;
+      if (pastDates.length > 0 && futureDates.length === 0 && !uniqueDates.includes(today)) {
+        warning = `⚠️ Past Date Notice: Uploaded file is for past date (${pastDates.join(', ')}). These will not appear on today's live queue.`;
+      } else if (futureDates.length > 0 && !uniqueDates.includes(today)) {
+        warning = `📅 Advance Booking Notice: File is scheduled for future date (${futureDates.join(', ')}). They will automatically activate on that day and will not show in today's live queue (${today}).`;
+      } else if (pastDates.length > 0 || futureDates.length > 0) {
+        warning = `ℹ️ Multi-Date Notice: File has dates (${uniqueDates.join(', ')}). Only today's records (${today}) appear in today's live queue.`;
+      }
+
       // Notify all affected clerks and admin
       affectedClerkIds.forEach(cId => {
         io.to(`clerk-${cId}`).emit('appointments:refresh');
       });
       io.emit('appointments:refresh');
-      io.to('admin').emit('appointments:imported', { count: imported, date: today, clerkId: clerk_id });
+      io.to('admin').emit('appointments:imported', { count: imported, date: today, clerkId: clerk_id, dates: uniqueDates });
 
-      res.json({ success: true, imported, skipped });
+      res.json({ success: true, imported, skipped, dates: uniqueDates, warning });
     } catch (err) {
       console.error('Clerk Excel import error:', err);
       res.status(500).json({ error: 'Failed to read Excel file. Please check the format.' });
