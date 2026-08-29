@@ -244,18 +244,37 @@ module.exports = (io, upload) => {
         rows.push({ name, phone, email, time: timeStr, date: dateStr, clerkId, service, duration, bookingStatus });
       });
 
-      // Delete today's direct appointments only for clerks appearing in this file
-      const affectedClerkIds = [...new Set(rows.map(r => r.clerkId).filter(Boolean))];
-      if (affectedClerkIds.length > 0) {
-        const placeholders = affectedClerkIds.map(() => '?').join(',');
-        db.prepare(`DELETE FROM appointments WHERE date = ? AND type = 'direct' AND clerk_id IN (${placeholders})`)
-          .run(today, ...affectedClerkIds);
-      }
-      // Also delete unassigned direct appointments
-      db.prepare(`DELETE FROM appointments WHERE date = ? AND type = 'direct' AND clerk_id IS NULL`).run(today);
+      // Smart Upsert / Duplicate Prevention:
+      // Match by (date, clerk_id, name, appointment_time) to avoid duplicate rows
+      // and preserve live kiosk check-ins (in-lobby / served)
+      const findExisting = db.prepare(`
+        SELECT id, arrival_status, member_id, is_late FROM appointments
+        WHERE date = ? AND LOWER(name) = LOWER(?) AND (clerk_id = ? OR (clerk_id IS NULL AND ? IS NULL))
+        LIMIT 1
+      `);
+
+      const updateAppt = db.prepare(`
+        UPDATE appointments
+        SET phone_number = COALESCE(?, phone_number),
+            email = COALESCE(?, email),
+            appointment_time = ?,
+            service = COALESCE(?, service),
+            duration_mins = COALESCE(?, duration_mins),
+            booking_status = COALESCE(?, booking_status)
+        WHERE id = ?
+      `);
 
       rows.forEach(r => {
-        insertAppt.run(r.name, r.phone || null, r.email || null, r.time, r.clerkId, r.date || today, r.service || null, r.duration || 15, r.bookingStatus || 'Confirmed');
+        const apptDate = r.date || today;
+        const existing = findExisting.get(apptDate, r.name.trim(), r.clerkId, r.clerkId);
+
+        if (existing) {
+          // Update existing booking details while keeping arrival status & ticket intact
+          updateAppt.run(r.phone, r.email, r.time, r.service, r.duration || 15, r.bookingStatus || 'Confirmed', existing.id);
+        } else {
+          // Insert new appointment
+          insertAppt.run(r.name, r.phone || null, r.email || null, r.time, r.clerkId, apptDate, r.service || null, r.duration || 15, r.bookingStatus || 'Confirmed');
+        }
         imported++;
       });
 
@@ -364,16 +383,39 @@ module.exports = (io, upload) => {
         rows.push({ name, phone, email, time: timeStr, clerkId: targetClerkId, date: dateStr, service, duration, bookingStatus });
       });
 
-      // Clear today's direct appointments for all affected clerks in this file
+      // Smart Upsert / Duplicate Prevention:
+      // Match by (date, clerk_id, name) to avoid duplicate rows and preserve live kiosk check-ins
+      const findExisting = db.prepare(`
+        SELECT id, arrival_status, member_id, is_late FROM appointments
+        WHERE date = ? AND LOWER(name) = LOWER(?) AND (clerk_id = ? OR (clerk_id IS NULL AND ? IS NULL))
+        LIMIT 1
+      `);
+
+      const updateAppt = db.prepare(`
+        UPDATE appointments
+        SET phone_number = COALESCE(?, phone_number),
+            email = COALESCE(?, email),
+            appointment_time = ?,
+            service = COALESCE(?, service),
+            duration_mins = COALESCE(?, duration_mins),
+            booking_status = COALESCE(?, booking_status)
+        WHERE id = ?
+      `);
+
       const affectedClerkIds = [...new Set(rows.map(r => r.clerkId).filter(Boolean))];
       if (affectedClerkIds.length === 0) affectedClerkIds.push(clerk_id);
 
-      const placeholders = affectedClerkIds.map(() => '?').join(',');
-      db.prepare(`DELETE FROM appointments WHERE date = ? AND type = 'direct' AND clerk_id IN (${placeholders})`)
-        .run(today, ...affectedClerkIds);
-
       rows.forEach(r => {
-        insertAppt.run(r.name, r.phone, r.email, r.time, r.clerkId, r.date || today, r.service, r.duration, r.bookingStatus);
+        const apptDate = r.date || today;
+        const existing = findExisting.get(apptDate, r.name.trim(), r.clerkId, r.clerkId);
+
+        if (existing) {
+          // Update existing booking details while keeping live arrival & ticket intact
+          updateAppt.run(r.phone, r.email, r.time, r.service, r.duration || 15, r.bookingStatus || 'Confirmed', existing.id);
+        } else {
+          // Insert new appointment
+          insertAppt.run(r.name, r.phone, r.email, r.time, r.clerkId, apptDate, r.service, r.duration, r.bookingStatus);
+        }
         imported++;
       });
 
