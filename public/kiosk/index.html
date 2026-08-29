@@ -680,8 +680,9 @@
                 <option>Death / Funeral Claim</option>
                 <option>SSS ID / UMID Application</option>
                 <option>Loan Application (Salary / Calamity)</option>
-                <option>Contribution Inquiry</option>
-                <option>E4 / Member Data Change</option>
+                <option>Contribution Inquiry / Verification</option>
+                <option>E4 / Member Data Update (SS Form E-4)</option>
+                <option>Senior Citizen / Pensioner Assistance</option>
                 <option>Others</option>
               </select>
             </div>
@@ -690,20 +691,18 @@
               <label class="form-label">Customer Type <span style="color:#64748b;font-weight:normal;">(Optional - for
                   ARTA CSM)</span></label>
               <select class="form-select" id="walkin-customertype">
-                <option value="">— Select Customer Type —</option>
-                <option>Employed Member</option>
-                <option>Self-Employed Member</option>
-                <option>Voluntary Member</option>
-                <option>Pensioner / Retirement</option>
-                <option>Disability Pensioner</option>
-                <option>Overseas Filipino Worker (OFW)</option>
-                <option>Non-Working Spouse</option>
-                <option>Employer</option>
-                <option>Employer Representative</option>
-                <option>Household Employee (Kasambahay)</option>
-                <option>Government Employee</option>
-                <option>Beneficiary</option>
-                <option>Prior Registrant / Non-Member</option>
+                <option value="">— Select customer type —</option>
+                <option value="Employed Member">Employed Member (Private / Formal Sector)</option>
+                <option value="Self-Employed">Self-Employed / Professional</option>
+                <option value="Voluntary Member">Voluntary Member / Individual Paying</option>
+                <option value="Non-Working Spouse">Non-Working Spouse</option>
+                <option value="OFW">OFW (Overseas Filipino Worker)</option>
+                <option value="Kasambahay">Kasambahay / Household Employee</option>
+                <option value="Pensioner">Pensioner / Retiree</option>
+                <option value="Beneficiary">Beneficiary / Dependent</option>
+                <option value="Employer">Employer / Company Representative</option>
+                <option value="Government Employee">Government Employee</option>
+                <option value="Prior Registrant">Prior Registrant / Non-Member</option>
               </select>
             </div>
 
@@ -845,18 +844,37 @@
 
             <!-- ARTA Demographics (same as Walk-In and Portal) -->
             <div class="form-group" style="margin-top:12px;">
+              <label class="form-label">Transaction Purpose <span style="color:#64748b;font-weight:normal;">(Optional - for ARTA CSM)</span></label>
+              <select class="form-select" id="appt-transaction">
+                <option value="">— Select your transaction —</option>
+                <option>Retirement Benefit</option>
+                <option>Sickness Benefit</option>
+                <option>Maternity Benefit</option>
+                <option>Disability Benefit</option>
+                <option>Death / Funeral Claim</option>
+                <option>SSS ID / UMID Application</option>
+                <option>Loan Application (Salary / Calamity)</option>
+                <option>Contribution Inquiry / Verification</option>
+                <option>E4 / Member Data Update (SS Form E-4)</option>
+                <option>Senior Citizen / Pensioner Assistance</option>
+                <option>Others</option>
+              </select>
+            </div>
+            <div class="form-group">
               <label class="form-label">Customer Type <span style="color:#64748b;font-weight:normal;">(Optional - for ARTA CSM)</span></label>
               <select class="form-select" id="appt-customertype">
-                <option value="">— Select customer category —</option>
-                <option value="Employed">Employed (Private / Formal Sector)</option>
+                <option value="">— Select customer type —</option>
+                <option value="Employed Member">Employed Member (Private / Formal Sector)</option>
                 <option value="Self-Employed">Self-Employed / Professional</option>
-                <option value="Voluntary">Voluntary Member / Individual Paying</option>
+                <option value="Voluntary Member">Voluntary Member / Individual Paying</option>
                 <option value="Non-Working Spouse">Non-Working Spouse</option>
                 <option value="OFW">OFW (Overseas Filipino Worker)</option>
-                <option value="Kasambahay">Kasambahay / Househelper</option>
+                <option value="Kasambahay">Kasambahay / Household Employee</option>
                 <option value="Pensioner">Pensioner / Retiree</option>
                 <option value="Beneficiary">Beneficiary / Dependent</option>
                 <option value="Employer">Employer / Company Representative</option>
+                <option value="Government Employee">Government Employee</option>
+                <option value="Prior Registrant">Prior Registrant / Non-Member</option>
               </select>
             </div>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
@@ -973,10 +991,10 @@
                 <option>Maternity Benefit</option>
                 <option>Disability Benefit</option>
                 <option>Death / Funeral Claim</option>
-                <option>Member Data Updating (SS Form E-4)</option>
                 <option>SSS ID / UMID Application</option>
-                <option>Salary / Calamity Loan Application</option>
-                <option>Contribution Verification / Inquiries</option>
+                <option>Loan Application (Salary / Calamity)</option>
+                <option>Contribution Inquiry / Verification</option>
+                <option>E4 / Member Data Update (SS Form E-4)</option>
                 <option>Senior Citizen / Pensioner Assistance</option>
                 <option>Others</option>
               </select>
@@ -984,16 +1002,18 @@
             <div class="form-group">
               <label class="form-label">Customer Type <span style="color:#64748b;font-weight:normal;">(Optional - for ARTA CSM)</span></label>
               <select class="form-select" id="portal-customertype">
-                <option value="">— Select customer category —</option>
-                <option value="Employed">Employed (Private / Formal Sector)</option>
+                <option value="">— Select customer type —</option>
+                <option value="Employed Member">Employed Member (Private / Formal Sector)</option>
                 <option value="Self-Employed">Self-Employed / Professional</option>
-                <option value="Voluntary">Voluntary Member / Individual Paying</option>
+                <option value="Voluntary Member">Voluntary Member / Individual Paying</option>
                 <option value="Non-Working Spouse">Non-Working Spouse</option>
                 <option value="OFW">OFW (Overseas Filipino Worker)</option>
-                <option value="Kasambahay">Kasambahay / Househelper</option>
+                <option value="Kasambahay">Kasambahay / Household Employee</option>
                 <option value="Pensioner">Pensioner / Retiree</option>
                 <option value="Beneficiary">Beneficiary / Dependent</option>
                 <option value="Employer">Employer / Company Representative</option>
+                <option value="Government Employee">Government Employee</option>
+                <option value="Prior Registrant">Prior Registrant / Non-Member</option>
               </select>
             </div>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
@@ -1316,6 +1336,7 @@
 
       try {
         // Read ARTA demographics the member filled in
+        const txPurpose = document.getElementById('appt-transaction')?.value || null;
         const customerType = document.getElementById('appt-customertype')?.value || null;
         const sex = document.getElementById('appt-sex')?.value || null;
         const age = document.getElementById('appt-age')?.value ? parseInt(document.getElementById('appt-age').value) : null;
@@ -1327,7 +1348,7 @@
           body: JSON.stringify({
             name: appt.name,
             sss_number: null,
-            transaction_type: appt.service || 'Direct Appointment',
+            transaction_type: txPurpose || appt.service || 'Direct Appointment',
             entry_type: 'direct-appointment',
             queue_number: null,
             customer_type: customerType,
