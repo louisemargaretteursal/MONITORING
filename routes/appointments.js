@@ -1,6 +1,91 @@
-const express = require('express');
-const ExcelJS = require('exceljs');
-const db = require('../database/db');
+function formatTimeTo12Hour(tStr) {
+  if (!tStr) return '';
+  const trimmed = String(tStr).trim();
+  const matchAmPm = trimmed.match(/^(\d{1,2}):(\d{2})(?::\d{2})?\s*(AM|PM)$/i);
+  if (matchAmPm) {
+    const h = String(parseInt(matchAmPm[1])).padStart(2, '0');
+    const m = matchAmPm[2];
+    const ampm = matchAmPm[3].toUpperCase();
+    return `${h}:${m} ${ampm}`;
+  }
+  const match24 = trimmed.match(/^(\d{1,2}):(\d{2})(?::\d{2})?$/);
+  if (match24) {
+    let h = parseInt(match24[1]);
+    const m = match24[2];
+    const ampm = h >= 12 ? 'PM' : 'AM';
+    h = h % 12 || 12;
+    return `${String(h).padStart(2, '0')}:${m} ${ampm}`;
+  }
+  return trimmed;
+}
+
+function normalizeAppointmentDateTime(val, defaultDate) {
+  const today = defaultDate || new Date().toISOString().split('T')[0];
+  if (!val) return { date: today, time: '' };
+
+  if (val instanceof Date) {
+    const y = val.getFullYear();
+    const m = String(val.getMonth() + 1).padStart(2, '0');
+    const d = String(val.getDate()).padStart(2, '0');
+    const dateStr = `${y}-${m}-${d}`;
+    let hours = val.getHours();
+    const minutes = String(val.getMinutes()).padStart(2, '0');
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+    hours = hours % 12 || 12;
+    const timeStr = `${String(hours).padStart(2, '0')}:${minutes} ${ampm}`;
+    return { date: dateStr, time: timeStr };
+  }
+
+  const str = String(val).trim();
+
+  // Excel numeric date serial
+  if (!isNaN(str) && Number(str) > 30000 && Number(str) < 70000) {
+    const excelEpoch = new Date(Date.UTC(1899, 11, 30));
+    const totalMs = Number(str) * 86400 * 1000;
+    const d = new Date(excelEpoch.getTime() + totalMs);
+    return normalizeAppointmentDateTime(d, today);
+  }
+
+  // Combined Date & Time (e.g. "8/30/2026 8:30", "8/30/2026 14:00", "2026-08-30 08:30 AM")
+  const matchDateTime = str.match(/^(\d{1,4}[-\/]\d{1,2}[-\/]\d{1,4})\s+(.+)$/);
+  if (matchDateTime) {
+    const rawDate = matchDateTime[1];
+    const rawTime = matchDateTime[2];
+
+    let dateStr = today;
+    if (rawDate.includes('-')) {
+      const p = rawDate.split('-');
+      if (p[0].length === 4) dateStr = `${p[0]}-${p[1].padStart(2, '0')}-${p[2].padStart(2, '0')}`;
+      else dateStr = `${p[2]}-${p[0].padStart(2, '0')}-${p[1].padStart(2, '0')}`;
+    } else if (rawDate.includes('/')) {
+      const p = rawDate.split('/');
+      if (p[0].length === 4) dateStr = `${p[0]}-${p[1].padStart(2, '0')}-${p[2].padStart(2, '0')}`;
+      else if (p[2] && p[2].length === 4) dateStr = `${p[2]}-${p[0].padStart(2, '0')}-${p[1].padStart(2, '0')}`;
+    }
+
+    const timeStr = formatTimeTo12Hour(rawTime);
+    return { date: dateStr, time: timeStr };
+  }
+
+  // Just date
+  const matchDateOnly = str.match(/^(\d{1,4}[-\/]\d{1,2}[-\/]\d{1,4})$/);
+  if (matchDateOnly) {
+    const rawDate = matchDateOnly[1];
+    let dateStr = today;
+    if (rawDate.includes('-')) {
+      const p = rawDate.split('-');
+      if (p[0].length === 4) dateStr = `${p[0]}-${p[1].padStart(2, '0')}-${p[2].padStart(2, '0')}`;
+      else dateStr = `${p[2]}-${p[0].padStart(2, '0')}-${p[1].padStart(2, '0')}`;
+    } else if (rawDate.includes('/')) {
+      const p = rawDate.split('/');
+      if (p[0].length === 4) dateStr = `${p[0]}-${p[1].padStart(2, '0')}-${p[2].padStart(2, '0')}`;
+      else if (p[2] && p[2].length === 4) dateStr = `${p[2]}-${p[0].padStart(2, '0')}-${p[1].padStart(2, '0')}`;
+    }
+    return { date: dateStr, time: '' };
+  }
+
+  return { date: today, time: formatTimeTo12Hour(str) };
+}
 
 module.exports = (io, upload) => {
   const router = express.Router();
@@ -184,61 +269,22 @@ module.exports = (io, upload) => {
         const c7 = row.getCell(7).value;
         const c8 = row.getCell(8).value?.toString()?.trim();
 
-        let dateStr = today;
-        let timeStr = '';
-        let name = '';
-        let email = null;
-        let phone = null;
-        let staffName = '';
-        let service = null;
-        let duration = 15;
-        let bookingStatus = 'Confirmed';
-
-        if (c1 instanceof Date) {
-          dateStr = c1.toISOString().split('T')[0];
-          timeStr = c1.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
-          name = c2 || '';
-          email = c3 || null;
-          phone = c4 || null;
-          staffName = c5 || '';
-          service = c6 || null;
-          duration = c7 ? parseInt(c7) || 15 : 15;
-          bookingStatus = c8 || 'Confirmed';
-        } else if (typeof c1 === 'string' && (c1.includes('/') || c1.includes('-') || c1.includes(':') || c1.toLowerCase().includes('am') || c1.toLowerCase().includes('pm'))) {
-          const parts = c1.trim().split(/\s+/);
-          if (parts.length >= 2) {
-            const parsedDate = new Date(c1);
-            if (!isNaN(parsedDate.getTime())) {
-              dateStr = parsedDate.toISOString().split('T')[0];
-              timeStr = parsedDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
-            } else {
-              timeStr = parts.slice(1).join(' ');
-            }
-          } else {
-            timeStr = c1;
-          }
-          name = c2 || '';
-          email = c3 || null;
-          phone = c4 || null;
-          staffName = c5 || '';
-          service = c6 || null;
-          duration = c7 ? parseInt(c7) || 15 : 15;
-          bookingStatus = c8 || 'Confirmed';
-        } else {
-          // Legacy 5-column format: Col 1 Name, Col 2 Phone, Col 3 Email, Col 4 Time, Col 5 Staff Name
-          name = c1?.toString()?.trim() || '';
-          phone = c2 || null;
-          email = c3 || null;
-          timeStr = c4 || '';
-          staffName = c5 || '';
-          service = c6 || null;
-        }
+        const dt = normalizeAppointmentDateTime(c1, today);
+        const dateStr = dt.date || today;
+        const timeStr = dt.time;
+        const name = c2 || '';
+        const email = c3 || null;
+        const phone = c4 || null;
+        const staffName = c5 || '';
+        const service = c6 || null;
+        const duration = c7 ? parseInt(c7) || 15 : 15;
+        const bookingStatus = c8 || 'Confirmed';
 
         if (!name || !timeStr) { skipped++; return; }
 
         let clerkId = null;
         if (staffName) {
-          const clerk = db.prepare('SELECT id FROM clerks WHERE name LIKE ?').get(`%${staffName}%`);
+          const clerk = db.prepare('SELECT id FROM clerks WHERE LOWER(name) LIKE LOWER(?)').get(`%${staffName.trim()}%`);
           if (clerk) clerkId = clerk.id;
         }
         rows.push({ name, phone, email, time: timeStr, date: dateStr, clerkId, service, duration, bookingStatus });
@@ -330,55 +376,16 @@ module.exports = (io, upload) => {
         const c7 = row.getCell(7).value;
         const c8 = row.getCell(8).value?.toString()?.trim();
 
-        let dateStr = today;
-        let timeStr = '';
-        let name = '';
-        let email = null;
-        let phone = null;
-        let staffName = '';
-        let service = null;
-        let duration = 15;
-        let bookingStatus = 'Confirmed';
-
-        // Check if official 8-column format (Col 1: Date & Time, Col 2: Name)
-        if (c1 instanceof Date) {
-          dateStr = c1.toISOString().split('T')[0];
-          timeStr = c1.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
-          name = c2 || '';
-          email = c3 || null;
-          phone = c4 || null;
-          staffName = c5 || '';
-          service = c6 || null;
-          duration = c7 ? parseInt(c7) || 15 : 15;
-          bookingStatus = c8 || 'Confirmed';
-        } else if (typeof c1 === 'string' && (c1.includes('/') || c1.includes('-') || c1.includes(':') || c1.toLowerCase().includes('am') || c1.toLowerCase().includes('pm')) && c2) {
-          const parts = c1.trim().split(/\s+/);
-          if (parts.length >= 2) {
-            const parsedDate = new Date(c1);
-            if (!isNaN(parsedDate.getTime())) {
-              dateStr = parsedDate.toISOString().split('T')[0];
-              timeStr = parsedDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
-            } else {
-              timeStr = parts.slice(1).join(' ');
-            }
-          } else {
-            timeStr = c1.trim();
-          }
-          name = c2 || '';
-          email = c3 || null;
-          phone = c4 || null;
-          staffName = c5 || '';
-          service = c6 || null;
-          duration = c7 ? parseInt(c7) || 15 : 15;
-          bookingStatus = c8 || 'Confirmed';
-        } else {
-          // Legacy 4/5-column format fallback
-          name = c1?.toString()?.trim() || '';
-          phone = c2 || null;
-          email = c3 || null;
-          timeStr = c4 || '';
-          staffName = c5 || '';
-        }
+        const dt = normalizeAppointmentDateTime(c1, today);
+        const dateStr = dt.date || today;
+        const timeStr = dt.time;
+        const name = c2 || '';
+        const email = c3 || null;
+        const phone = c4 || null;
+        const staffName = c5 || '';
+        const service = c6 || null;
+        const duration = c7 ? parseInt(c7) || 15 : 15;
+        const bookingStatus = c8 || 'Confirmed';
 
         if (!name || !timeStr) { skipped++; return; }
 
