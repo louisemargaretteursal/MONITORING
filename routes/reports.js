@@ -256,8 +256,9 @@ module.exports = () => {
     const apptsQuery = isOjt
       ? `
         SELECT a.*,
+               a.phone_number as phone,
                COALESCE(c.name, 'OJT Assistant') as clerk_name,
-               COALESCE(a.counter, c.counter, 'E-Center') as counter_name,
+               COALESCE(c.counter, 'E-Center') as counter_name,
                m.queue_number,
                m.sss_number,
                m.check_in_time,
@@ -286,8 +287,9 @@ module.exports = () => {
       `
       : `
         SELECT a.*,
+               a.phone_number as phone,
                COALESCE(c.name, 'Assigned Officer') as clerk_name,
-               COALESCE(a.counter, c.counter, 'Counter 1') as counter_name,
+               COALESCE(c.counter, 'Counter 1') as counter_name,
                m.queue_number,
                m.sss_number,
                m.check_in_time,
@@ -1171,8 +1173,9 @@ module.exports = () => {
       // ── SHEET 3: MY APPOINTMENTS & SCHEDULE ATTENDANCE LOG ───────────────────
       let apptSql = `
         SELECT a.*,
+               a.phone_number as phone,
                COALESCE(c.name, 'Assigned Officer') as clerk_name,
-               COALESCE(a.counter, c.counter, 'Counter 1') as counter_name,
+               COALESCE(c.counter, 'Counter 1') as counter_name,
                m.queue_number,
                m.sss_number,
                m.check_in_time,
