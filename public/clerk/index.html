@@ -1731,7 +1731,7 @@
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           outcome: selectedOutcome,
-          remarks: document.getElementById('instructions-input') ? document.getElementById('instructions-input').value.trim() : null,
+          remarks: null,
           clerk_instructions: document.getElementById('instructions-input') ? document.getElementById('instructions-input').value.trim() : '',
           member_id: activeMember.id,
           confirmed_transaction_type: confirmedType,
