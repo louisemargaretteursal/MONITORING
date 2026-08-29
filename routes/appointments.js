@@ -269,12 +269,12 @@ module.exports = (io, upload) => {
     }
   });
 
-  // POST import Excel appointments for a specific clerk (clerk self-upload)
+  // POST import Excel appointments for a specific clerk or multi-staff file (clerk self-upload)
   router.post('/clerk/:clerk_id/import', upload.single('file'), async (req, res) => {
     if (!req.file) return res.status(400).json({ error: 'No file uploaded.' });
     const { clerk_id } = req.params;
-    const clerk = db.prepare('SELECT * FROM clerks WHERE id = ?').get(clerk_id);
-    if (!clerk) return res.status(404).json({ error: 'Clerk not found.' });
+    const currentClerk = db.prepare('SELECT * FROM clerks WHERE id = ?').get(clerk_id);
+    if (!currentClerk) return res.status(404).json({ error: 'Clerk not found.' });
 
     try {
       const workbook = new ExcelJS.Workbook();
@@ -282,15 +282,13 @@ module.exports = (io, upload) => {
       const worksheet = workbook.worksheets[0];
 
       const today = new Date().toISOString().split('T')[0];
-      // Clear only THIS clerk's today direct appointments
-      db.prepare(`DELETE FROM appointments WHERE date = ? AND type = 'direct' AND clerk_id = ?`).run(today, clerk_id);
-
       let imported = 0, skipped = 0;
       const insertAppt = db.prepare(`
         INSERT INTO appointments (name, phone_number, email, appointment_time, clerk_id, type, date, service, duration_mins, booking_status)
         VALUES (?, ?, ?, ?, ?, 'direct', ?, ?, ?, ?)
       `);
 
+      const rows = [];
       worksheet.eachRow((row, rowNumber) => {
         if (rowNumber === 1) return;
 
@@ -303,46 +301,87 @@ module.exports = (io, upload) => {
         const c7 = row.getCell(7).value;
         const c8 = row.getCell(8).value?.toString()?.trim();
 
+        let dateStr = today;
         let timeStr = '';
         let name = '';
         let email = null;
         let phone = null;
+        let staffName = '';
         let service = null;
         let duration = 15;
         let bookingStatus = 'Confirmed';
 
         // Check if official 8-column format (Col 1: Date & Time, Col 2: Name)
         if (c1 instanceof Date) {
+          dateStr = c1.toISOString().split('T')[0];
           timeStr = c1.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
           name = c2 || '';
           email = c3 || null;
           phone = c4 || null;
+          staffName = c5 || '';
           service = c6 || null;
           duration = c7 ? parseInt(c7) || 15 : 15;
           bookingStatus = c8 || 'Confirmed';
         } else if (typeof c1 === 'string' && (c1.includes('/') || c1.includes('-') || c1.includes(':') || c1.toLowerCase().includes('am') || c1.toLowerCase().includes('pm')) && c2) {
           const parts = c1.trim().split(/\s+/);
-          timeStr = parts.length >= 2 ? parts.slice(1).join(' ') : c1.trim();
+          if (parts.length >= 2) {
+            const parsedDate = new Date(c1);
+            if (!isNaN(parsedDate.getTime())) {
+              dateStr = parsedDate.toISOString().split('T')[0];
+              timeStr = parsedDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+            } else {
+              timeStr = parts.slice(1).join(' ');
+            }
+          } else {
+            timeStr = c1.trim();
+          }
           name = c2 || '';
           email = c3 || null;
           phone = c4 || null;
+          staffName = c5 || '';
           service = c6 || null;
           duration = c7 ? parseInt(c7) || 15 : 15;
           bookingStatus = c8 || 'Confirmed';
         } else {
-          // Legacy 4-column format fallback (Col 1: Name, Col 2: Phone, Col 3: Email, Col 4: Time)
+          // Legacy 4/5-column format fallback
           name = c1?.toString()?.trim() || '';
           phone = c2 || null;
           email = c3 || null;
           timeStr = c4 || '';
+          staffName = c5 || '';
         }
 
         if (!name || !timeStr) { skipped++; return; }
-        insertAppt.run(name, phone, email, timeStr, clerk_id, today, service, duration, bookingStatus);
+
+        let targetClerkId = clerk_id;
+        if (staffName) {
+          const matched = db.prepare('SELECT id FROM clerks WHERE LOWER(name) LIKE LOWER(?)').get(`%${staffName.trim()}%`);
+          if (matched) {
+            targetClerkId = matched.id;
+          }
+        }
+
+        rows.push({ name, phone, email, time: timeStr, clerkId: targetClerkId, date: dateStr, service, duration, bookingStatus });
+      });
+
+      // Clear today's direct appointments for all affected clerks in this file
+      const affectedClerkIds = [...new Set(rows.map(r => r.clerkId).filter(Boolean))];
+      if (affectedClerkIds.length === 0) affectedClerkIds.push(clerk_id);
+
+      const placeholders = affectedClerkIds.map(() => '?').join(',');
+      db.prepare(`DELETE FROM appointments WHERE date = ? AND type = 'direct' AND clerk_id IN (${placeholders})`)
+        .run(today, ...affectedClerkIds);
+
+      rows.forEach(r => {
+        insertAppt.run(r.name, r.phone, r.email, r.time, r.clerkId, r.date || today, r.service, r.duration, r.bookingStatus);
         imported++;
       });
 
-      io.to(`clerk-${clerk_id}`).emit('appointments:refresh');
+      // Notify all affected clerks and admin
+      affectedClerkIds.forEach(cId => {
+        io.to(`clerk-${cId}`).emit('appointments:refresh');
+      });
+      io.emit('appointments:refresh');
       io.to('admin').emit('appointments:imported', { count: imported, date: today, clerkId: clerk_id });
 
       res.json({ success: true, imported, skipped });
