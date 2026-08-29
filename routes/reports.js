@@ -252,7 +252,74 @@ module.exports = () => {
         : 0
     };
 
-    res.json({ date, records, summary });
+    // Also fetch all appointments for this clerk on this date with their transaction status
+    const apptsQuery = isOjt
+      ? `
+        SELECT a.*,
+               COALESCE(c.name, 'OJT Assistant') as clerk_name,
+               COALESCE(a.counter, c.counter, 'E-Center') as counter_name,
+               m.queue_number,
+               m.sss_number,
+               m.check_in_time,
+               t.service_start_time,
+               t.service_end_time,
+               t.duration_minutes,
+               t.wait_time_minutes,
+               t.outcome,
+               t.rating,
+               t.remarks,
+               t.feedback_reason,
+               t.clerk_instructions,
+               t.confirmed_transaction_type,
+               CASE
+                 WHEN a.arrival_status = 'done' OR t.outcome IS NOT NULL THEN 'Served'
+                 WHEN a.arrival_status = 'no-show' THEN 'No-Show'
+                 WHEN a.arrival_status = 'in-lobby' THEN 'In Lobby'
+                 ELSE 'Pending'
+               END as computed_status
+        FROM appointments a
+        LEFT JOIN clerks c ON a.clerk_id = c.id
+        LEFT JOIN members m ON a.member_id = m.id
+        LEFT JOIN transactions t ON t.member_id = m.id
+        WHERE a.date = ?
+        ORDER BY a.appointment_time ASC
+      `
+      : `
+        SELECT a.*,
+               COALESCE(c.name, 'Assigned Officer') as clerk_name,
+               COALESCE(a.counter, c.counter, 'Counter 1') as counter_name,
+               m.queue_number,
+               m.sss_number,
+               m.check_in_time,
+               t.service_start_time,
+               t.service_end_time,
+               t.duration_minutes,
+               t.wait_time_minutes,
+               t.outcome,
+               t.rating,
+               t.remarks,
+               t.feedback_reason,
+               t.clerk_instructions,
+               t.confirmed_transaction_type,
+               CASE
+                 WHEN a.arrival_status = 'done' OR t.outcome IS NOT NULL THEN 'Served'
+                 WHEN a.arrival_status = 'no-show' THEN 'No-Show'
+                 WHEN a.arrival_status = 'in-lobby' THEN 'In Lobby'
+                 ELSE 'Pending'
+               END as computed_status
+        FROM appointments a
+        LEFT JOIN clerks c ON a.clerk_id = c.id
+        LEFT JOIN members m ON a.member_id = m.id
+        LEFT JOIN transactions t ON t.member_id = m.id
+        WHERE a.clerk_id = ? AND a.date = ?
+        ORDER BY a.appointment_time ASC
+      `;
+
+    const appointments = isOjt
+      ? db.prepare(apptsQuery).all(date)
+      : db.prepare(apptsQuery).all(id, date);
+
+    res.json({ date, records, summary, appointments });
   });
 
   // ── CSV Helper ─────────────────────────────────────────────────────────────
@@ -1101,10 +1168,207 @@ module.exports = () => {
       const wsMaster = wb.addWorksheet('Master Log', { views: [{ showGridLines: true }] });
       buildTransactionSheet(wsMaster, 'MASTER SERVICE MONITORING LOG', subtitleText, rows);
 
+      // ── SHEET 3: MY APPOINTMENTS & SCHEDULE ATTENDANCE LOG ───────────────────
+      let apptSql = `
+        SELECT a.*,
+               COALESCE(c.name, 'Assigned Officer') as clerk_name,
+               COALESCE(a.counter, c.counter, 'Counter 1') as counter_name,
+               m.queue_number,
+               m.sss_number,
+               m.check_in_time,
+               t.service_start_time,
+               t.service_end_time,
+               t.duration_minutes,
+               t.wait_time_minutes,
+               t.outcome,
+               t.rating,
+               t.remarks,
+               t.feedback_reason,
+               t.clerk_instructions,
+               COALESCE(t.confirmed_transaction_type, a.service, m.transaction_type, 'Appointment') as confirmed_tx_type,
+               CASE
+                 WHEN a.arrival_status = 'done' OR t.outcome IS NOT NULL THEN 'Served'
+                 WHEN a.arrival_status = 'no-show' THEN 'No-Show'
+                 WHEN a.arrival_status = 'in-lobby' THEN 'In Lobby'
+                 ELSE 'Pending'
+               END as computed_status
+        FROM appointments a
+        LEFT JOIN clerks c ON a.clerk_id = c.id
+        LEFT JOIN members m ON a.member_id = m.id
+        LEFT JOIN transactions t ON t.member_id = m.id
+        WHERE 1=1
+      `;
+      const apptParams = [];
+      if (clerkId) {
+        apptSql += ' AND a.clerk_id = ?';
+        apptParams.push(clerkId);
+      }
+      if (fromDate && toDate) {
+        apptSql += ' AND a.date BETWEEN ? AND ?';
+        apptParams.push(fromDate, toDate);
+      } else if (targetDate && !isAll) {
+        apptSql += ' AND a.date = ?';
+        apptParams.push(targetDate);
+      }
+      apptSql += ' ORDER BY a.date DESC, a.appointment_time ASC';
+
+      const apptRows = db.prepare(apptSql).all(...apptParams);
+
+      if (apptRows.length > 0) {
+        const wsAppts = wb.addWorksheet(clerkId ? 'My Appointments' : 'Appointments Schedule', { views: [{ state: 'frozen', xSplit: 0, ySplit: 6, showGridLines: true }] });
+        wsAppts.pageSetup = { orientation: 'landscape', paperSize: 9, fitToPage: true, fitToWidth: 1, fitToHeight: 0 };
+
+        // Banner
+        wsAppts.mergeCells('A1:P1');
+        const apptTitle = wsAppts.getCell('A1');
+        apptTitle.value = `SOCIAL SECURITY SYSTEM — TOLEDO BRANCH | ${clerkId ? 'MY APPOINTMENTS & ATTENDANCE LOG' : 'APPOINTMENT SCHEDULE & ATTENDANCE LOG'}`;
+        apptTitle.font = { name: 'Segoe UI', size: 13, bold: true, color: { argb: 'FFFFFFFF' } };
+        apptTitle.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF' + NAVY_DARK } };
+        apptTitle.alignment = { vertical: 'middle', horizontal: 'center' };
+        wsAppts.getRow(1).height = 28;
+
+        wsAppts.mergeCells('A2:P2');
+        const apptSub = wsAppts.getCell('A2');
+        apptSub.value = subtitleText;
+        apptSub.font = { name: 'Segoe UI', size: 10, italic: true, color: { argb: 'FFFFFFFF' } };
+        apptSub.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF' + SSS_BLUE } };
+        apptSub.alignment = { vertical: 'middle', horizontal: 'center' };
+        wsAppts.getRow(2).height = 20;
+
+        // KPI Summary Row
+        const totalAppts = apptRows.length;
+        const servedAppts = apptRows.filter(r => r.computed_status === 'Served').length;
+        const noShowAppts = apptRows.filter(r => r.computed_status === 'No-Show').length;
+        const inLobbyAppts = apptRows.filter(r => r.computed_status === 'In Lobby').length;
+        const pendingAppts = apptRows.filter(r => r.computed_status === 'Pending').length;
+
+        wsAppts.mergeCells('A4:C4');
+        wsAppts.getCell('A4').value = `Total Bookings: ${totalAppts}`;
+        wsAppts.getCell('A4').font = { name: 'Segoe UI', size: 10, bold: true, color: { argb: 'FF1E3A8A' } };
+        wsAppts.getCell('A4').fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE0F2FE' } };
+        wsAppts.getCell('A4').alignment = { vertical: 'middle', horizontal: 'center' };
+
+        wsAppts.mergeCells('D4:F4');
+        wsAppts.getCell('D4').value = `Served: ${servedAppts} (${totalAppts ? Math.round(servedAppts/totalAppts*100) : 0}%)`;
+        wsAppts.getCell('D4').font = { name: 'Segoe UI', size: 10, bold: true, color: { argb: 'FF15803D' } };
+        wsAppts.getCell('D4').fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFDCFCE7' } };
+        wsAppts.getCell('D4').alignment = { vertical: 'middle', horizontal: 'center' };
+
+        wsAppts.mergeCells('G4:I4');
+        wsAppts.getCell('G4').value = `No-Show: ${noShowAppts} (${totalAppts ? Math.round(noShowAppts/totalAppts*100) : 0}%)`;
+        wsAppts.getCell('G4').font = { name: 'Segoe UI', size: 10, bold: true, color: { argb: 'FFB91C1C' } };
+        wsAppts.getCell('G4').fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFEE2E2' } };
+        wsAppts.getCell('G4').alignment = { vertical: 'middle', horizontal: 'center' };
+
+        wsAppts.mergeCells('J4:L4');
+        wsAppts.getCell('J4').value = `In Lobby: ${inLobbyAppts} | Pending: ${pendingAppts}`;
+        wsAppts.getCell('J4').font = { name: 'Segoe UI', size: 10, bold: true, color: { argb: 'FF1E3A8A' } };
+        wsAppts.getCell('J4').fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE0F2FE' } };
+        wsAppts.getCell('J4').alignment = { vertical: 'middle', horizontal: 'center' };
+
+        wsAppts.getRow(4).height = 22;
+
+        // Table Header
+        const apptHeaders = [
+          '#', 'Date', 'Appt Time', 'Member Name', 'Contact Phone', 'Email Address',
+          'Service / Purpose', 'Assigned Officer', 'Counter / Desk', 'Status / Mark',
+          'Late?', 'Check-in Time', 'Duration (min)', 'Outcome', 'CSAT Rating', 'Instructions / Remarks'
+        ];
+
+        const apptHeaderRow = wsAppts.getRow(6);
+        apptHeaderRow.values = apptHeaders;
+        apptHeaderRow.height = 26;
+        apptHeaderRow.eachCell((cell) => {
+          cell.font = { name: 'Segoe UI', size: 9.5, bold: true, color: { argb: 'FFFFFFFF' } };
+          cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF' + HEADER_BG } };
+          cell.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true };
+          cell.border = {
+            top: { style: 'medium', color: { argb: 'FF' + NAVY_DARK } },
+            bottom: { style: 'medium', color: { argb: 'FF' + NAVY_DARK } },
+            left: { style: 'thin', color: { argb: 'FFFFFFFF' } },
+            right: { style: 'thin', color: { argb: 'FFFFFFFF' } }
+          };
+        });
+
+        wsAppts.autoFilter = {
+          from: { row: 6, column: 1 },
+          to: { row: 6, column: apptHeaders.length }
+        };
+
+        // Populate Data
+        apptRows.forEach((r, idx) => {
+          const row = wsAppts.getRow(7 + idx);
+          const checkIn = r.check_in_time ? r.check_in_time.split(' ')[1] || r.check_in_time : '—';
+          const dur = r.duration_minutes != null ? parseFloat(r.duration_minutes) : (r.computed_status === 'Served' ? 10.0 : 0);
+          const out = r.outcome ? (r.outcome === 'finished' ? 'Finished' : (r.outcome === 'for-verification' ? 'For Verification' : r.outcome)) : (r.computed_status === 'Served' ? 'Finished' : '—');
+          const sat = r.rating ? (r.rating === 'happy' ? 'Satisfied' : (r.rating === 'neutral' ? 'Neutral' : 'Unsatisfied')) : '—';
+
+          row.values = [
+            idx + 1,
+            r.date || '—',
+            r.appointment_time || '—',
+            r.name || '—',
+            r.phone || '—',
+            r.email || '—',
+            r.confirmed_tx_type || r.service || 'Appointment',
+            r.clerk_name || 'Assigned Officer',
+            r.counter_name || 'Counter 1',
+            r.computed_status,
+            r.is_late ? 'Yes (Late)' : 'No',
+            checkIn,
+            dur,
+            out,
+            sat,
+            r.clerk_instructions || r.remarks || ''
+          ];
+
+          const isEven = idx % 2 === 0;
+          const rowBg = isEven ? 'FFFFFFFF' : 'FFF8FAFC';
+
+          row.eachCell({ includeEmpty: true }, (cell, colNumber) => {
+            cell.font = { name: 'Segoe UI', size: 9 };
+            cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: rowBg } };
+            cell.border = {
+              top: { style: 'thin', color: { argb: 'FF' + BORDER_COLOR } },
+              left: { style: 'thin', color: { argb: 'FF' + BORDER_COLOR } },
+              bottom: { style: 'thin', color: { argb: 'FF' + BORDER_COLOR } },
+              right: { style: 'thin', color: { argb: 'FF' + BORDER_COLOR } }
+            };
+            cell.alignment = { vertical: 'middle', horizontal: 'left' };
+
+            if ([1, 2, 3, 5, 8, 9, 10, 11, 12, 13, 14, 15].includes(colNumber)) {
+              cell.alignment = { vertical: 'middle', horizontal: 'center' };
+            }
+          });
+
+          // Status Badge Color
+          const statusCell = row.getCell(10);
+          if (r.computed_status === 'Served') {
+            statusCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFDCFCE7' } };
+            statusCell.font = { name: 'Segoe UI', size: 9, bold: true, color: { argb: 'FF15803D' } };
+          } else if (r.computed_status === 'No-Show') {
+            statusCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFEE2E2' } };
+            statusCell.font = { name: 'Segoe UI', size: 9, bold: true, color: { argb: 'FFB91C1C' } };
+          } else if (r.computed_status === 'In Lobby') {
+            statusCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFDBEAFE' } };
+            statusCell.font = { name: 'Segoe UI', size: 9, bold: true, color: { argb: 'FF1D4ED8' } };
+          } else {
+            statusCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF1F5F9' } };
+            statusCell.font = { name: 'Segoe UI', size: 9, bold: true, color: { argb: 'FF64748B' } };
+          }
+        });
+
+        // Column widths
+        const apptColWidths = [6, 12, 12, 24, 16, 22, 30, 18, 16, 16, 10, 12, 12, 16, 14, 28];
+        apptColWidths.forEach((w, i) => {
+          wsAppts.getColumn(i + 1).width = w;
+        });
+      }
+
       // ── CATEGORY SHEETS: ONLY CREATED IF ROWS EXIST (No Empty Clutter Tabs) ──
       // ── INDIVIDUAL TRANSACTION TYPE TABS (Exact Transacted Types) ──────────
       // Create a dedicated worksheet tab for each exact transaction type that was transacted on this day/period
-      const usedSheetNames = new Set(['sss service matrix', 'master log', 'staff performance', 'tx types breakdown']);
+      const usedSheetNames = new Set(['sss service matrix', 'master log', 'my appointments', 'appointments schedule', 'staff performance', 'tx types breakdown']);
 
       matrixRows.forEach(mItem => {
         const typeName = mItem.name;

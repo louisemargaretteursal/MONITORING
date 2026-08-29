@@ -547,29 +547,71 @@
         </div>
       </div>
       <div class="log-summary" id="log-summary"></div>
+
+      <!-- Service Log Tabs -->
+      <div style="display:flex;gap:8px;padding:0 24px 12px 24px;border-bottom:1px solid #e2e8f0;">
+        <button id="btn-log-tab-tx" class="btn btn-sm btn-primary" onclick="switchLogTab('tx')" style="font-weight:700;display:flex;align-items:center;gap:6px;">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          Concluded Transactions (<span id="log-tx-badge">0</span>)
+        </button>
+        <button id="btn-log-tab-appts" class="btn btn-sm btn-ghost" onclick="switchLogTab('appts')" style="font-weight:700;display:flex;align-items:center;gap:6px;border-color:#cbd5e1;">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          My Appointments Schedule (<span id="log-appts-badge">0</span>)
+        </button>
+      </div>
+
       <div class="log-body">
-        <table class="log-table">
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>Queue</th>
-              <th>Name</th>
-              <th>SSS Number</th>
-              <th>Entry Type</th>
-              <th>Transaction Type</th>
-              <th>Check-in</th>
-              <th>Duration</th>
-              <th>Outcome</th>
-              <th>Satisfaction</th>
-              <th>Remarks</th>
-              <th>Instructions for Member</th>
-            </tr>
-          </thead>
-          <tbody id="log-tbody"></tbody>
-        </table>
-        <div id="log-empty" class="hidden" style="text-align:center;padding:60px 20px;color:#6b7280;">
-          <div style="margin-bottom:12px;display:flex;justify-content:center;"><svg class="icon icon-4xl" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="13" y2="16"/></svg></div>
-          <p>No transactions recorded yet today.</p>
+        <!-- Tab 1: Concluded Transactions -->
+        <div id="log-view-tx">
+          <table class="log-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Queue</th>
+                <th>Name</th>
+                <th>SSS Number</th>
+                <th>Entry Type</th>
+                <th>Transaction Type</th>
+                <th>Check-in</th>
+                <th>Duration</th>
+                <th>Outcome</th>
+                <th>Satisfaction</th>
+                <th>Remarks</th>
+                <th>Instructions for Member</th>
+              </tr>
+            </thead>
+            <tbody id="log-tbody"></tbody>
+          </table>
+          <div id="log-empty" class="hidden" style="text-align:center;padding:60px 20px;color:#6b7280;">
+            <div style="margin-bottom:12px;display:flex;justify-content:center;"><svg class="icon icon-4xl" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="13" y2="16"/></svg></div>
+            <p>No concluded transactions recorded yet today.</p>
+          </div>
+        </div>
+
+        <!-- Tab 2: My Appointments Schedule & Attendance -->
+        <div id="log-view-appts" class="hidden">
+          <table class="log-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Time</th>
+                <th>Member Name</th>
+                <th>Contact Phone</th>
+                <th>Booked Service</th>
+                <th>Status / Attendance</th>
+                <th>Check-in</th>
+                <th>Duration</th>
+                <th>Outcome</th>
+                <th>CSAT</th>
+                <th>Clerk Instructions</th>
+              </tr>
+            </thead>
+            <tbody id="log-appts-tbody"></tbody>
+          </table>
+          <div id="log-appts-empty" class="hidden" style="text-align:center;padding:60px 20px;color:#6b7280;">
+            <div style="margin-bottom:12px;display:flex;justify-content:center;"><svg class="icon icon-4xl" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
+            <p>No appointments booked for this clerk today.</p>
+          </div>
         </div>
       </div>
       <div class="log-footer no-print">
@@ -1929,13 +1971,40 @@
   socket.on('disconnect', () => showToast('Connection lost. Reconnecting...', 'error'));
 
   // ── Service Log ──────────────────────────────────────────────────────────
+  let activeLogTab = 'tx';
+
+  function switchLogTab(tab) {
+    activeLogTab = tab;
+    const btnTx = document.getElementById('btn-log-tab-tx');
+    const btnAppts = document.getElementById('btn-log-tab-appts');
+    const viewTx = document.getElementById('log-view-tx');
+    const viewAppts = document.getElementById('log-view-appts');
+
+    if (tab === 'tx') {
+      btnTx.className = 'btn btn-sm btn-primary';
+      btnAppts.className = 'btn btn-sm btn-ghost';
+      btnAppts.style.borderColor = '#cbd5e1';
+      viewTx.classList.remove('hidden');
+      viewAppts.classList.add('hidden');
+    } else {
+      btnTx.className = 'btn btn-sm btn-ghost';
+      btnTx.style.borderColor = '#cbd5e1';
+      btnAppts.className = 'btn btn-sm btn-primary';
+      viewTx.classList.add('hidden');
+      viewAppts.classList.remove('hidden');
+    }
+  }
+
   async function openServiceLog() {
     if (!clerk) return;
     document.getElementById('log-overlay').classList.add('open');
     document.getElementById('log-header-sub').textContent = 'Loading...';
     document.getElementById('log-tbody').innerHTML = '';
+    document.getElementById('log-appts-tbody').innerHTML = '';
     document.getElementById('log-summary').innerHTML = '';
     document.getElementById('log-empty').classList.add('hidden');
+    document.getElementById('log-appts-empty').classList.add('hidden');
+    switchLogTab('tx');
 
     const today = new Date().toISOString().split('T')[0];
     const res = await fetch(`/api/reports/clerk/${clerk.id}/today?date=${today}`);
@@ -1943,6 +2012,12 @@
 
     const dateLabel = new Date().toLocaleDateString('en-PH', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
     document.getElementById('log-header-sub').textContent = `${clerk.name} — ${clerk.counter} | ${dateLabel}`;
+
+    const records = data.records || [];
+    const appointments = data.appointments || [];
+
+    document.getElementById('log-tx-badge').textContent = records.length;
+    document.getElementById('log-appts-badge').textContent = appointments.length;
 
     // Summary cards
     const s = data.summary;
@@ -1959,9 +2034,8 @@
         <span style="display:flex;align-items:center;gap:3px;color:var(--danger);font-weight:700;">${unsIcon}${s.sad}</span>
       </div><div class="lbl">Satisfaction</div></div>`;
 
-    if (data.records.length === 0) {
+    if (records.length === 0) {
       document.getElementById('log-empty').classList.remove('hidden');
-      return;
     }
 
     const outcomeMap = {
@@ -1988,9 +2062,10 @@
       ? `<span style="display:inline-block;padding:2px 8px;border-radius:999px;font-size:0.72rem;font-weight:700;background:${cfg.bg};color:${cfg.color};">${cfg.label}</span>`
       : '<span style="color:#9ca3af;font-size:0.78rem">—</span>';
 
+    // Populate Tab 1: Concluded Transactions
     const tbody = document.getElementById('log-tbody');
     tbody.innerHTML = '';
-    data.records.forEach((r, i) => {
+    records.forEach((r, i) => {
       const checkIn = r.check_in_time ? new Date(r.check_in_time).toLocaleTimeString('en-PH', { hour:'2-digit', minute:'2-digit', hour12:true }) : '—';
       const dur = r.duration_minutes ? `${parseFloat(r.duration_minutes).toFixed(1)} min` : '—';
       const txType = r.confirmed_transaction_type || r.transaction_type || '—';
@@ -2010,6 +2085,47 @@
         <td style="font-size:0.75rem;color:#1d4ed8;font-style:italic;">${r.clerk_instructions || '<span style="color:#9ca3af">—</span>'}</td>`;
       tbody.appendChild(tr);
     });
+
+    // Populate Tab 2: My Appointments Schedule & Attendance
+    const apptsTbody = document.getElementById('log-appts-tbody');
+    apptsTbody.innerHTML = '';
+    if (appointments.length === 0) {
+      document.getElementById('log-appts-empty').classList.remove('hidden');
+    } else {
+      document.getElementById('log-appts-empty').classList.add('hidden');
+      appointments.forEach((a, idx) => {
+        const checkIn = a.check_in_time ? new Date(a.check_in_time).toLocaleTimeString('en-PH', { hour:'2-digit', minute:'2-digit', hour12:true }) : '—';
+        const dur = a.duration_minutes ? `${parseFloat(a.duration_minutes).toFixed(1)} min` : (a.computed_status === 'Served' ? '10.0 min' : '—');
+        
+        let statusBadge = '<span style="display:inline-block;padding:2px 8px;border-radius:999px;font-size:0.72rem;font-weight:700;background:#f1f5f9;color:#64748b;">Pending</span>';
+        if (a.computed_status === 'Served') {
+          statusBadge = '<span style="display:inline-block;padding:2px 8px;border-radius:999px;font-size:0.72rem;font-weight:700;background:#dcfce7;color:#15803d;">✓ Served</span>';
+        } else if (a.computed_status === 'No-Show') {
+          statusBadge = '<span style="display:inline-block;padding:2px 8px;border-radius:999px;font-size:0.72rem;font-weight:700;background:#fee2e2;color:#b91c1c;">✕ No-Show</span>';
+        } else if (a.computed_status === 'In Lobby') {
+          statusBadge = '<span style="display:inline-block;padding:2px 8px;border-radius:999px;font-size:0.72rem;font-weight:700;background:#dbeafe;color:#1d4ed8;">⏱ In Lobby</span>';
+        }
+
+        const outBadge = a.outcome ? chip(outcomeMap[a.outcome]) : (a.computed_status === 'Served' ? '<span style="color:#15803d;font-weight:600;font-size:0.78rem;">Finished</span>' : '<span style="color:#9ca3af">—</span>');
+        const ratBadge = a.rating ? chip(ratingMap[a.rating]) : '<span style="color:#9ca3af">—</span>';
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td style="color:var(--text-muted);font-size:0.75rem;">${idx + 1}</td>
+          <td><strong>${a.appointment_time || '—'}</strong></td>
+          <td style="font-weight:600;">${a.name || '—'}</td>
+          <td style="font-size:0.78rem;color:#475569;">${a.phone || '—'}</td>
+          <td style="font-size:0.8rem;">${a.confirmed_transaction_type || a.service || 'Appointment'}</td>
+          <td>${statusBadge}</td>
+          <td style="font-size:0.78rem;">${checkIn}</td>
+          <td style="font-size:0.78rem;">${dur}</td>
+          <td>${outBadge}</td>
+          <td>${ratBadge}</td>
+          <td style="font-size:0.75rem;color:#1d4ed8;font-style:italic;">${a.clerk_instructions || a.remarks || '<span style="color:#9ca3af">—</span>'}</td>
+        `;
+        apptsTbody.appendChild(tr);
+      });
+    }
   }
 
   function closeServiceLog() {
@@ -2038,42 +2154,78 @@
   function printServiceLog() {
     if (!clerk) return;
     const today = new Date().toLocaleDateString('en-PH', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
-    const rows = Array.from(document.getElementById('log-tbody').querySelectorAll('tr'))
-      .map(r => Array.from(r.querySelectorAll('td')).map(td => td.textContent.trim()).join('</td><td>'))
-      .map(r => `<tr><td>${r}</td></tr>`).join('');
 
-    const summaryEl = document.getElementById('log-summary');
-    const totals = summaryEl.querySelectorAll('.log-stat');
+    if (activeLogTab === 'appts') {
+      const rows = Array.from(document.getElementById('log-appts-tbody').querySelectorAll('tr'))
+        .map(r => Array.from(r.querySelectorAll('td')).map(td => td.textContent.trim()).join('</td><td>'))
+        .map(r => `<tr><td>${r}</td></tr>`).join('');
 
-    document.getElementById('log-print-area').innerHTML = `
-      <div style="text-align:center;margin-bottom:20px;border-bottom:2px solid #000;padding-bottom:12px;">
-        <h2 style="margin:0;font-size:14pt;">SOCIAL SECURITY SYSTEM</h2>
-        <h3 style="margin:4px 0;font-size:12pt;">SSS Toledo Branch</h3>
-        <p style="margin:0;font-size:10pt;">Daily Service Log — ${today}</p>
-        <p style="margin:4px 0;font-size:10pt;"><strong>Clerk/Officer:</strong> ${clerk.name} &nbsp;|&nbsp; <strong>Counter:</strong> ${clerk.counter}</p>
-      </div>
-      <table style="width:100%;border-collapse:collapse;font-size:9pt;margin-bottom:16px;">
-        <tr style="background:#f0f0f0;">
-          <th style="border:1px solid #ccc;padding:5px 6px;text-align:left;">#</th>
-          <th style="border:1px solid #ccc;padding:5px 6px;text-align:left;">Queue</th>
-          <th style="border:1px solid #ccc;padding:5px 6px;text-align:left;">Name</th>
-          <th style="border:1px solid #ccc;padding:5px 6px;text-align:left;">SSS Number</th>
-          <th style="border:1px solid #ccc;padding:5px 6px;text-align:left;">Transaction Type</th>
-          <th style="border:1px solid #ccc;padding:5px 6px;text-align:left;">Check-in</th>
-          <th style="border:1px solid #ccc;padding:5px 6px;text-align:left;">Duration</th>
-          <th style="border:1px solid #ccc;padding:5px 6px;text-align:left;">Outcome</th>
-          <th style="border:1px solid #ccc;padding:5px 6px;text-align:left;">Rating</th>
-          <th style="border:1px solid #ccc;padding:5px 6px;text-align:left;">Remarks</th>
-        </tr>
-        ${rows || '<tr><td colspan="10" style="text-align:center;padding:12px;">No records for today.</td></tr>'}
-      </table>
-      <div style="display:flex;gap:24px;font-size:9pt;border-top:1px solid #ccc;padding-top:10px;">
-        ${Array.from(totals).map(s => `<span><strong>${s.querySelector('.lbl').textContent}:</strong> ${s.querySelector('.val').textContent}</span>`).join('')}
-      </div>
-      <div style="margin-top:40px;font-size:9pt;display:flex;justify-content:space-between;">
-        <div style="text-align:center;border-top:1px solid #000;width:200px;padding-top:4px;">Clerk's Signature over Printed Name</div>
-        <div style="text-align:center;border-top:1px solid #000;width:200px;padding-top:4px;">Supervisor's Signature</div>
-      </div>`;
+      document.getElementById('log-print-area').innerHTML = `
+        <div style="text-align:center;margin-bottom:20px;border-bottom:2px solid #000;padding-bottom:12px;">
+          <h2 style="margin:0;font-size:14pt;">SOCIAL SECURITY SYSTEM</h2>
+          <h3 style="margin:4px 0;font-size:12pt;">SSS Toledo Branch</h3>
+          <p style="margin:0;font-size:10pt;">My Appointments &amp; Attendance Schedule — ${today}</p>
+          <p style="margin:4px 0;font-size:10pt;"><strong>Assigned Officer:</strong> ${clerk.name} &nbsp;|&nbsp; <strong>Counter:</strong> ${clerk.counter}</p>
+        </div>
+        <table style="width:100%;border-collapse:collapse;font-size:9pt;margin-bottom:16px;">
+          <tr style="background:#f0f0f0;">
+            <th style="border:1px solid #ccc;padding:5px 6px;text-align:left;">#</th>
+            <th style="border:1px solid #ccc;padding:5px 6px;text-align:left;">Time</th>
+            <th style="border:1px solid #ccc;padding:5px 6px;text-align:left;">Member Name</th>
+            <th style="border:1px solid #ccc;padding:5px 6px;text-align:left;">Contact Phone</th>
+            <th style="border:1px solid #ccc;padding:5px 6px;text-align:left;">Booked Service</th>
+            <th style="border:1px solid #ccc;padding:5px 6px;text-align:left;">Status / Attendance</th>
+            <th style="border:1px solid #ccc;padding:5px 6px;text-align:left;">Check-in</th>
+            <th style="border:1px solid #ccc;padding:5px 6px;text-align:left;">Duration</th>
+            <th style="border:1px solid #ccc;padding:5px 6px;text-align:left;">Outcome</th>
+            <th style="border:1px solid #ccc;padding:5px 6px;text-align:left;">CSAT</th>
+            <th style="border:1px solid #ccc;padding:5px 6px;text-align:left;">Instructions / Remarks</th>
+          </tr>
+          ${rows || '<tr><td colspan="11" style="text-align:center;padding:12px;">No appointments recorded for today.</td></tr>'}
+        </table>
+        <div style="margin-top:40px;font-size:9pt;display:flex;justify-content:space-between;">
+          <div style="text-align:center;border-top:1px solid #000;width:200px;padding-top:4px;">Clerk's Signature over Printed Name</div>
+          <div style="text-align:center;border-top:1px solid #000;width:200px;padding-top:4px;">Supervisor's Signature</div>
+        </div>`;
+    } else {
+      const rows = Array.from(document.getElementById('log-tbody').querySelectorAll('tr'))
+        .map(r => Array.from(r.querySelectorAll('td')).map(td => td.textContent.trim()).join('</td><td>'))
+        .map(r => `<tr><td>${r}</td></tr>`).join('');
+
+      const summaryEl = document.getElementById('log-summary');
+      const totals = summaryEl.querySelectorAll('.log-stat');
+
+      document.getElementById('log-print-area').innerHTML = `
+        <div style="text-align:center;margin-bottom:20px;border-bottom:2px solid #000;padding-bottom:12px;">
+          <h2 style="margin:0;font-size:14pt;">SOCIAL SECURITY SYSTEM</h2>
+          <h3 style="margin:4px 0;font-size:12pt;">SSS Toledo Branch</h3>
+          <p style="margin:0;font-size:10pt;">Daily Service Log — ${today}</p>
+          <p style="margin:4px 0;font-size:10pt;"><strong>Clerk/Officer:</strong> ${clerk.name} &nbsp;|&nbsp; <strong>Counter:</strong> ${clerk.counter}</p>
+        </div>
+        <table style="width:100%;border-collapse:collapse;font-size:9pt;margin-bottom:16px;">
+          <tr style="background:#f0f0f0;">
+            <th style="border:1px solid #ccc;padding:5px 6px;text-align:left;">#</th>
+            <th style="border:1px solid #ccc;padding:5px 6px;text-align:left;">Queue</th>
+            <th style="border:1px solid #ccc;padding:5px 6px;text-align:left;">Name</th>
+            <th style="border:1px solid #ccc;padding:5px 6px;text-align:left;">SSS Number</th>
+            <th style="border:1px solid #ccc;padding:5px 6px;text-align:left;">Transaction Type</th>
+            <th style="border:1px solid #ccc;padding:5px 6px;text-align:left;">Check-in</th>
+            <th style="border:1px solid #ccc;padding:5px 6px;text-align:left;">Duration</th>
+            <th style="border:1px solid #ccc;padding:5px 6px;text-align:left;">Outcome</th>
+            <th style="border:1px solid #ccc;padding:5px 6px;text-align:left;">Rating</th>
+            <th style="border:1px solid #ccc;padding:5px 6px;text-align:left;">Remarks</th>
+            <th style="border:1px solid #ccc;padding:5px 6px;text-align:left;">Instructions</th>
+          </tr>
+          ${rows || '<tr><td colspan="11" style="text-align:center;padding:12px;">No records for today.</td></tr>'}
+        </table>
+        <div style="display:flex;gap:24px;font-size:9pt;border-top:1px solid #ccc;padding-top:10px;">
+          ${Array.from(totals).map(s => `<span><strong>${s.querySelector('.lbl').textContent}:</strong> ${s.querySelector('.val').textContent}</span>`).join('')}
+        </div>
+        <div style="margin-top:40px;font-size:9pt;display:flex;justify-content:space-between;">
+          <div style="text-align:center;border-top:1px solid #000;width:200px;padding-top:4px;">Clerk's Signature over Printed Name</div>
+          <div style="text-align:center;border-top:1px solid #000;width:200px;padding-top:4px;">Supervisor's Signature</div>
+        </div>`;
+    }
 
     window.print();
   }
