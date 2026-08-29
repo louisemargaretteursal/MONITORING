@@ -49,6 +49,96 @@ module.exports = (io, upload) => {
     res.json(appointments);
   });
 
+  // GET export appointments in official 8-column format
+  router.get('/export/excel', async (req, res) => {
+    try {
+      const today = new Date().toISOString().split('T')[0];
+      const targetDate = req.query.date || today;
+      const clerkId = req.query.clerk_id;
+
+      let sql = `
+        SELECT a.*, c.name as clerk_name, c.counter
+        FROM appointments a
+        LEFT JOIN clerks c ON a.clerk_id = c.id
+        WHERE a.date = ?
+      `;
+      const params = [targetDate];
+      if (clerkId) {
+        sql += ' AND a.clerk_id = ?';
+        params.push(clerkId);
+      }
+      sql += ' ORDER BY a.appointment_time ASC';
+
+      const appts = db.prepare(sql).all(...params);
+
+      const workbook = new ExcelJS.Workbook();
+      workbook.creator = 'Social Security System — Toledo Branch';
+      const sheet = workbook.addWorksheet('Appointment Bookings', { views: [{ showGridLines: true }] });
+
+      sheet.columns = [
+        { header: 'Date & Time',     key: 'dateTime', width: 22 },
+        { header: 'Customer Name',   key: 'name',     width: 26 },
+        { header: 'Customer Email',  key: 'email',    width: 28 },
+        { header: 'Customer Phone',  key: 'phone',    width: 18 },
+        { header: 'Staff Name',      key: 'staff',    width: 22 },
+        { header: 'Service',         key: 'service',  width: 34 },
+        { header: 'Duration (mins.)', key: 'duration', width: 16 },
+        { header: 'Status',          key: 'status',   width: 14 }
+      ];
+
+      const headerRow = sheet.getRow(1);
+      headerRow.height = 28;
+      headerRow.eachCell((cell) => {
+        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF071E4A' } };
+        cell.font = { name: 'Segoe UI', size: 10, bold: true, color: { argb: 'FFFFFFFF' } };
+        cell.alignment = { vertical: 'middle', horizontal: 'center' };
+        cell.border = {
+          top: { style: 'thin', color: { argb: 'FFD1D5DB' } },
+          left: { style: 'thin', color: { argb: 'FFD1D5DB' } },
+          bottom: { style: 'medium', color: { argb: 'FF0038A8' } },
+          right: { style: 'thin', color: { argb: 'FFD1D5DB' } }
+        };
+      });
+
+      appts.forEach((a, idx) => {
+        const dateTimeStr = `${a.date} ${a.appointment_time || '09:00 AM'}`;
+        const row = sheet.addRow({
+          dateTime: dateTimeStr,
+          name: a.name || '—',
+          email: a.email || '—',
+          phone: a.phone_number || '—',
+          staff: a.clerk_name || 'Unassigned',
+          service: a.service || 'Appointment Consultation',
+          duration: a.duration_mins || 15,
+          status: a.booking_status || (a.arrival_status === 'served' ? 'Served' : (a.arrival_status === 'in-lobby' ? 'In Lobby' : 'Confirmed'))
+        });
+
+        const isEven = idx % 2 === 0;
+        const rowBg = isEven ? 'FFFFFFFF' : 'FFF8FAFC';
+        row.eachCell({ includeEmpty: true }, (cell) => {
+          cell.font = { name: 'Segoe UI', size: 9.5 };
+          cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: rowBg } };
+          cell.border = {
+            top: { style: 'thin', color: { argb: 'FFE2E8F0' } },
+            left: { style: 'thin', color: { argb: 'FFE2E8F0' } },
+            bottom: { style: 'thin', color: { argb: 'FFE2E8F0' } },
+            right: { style: 'thin', color: { argb: 'FFE2E8F0' } }
+          };
+          cell.alignment = { vertical: 'middle', horizontal: 'left' };
+        });
+      });
+
+      const filename = `SSS_Toledo_Appointment_Bookings_${targetDate}.xlsx`;
+      res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+      res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+      await workbook.xlsx.write(res);
+      res.end();
+    } catch (e) {
+      console.error('Appointment export error:', e);
+      res.status(500).json({ error: 'Failed to export appointments' });
+    }
+  });
+
   // POST import Excel appointments (admin — scoped per-clerk deletion)
   router.post('/import', upload.single('file'), async (req, res) => {
     if (!req.file) return res.status(400).json({ error: 'No file uploaded.' });
