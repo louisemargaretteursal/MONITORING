@@ -68,7 +68,7 @@ async function createSampleExcel() {
       name: 'Maria Clara Santos',
       email: 'maria.clara@yahoo.com',
       phone: '09289876543',
-      staff: 'Marga Ursal',
+      staff: 'Noeme Mamac',
       service: 'Maternity Benefit Claim',
       duration: 20,
       status: 'Confirmed'
@@ -78,7 +78,7 @@ async function createSampleExcel() {
       name: 'Jose P. Rizal',
       email: 'jose.rizal@outlook.com',
       phone: '09185551234',
-      staff: 'Laarnie Alibong',
+      staff: 'Glory May Tagpuno',
       service: 'Retirement Benefit Claim',
       duration: 20,
       status: 'Confirmed'
@@ -88,7 +88,7 @@ async function createSampleExcel() {
       name: 'Andres Bonifacio',
       email: 'andres.bonifacio@gmail.com',
       phone: '09228889900',
-      staff: 'Sheina Torrecampo',
+      staff: 'Emmie Flores',
       service: 'Sickness Benefit Claim',
       duration: 15,
       status: 'Confirmed'
@@ -98,7 +98,7 @@ async function createSampleExcel() {
       name: 'Teresa Magbanua',
       email: 'teresa.magbanua@gmail.com',
       phone: '09191112233',
-      staff: 'Sheila Vasquez',
+      staff: 'Mabelle Paz',
       service: 'Senior Citizen / Pensioner Assistance',
       duration: 20,
       status: 'Confirmed'
@@ -108,7 +108,7 @@ async function createSampleExcel() {
       name: 'Emilio Aguinaldo',
       email: 'emilio.aguinaldo@gov.ph',
       phone: '09173334455',
-      staff: 'Christie Sillar',
+      staff: 'Maricar Boniao',
       service: 'Death / Funeral Claim',
       duration: 25,
       status: 'Confirmed'
@@ -118,7 +118,7 @@ async function createSampleExcel() {
       name: 'Melchora Aquino',
       email: 'tandang.sora@gmail.com',
       phone: '09204445566',
-      staff: 'Marga Ursal',
+      staff: 'Noeme Mamac',
       service: 'Senior Citizen / Pension Inquiry',
       duration: 15,
       status: 'Confirmed'
@@ -128,7 +128,7 @@ async function createSampleExcel() {
       name: 'Antonio Luna',
       email: 'antonio.luna@army.mil.ph',
       phone: '09187778899',
-      staff: 'Laarnie Alibong',
+      staff: 'Glory May Tagpuno',
       service: 'Salary / Calamity Loan Application',
       duration: 15,
       status: 'Confirmed'
@@ -138,7 +138,7 @@ async function createSampleExcel() {
       name: 'Gabriela Silang',
       email: 'gabriela.silang@yahoo.com',
       phone: '09216667788',
-      staff: 'Sheina Torrecampo',
+      staff: 'Emmie Flores',
       service: 'Member Data Updating (SS Form E-4)',
       duration: 15,
       status: 'Confirmed'
@@ -148,9 +148,29 @@ async function createSampleExcel() {
       name: 'Apolinario Mabini',
       email: 'apolinario.mabini@law.edu.ph',
       phone: '09179990011',
-      staff: 'Sheila Vasquez',
+      staff: 'Mabelle Paz',
       service: 'Disability Benefit Claim',
       duration: 20,
+      status: 'Confirmed'
+    },
+    {
+      dateTime: `${todayStr} 03:30 PM`,
+      name: 'Francisco Baltazar',
+      email: 'balagtas.francisco@gmail.com',
+      phone: '09192223344',
+      staff: 'Maricar Boniao',
+      service: 'Contribution Verification / Inquiries',
+      duration: 15,
+      status: 'Confirmed'
+    },
+    {
+      dateTime: `${todayStr} 04:00 PM`,
+      name: 'Diego Silang',
+      email: 'diego.silang@history.ph',
+      phone: '09178881234',
+      staff: 'Christie Sillar',
+      service: 'Payment & PRN Verification',
+      duration: 15,
       status: 'Confirmed'
     }
   ];

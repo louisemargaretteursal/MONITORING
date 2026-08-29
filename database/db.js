@@ -129,32 +129,42 @@ try {
   db.prepare("UPDATE transactions SET counter = 'PACD Desk' WHERE (counter = 'Branch Staff' OR counter IS NULL) AND member_id IN (SELECT id FROM members WHERE routed_to = 'pacd')").run();
   db.prepare("UPDATE transactions SET counter = 'E-Center Station' WHERE (counter = 'Branch Staff' OR counter IS NULL) AND member_id IN (SELECT id FROM members WHERE routed_to = 'ecenter')").run();
   db.prepare("UPDATE transactions SET counter = 'Counter 1' WHERE counter = 'Branch Staff' OR counter = 'Main Counter' OR counter IS NULL").run();
+
+  // Rename previous demo staff to official demo roster
+  db.prepare("UPDATE clerks SET name = 'Noeme Mamac' WHERE name = 'Marga Ursal'").run();
+  db.prepare("UPDATE clerks SET name = 'Glory May Tagpuno' WHERE name = 'Laarnie Alibong'").run();
+  db.prepare("UPDATE clerks SET name = 'Emmie Flores' WHERE name = 'Sheina Torrecampo'").run();
+  db.prepare("UPDATE clerks SET name = 'Mabelle Paz' WHERE name = 'Sheila Vasquez'").run();
 } catch(e) {}
 
-// ─── SEED DEFAULT CLERKS (if none exist) ─────────────────────────────────────
-const clerkCount = db.prepare('SELECT COUNT(*) as count FROM clerks').get();
-if (clerkCount.count === 0) {
-  const insert = db.prepare(
-    'INSERT INTO clerks (name, counter, pin_hash) VALUES (?, ?, ?)'
-  );
-  const defaultClerks = [
-    ['Christie Sillar',   'Branch Staff', '1234'],
-    ['Marga Ursal',       'Branch Staff', '1234'],
-    ['Laarnie Alibong',   'Branch Staff', '1234'],
-    ['Sheina Torrecampo', 'Branch Staff', '1234'],
-    ['Sheila Vasquez',    'Branch Staff', '1234'],
-    ['Admin',             'Admin',        'admin1234'],
-  ];
-  defaultClerks.forEach(c => insert.run(...c));
-  console.log('✅ Default staff accounts seeded (PIN: 1234 / Admin PIN: admin1234)');
-}
+// ─── SEED DEFAULT CLERKS (ensure all 6 official staff + Admin exist) ──────────
+const officialClerks = [
+  ['Christie Sillar',   'Branch Staff', '1234'],
+  ['Noeme Mamac',       'Branch Staff', '1234'],
+  ['Glory May Tagpuno', 'Branch Staff', '1234'],
+  ['Emmie Flores',      'Branch Staff', '1234'],
+  ['Mabelle Paz',       'Branch Staff', '1234'],
+  ['Maricar Boniao',    'Branch Staff', '1234'],
+  ['Admin',             'Admin',        'admin1234'],
+];
+
+const checkClerk = db.prepare('SELECT id FROM clerks WHERE name = ?');
+const insertClerk = db.prepare('INSERT INTO clerks (name, counter, pin_hash) VALUES (?, ?, ?)');
+
+officialClerks.forEach(([cName, cCounter, cPin]) => {
+  const existing = checkClerk.get(cName);
+  if (!existing) {
+    insertClerk.run(cName, cCounter, cPin);
+  }
+});
+console.log('✅ Official 6 branch staff accounts verified (PIN: 1234 / Admin PIN: admin1234)');
 
 // ─── SEED DEFAULT MSS TASKS (if table is empty) ──────────────────────────────
 const taskCount = db.prepare('SELECT COUNT(*) as count FROM mss_tasks').get();
 if (taskCount.count === 0) {
   const christie = db.prepare("SELECT id FROM clerks WHERE name = 'Christie Sillar'").get();
-  const marga = db.prepare("SELECT id FROM clerks WHERE name = 'Marga Ursal'").get();
-  const laarnie = db.prepare("SELECT id FROM clerks WHERE name = 'Laarnie Alibong'").get();
+  const noeme = db.prepare("SELECT id FROM clerks WHERE name = 'Noeme Mamac'").get();
+  const glory = db.prepare("SELECT id FROM clerks WHERE name = 'Glory May Tagpuno'").get();
 
   const insertTask = db.prepare(`
     INSERT INTO mss_tasks (title, description, category, priority, assigned_to, assigned_station, target_date, status, started_at, completed_at, accomplishment_notes)
@@ -179,13 +189,13 @@ if (taskCount.count === 0) {
     );
   }
 
-  if (marga) {
+  if (noeme) {
     insertTask.run(
       'ACOP Annual Pensioner Verification Audit',
       'Audit Toledo North cluster annual confirmation records for pending pension release.',
       'ACOP & Pensioners',
       'normal',
-      marga.id,
+      noeme.id,
       'Counter 2',
       `${todayStr} 16:30`,
       'pending',
@@ -195,13 +205,13 @@ if (taskCount.count === 0) {
     );
   }
 
-  if (laarnie) {
+  if (glory) {
     insertTask.run(
       'Death & Funeral Claims Completeness Check',
       'Review death claim documentary completeness before branch head final signoff.',
       'Claims & Benefits',
       'critical',
-      laarnie.id,
+      glory.id,
       'PACD Desk',
       `${todayStr} 14:00`,
       'completed',
