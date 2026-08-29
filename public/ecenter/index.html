@@ -383,7 +383,23 @@
           </div>
           <!-- Confirmed type -->
           <label style="font-size:0.75rem;font-weight:600;color:#374151;display:block;margin-bottom:5px;">Confirmed Transaction Type <span style="color:var(--danger)">*</span></label>
-          <select class="form-select" id="tx-type-select" style="width:100%;font-size:0.85rem;">
+          <!-- Searchable wrapper -->
+          <div class="tx-search-wrap" id="tx-search-wrap" style="position:relative;">
+            <div style="position:relative;">
+              <input type="text" id="tx-search-input" autocomplete="off" placeholder="🔍 Type to search transaction…"
+                style="width:100%;box-sizing:border-box;padding:8px 34px 8px 10px;font-size:0.85rem;border:1.5px solid #d1d5db;border-radius:8px;outline:none;background:#fff;cursor:text;"
+                onfocus="openTxDropdown()" oninput="filterTxOptions()" onkeydown="txSearchKeyNav(event)">
+              <svg id="tx-search-chevron" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#6b7280" stroke-width="2.5"
+                style="position:absolute;right:10px;top:50%;transform:translateY(-50%);pointer-events:none;transition:transform .2s;">
+                <polyline points="6 9 12 15 18 9"/>
+              </svg>
+            </div>
+            <div id="tx-dropdown-list"
+              style="display:none;position:absolute;z-index:9999;top:calc(100% + 3px);left:0;right:0;background:#fff;border:1.5px solid #d1d5db;border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.12);max-height:260px;overflow-y:auto;">
+            </div>
+          </div>
+          <!-- Hidden native select kept for value compatibility -->
+          <select class="form-select" id="tx-type-select" style="display:none;width:100%;font-size:0.85rem;">
             <option value="">— Select Confirmed Transaction Type —</option>
 
             <optgroup label="E-Center &amp; Web Services Core">
@@ -471,6 +487,7 @@
               <option value="Complaints (all type of complaints on LR repayments, LR and contribution posting, all non-receipt complaints, delay, unsatisfaction and all other complaints)">Complaints (all type of complaints on LR repayments, LR and contribution posting, all non-receipt complaints, delay, unsatisfaction and all other complaints)</option>
             </optgroup>
           </select>
+          </div>
         </div>
 
         <!-- Transaction Outcome -->
@@ -1137,6 +1154,15 @@
       if (declaredEl) declaredEl.textContent = declared || 'Not specified';
 
       const sel = document.getElementById('tx-type-select');
+      sel.value = '';
+      let matched = '';
+      for (const opt of sel.options) {
+        if (opt.value && declared.toLowerCase().includes(opt.value.toLowerCase())) {
+          sel.value = opt.value; matched = opt.text; break;
+        }
+      }
+      const txInput = document.getElementById('tx-search-input');
+      if (txInput) txInput.value = matched;
       if (sel) {
         sel.value = '';
         for (const opt of sel.options) {
@@ -1497,6 +1523,92 @@
       t.className = `toast ${type}`; t.textContent = msg; c.appendChild(t);
       setTimeout(() => { t.style.animation = 'fadeOut 0.3s ease forwards'; setTimeout(() => t.remove(), 300); }, 4000);
     }
+
+    // ── Searchable Transaction Type Dropdown ───────────────────────────────
+    (function initTxSearchable() {
+      const input     = document.getElementById('tx-search-input');
+      const list      = document.getElementById('tx-dropdown-list');
+      const hiddenSel = document.getElementById('tx-type-select');
+      const chevron   = document.getElementById('tx-search-chevron');
+      if (!input || !list || !hiddenSel) return;
+
+      function getOptions() {
+        const opts = [];
+        for (const child of hiddenSel.children) {
+          if (child.tagName === 'OPTGROUP') {
+            for (const opt of child.children) opts.push({ value: opt.value, label: opt.text, group: child.label });
+          } else if (child.value) {
+            opts.push({ value: child.value, label: child.text, group: '' });
+          }
+        }
+        return opts;
+      }
+
+      let highlighted = -1;
+
+      function buildList(filter) {
+        const q = filter.toLowerCase().trim();
+        const all = getOptions();
+        const filtered = q ? all.filter(o => o.label.toLowerCase().includes(q) || o.group.toLowerCase().includes(q)) : all;
+        list.innerHTML = '';
+        if (!filtered.length) { list.innerHTML = '<div style="padding:10px 14px;font-size:0.82rem;color:#9ca3af;">No matches found</div>'; highlighted = -1; return; }
+        let lastGroup = null;
+        filtered.forEach((opt, idx) => {
+          if (opt.group && opt.group !== lastGroup) {
+            const g = document.createElement('div');
+            g.textContent = opt.group;
+            g.style.cssText = 'padding:6px 12px 3px;font-size:0.7rem;font-weight:700;letter-spacing:.05em;color:#9ca3af;text-transform:uppercase;';
+            list.appendChild(g); lastGroup = opt.group;
+          }
+          const item = document.createElement('div');
+          item.dataset.value = opt.value;
+          let display = opt.label;
+          if (q) {
+            const re = new RegExp(`(${q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')})`, 'gi');
+            display = opt.label.replace(re, '<mark style="background:#fef08a;border-radius:2px;padding:0 1px;">$1</mark>');
+          }
+          item.innerHTML = display;
+          item.style.cssText = 'padding:8px 14px;font-size:0.83rem;cursor:pointer;color:#111827;transition:background .1s;';
+          item.onmouseenter = () => setHighlight(idx);
+          item.onclick = () => selectOption(opt);
+          list.appendChild(item);
+        });
+        highlighted = -1;
+      }
+
+      function setHighlight(idx) {
+        list.querySelectorAll('[data-value]').forEach((el, i) => {
+          el.style.background = i === idx ? '#eff6ff' : '';
+          el.style.color = i === idx ? '#1d4ed8' : '#111827';
+        });
+        highlighted = idx;
+      }
+
+      function selectOption(opt) { input.value = opt.label; hiddenSel.value = opt.value; closeDropdown(); }
+
+      function openDropdown() {
+        buildList(input.value); list.style.display = 'block';
+        input.style.borderColor = '#2563eb';
+        if (chevron) chevron.style.transform = 'translateY(-50%) rotate(180deg)';
+      }
+
+      function closeDropdown() {
+        list.style.display = 'none'; input.style.borderColor = '#d1d5db';
+        if (chevron) chevron.style.transform = 'translateY(-50%) rotate(0deg)';
+      }
+
+      window.openTxDropdown  = openDropdown;
+      window.filterTxOptions = () => { buildList(input.value); list.style.display = 'block'; };
+      window.txSearchKeyNav  = (e) => {
+        const items = list.querySelectorAll('[data-value]');
+        if (!items.length) return;
+        if (e.key === 'ArrowDown')  { e.preventDefault(); const n = Math.min(highlighted+1, items.length-1); setHighlight(n); items[n]?.scrollIntoView({block:'nearest'}); }
+        else if (e.key === 'ArrowUp')   { e.preventDefault(); const p = Math.max(highlighted-1, 0); setHighlight(p); items[p]?.scrollIntoView({block:'nearest'}); }
+        else if (e.key === 'Enter')  { e.preventDefault(); if (highlighted >= 0 && items[highlighted]) items[highlighted].click(); }
+        else if (e.key === 'Escape') { closeDropdown(); }
+      };
+      document.addEventListener('click', (e) => { if (!e.target.closest('#tx-search-wrap')) closeDropdown(); });
+    })();
   </script>
 </body>
 </html>
