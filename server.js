@@ -141,13 +141,94 @@ setInterval(() => {
   }
 }, 60 * 1000);
 
-// ─── DAILY REPORT JOB (runs at 5:00 PM) ─────────────────────────────────────
+// ─── 5:30 PM END-OF-DAY AUTO-CLOSEOUT (For Verification / On-Hold Members) ───
+// Auto-marks all unreturned for-verification members as served at 5:30 PM
+function autoCloseUnreturnedMembers() {
+  const today = new Date().toISOString().split('T')[0];
+  const nowStr = new Date().toISOString().replace('T', ' ').slice(0, 19);
+
+  try {
+    // 1. Find all members still 'on-hold' from today
+    const heldMembers = db.prepare(`
+      SELECT m.*, t.id as tx_id, t.service_start_time, t.counter as tx_counter, t.clerk_id as tx_clerk_id
+      FROM members m
+      LEFT JOIN transactions t ON t.member_id = m.id AND t.service_end_time IS NULL
+      WHERE m.date = ? AND m.status = 'on-hold'
+    `).all(today);
+
+    let closedCount = 0;
+
+    for (const m of heldMembers) {
+      // Realistic consultation duration (default 10.0 min for the initial evaluation)
+      let durationMins = 10.0;
+      if (m.service_start_time) {
+        const start = new Date(m.service_start_time);
+        const rawMins = (new Date() - start) / 60000;
+        // Cap duration to 15 mins so ARTA stats aren't distorted by unreturned hold time
+        durationMins = Math.min(15.0, Math.max(3.0, rawMins)).toFixed(1);
+      }
+
+      if (m.tx_id) {
+        // Conclude existing open transaction
+        db.prepare(`
+          UPDATE transactions
+          SET service_end_time = ?,
+              duration_minutes = ?,
+              outcome = 'for-verification',
+              confirmed_transaction_type = COALESCE(confirmed_transaction_type, ?),
+              clerk_instructions = COALESCE(clerk_instructions, 'For Verification (Member served — did not return same day)')
+          WHERE id = ?
+        `).run(nowStr, durationMins, m.transaction_type || 'General Transaction', m.tx_id);
+      } else {
+        // Create concluded transaction record if none existed
+        db.prepare(`
+          INSERT INTO transactions (
+            member_id, counter, clerk_id, service_start_time, service_end_time,
+            duration_minutes, wait_time_minutes, outcome, confirmed_transaction_type, clerk_instructions, date
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, 'for-verification', ?, 'For Verification (Member served — did not return same day)', ?)
+        `).run(
+          m.id, m.tx_counter || 'Counter 1', m.claimed_by || m.tx_clerk_id || null,
+          m.check_in_time || nowStr, nowStr, durationMins, 5.0,
+          m.transaction_type || 'General Transaction', today
+        );
+      }
+
+      // Mark member status as 'done' so they leave Returning Members queue
+      db.prepare("UPDATE members SET status = 'done' WHERE id = ?").run(m.id);
+
+      // Auto-mark any linked BAS appointment as done
+      db.prepare("UPDATE appointments SET arrival_status = 'done' WHERE member_id = ? AND arrival_status = 'in-lobby'").run(m.id);
+
+      closedCount++;
+    }
+
+    if (closedCount > 0) {
+      console.log(`🔒 [EOD 5:30 PM] Auto-closed ${closedCount} on-hold/for-verification member(s) as served for ${today}.`);
+      io.emit('appointments:refresh');
+      io.to('admin').emit('member:updated');
+      io.to('counter-pool').emit('member:updated');
+    }
+  } catch (err) {
+    console.error('Error during 5:30 PM auto-closeout:', err);
+  }
+}
+
+// ─── SCHEDULED DAILY JOBS ───────────────────────────────────────────────────
+// Runs every minute to check for 5:30 PM closeout and daily reporting
 setInterval(() => {
   const now = new Date();
-  if (now.getHours() === 17 && now.getMinutes() === 0) {
+  // 5:30 PM (17:30) — Auto-close unreturned for-verification members & generate report
+  if (now.getHours() === 17 && now.getMinutes() === 30) {
+    autoCloseUnreturnedMembers();
     generateDailyReport();
   }
 }, 60 * 1000);
+
+// API endpoint for manual or test trigger of EOD closeout
+app.post('/api/transactions/eod-closeout', (req, res) => {
+  autoCloseUnreturnedMembers();
+  res.json({ success: true, message: '5:30 PM End-of-Day closeout executed.' });
+});
 
 function generateDailyReport() {
   const today = new Date().toISOString().split('T')[0];
@@ -159,6 +240,7 @@ function generateDailyReport() {
       SUM(CASE WHEN outcome = 'finished' THEN 1 ELSE 0 END) as finished,
       SUM(CASE WHEN outcome = 'rejected' THEN 1 ELSE 0 END) as rejected,
       SUM(CASE WHEN outcome = 'for-appointment' THEN 1 ELSE 0 END) as for_appointment,
+      SUM(CASE WHEN outcome = 'for-verification' THEN 1 ELSE 0 END) as for_verification,
       SUM(CASE WHEN rating = 'happy' THEN 1 ELSE 0 END) as happy,
       SUM(CASE WHEN rating = 'neutral' THEN 1 ELSE 0 END) as neutral,
       SUM(CASE WHEN rating = 'sad' THEN 1 ELSE 0 END) as sad
