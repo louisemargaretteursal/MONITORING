@@ -1,3 +1,7 @@
+const express = require('express');
+const ExcelJS = require('exceljs');
+const db = require('../database/db');
+
 function formatTimeTo12Hour(tStr) {
   if (!tStr) return '';
   const trimmed = String(tStr).trim();
@@ -321,6 +325,9 @@ module.exports = (io, upload) => {
           // Insert new appointment
           insertAppt.run(r.name, r.phone || null, r.email || null, r.time, r.clerkId, apptDate, r.service || null, r.duration || 15, r.bookingStatus || 'Confirmed');
         }
+        imported++;
+      });
+
       const uniqueDates = [...new Set(rows.map(r => r.date || today))];
       const pastDates = uniqueDates.filter(d => d < today);
       const futureDates = uniqueDates.filter(d => d > today);
