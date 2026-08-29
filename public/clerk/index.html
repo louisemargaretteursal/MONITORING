@@ -501,33 +501,47 @@
           </div>
         </div>
 
-        <!-- Excel Format Guide -->
+        <!-- Excel Format Guide & Download -->
         <div class="profile-section">
-          <div class="profile-section-title">
-            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-            Excel Format Guide
+          <div class="profile-section-title" style="display:flex;justify-content:space-between;align-items:center;">
+            <span style="display:flex;align-items:center;gap:6px;">
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              Official 8-Column Format Guide
+            </span>
+            <a href="/api/appointments/template" download style="color:#0284c7;text-decoration:none;font-weight:700;font-size:0.7rem;display:flex;align-items:center;gap:4px;">
+              <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Download Sample (.xlsx)
+            </a>
           </div>
-          <table style="width:100%;border-collapse:collapse;font-size:0.75rem;">
-            <thead>
-              <tr style="background:#f8fafc;">
-                <th style="padding:6px 8px;text-align:left;border-bottom:1px solid #e2e8f0;color:#64748b;">Col A</th>
-                <th style="padding:6px 8px;text-align:left;border-bottom:1px solid #e2e8f0;color:#64748b;">Col B</th>
-                <th style="padding:6px 8px;text-align:left;border-bottom:1px solid #e2e8f0;color:#64748b;">Col C</th>
-                <th style="padding:6px 8px;text-align:left;border-bottom:1px solid #e2e8f0;color:#64748b;">Col D</th>
-                <th style="padding:6px 8px;text-align:left;border-bottom:1px solid #e2e8f0;color:#64748b;">Col E</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td style="padding:6px 8px;border-bottom:1px solid #f1f5f9;font-weight:700;">Name</td>
-                <td style="padding:6px 8px;border-bottom:1px solid #f1f5f9;">Phone</td>
-                <td style="padding:6px 8px;border-bottom:1px solid #f1f5f9;">Email</td>
-                <td style="padding:6px 8px;border-bottom:1px solid #f1f5f9;font-weight:700;">Time</td>
-                <td style="padding:6px 8px;border-bottom:1px solid #f1f5f9;color:#94a3b8;">(Optional)</td>
-              </tr>
-            </tbody>
-          </table>
-          <p style="font-size:0.7rem;color:#94a3b8;margin-top:8px;">Row 1 is treated as a header and skipped. Time format: <strong>9:00 AM</strong> or <strong>09:00</strong>.</p>
+          <div style="overflow-x:auto;">
+            <table style="width:100%;border-collapse:collapse;font-size:0.72rem;min-width:380px;">
+              <thead>
+                <tr style="background:#f8fafc;">
+                  <th style="padding:5px 6px;text-align:left;border-bottom:1px solid #e2e8f0;color:#64748b;">Col 1</th>
+                  <th style="padding:5px 6px;text-align:left;border-bottom:1px solid #e2e8f0;color:#64748b;">Col 2</th>
+                  <th style="padding:5px 6px;text-align:left;border-bottom:1px solid #e2e8f0;color:#64748b;">Col 3</th>
+                  <th style="padding:5px 6px;text-align:left;border-bottom:1px solid #e2e8f0;color:#64748b;">Col 4</th>
+                  <th style="padding:5px 6px;text-align:left;border-bottom:1px solid #e2e8f0;color:#64748b;">Col 5</th>
+                  <th style="padding:5px 6px;text-align:left;border-bottom:1px solid #e2e8f0;color:#64748b;">Col 6</th>
+                  <th style="padding:5px 6px;text-align:left;border-bottom:1px solid #e2e8f0;color:#64748b;">Col 7</th>
+                  <th style="padding:5px 6px;text-align:left;border-bottom:1px solid #e2e8f0;color:#64748b;">Col 8</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td style="padding:5px 6px;border-bottom:1px solid #f1f5f9;font-weight:700;">Date &amp; Time</td>
+                  <td style="padding:5px 6px;border-bottom:1px solid #f1f5f9;font-weight:700;">Customer Name</td>
+                  <td style="padding:5px 6px;border-bottom:1px solid #f1f5f9;">Email</td>
+                  <td style="padding:5px 6px;border-bottom:1px solid #f1f5f9;">Phone</td>
+                  <td style="padding:5px 6px;border-bottom:1px solid #f1f5f9;">Staff Name</td>
+                  <td style="padding:5px 6px;border-bottom:1px solid #f1f5f9;">Service</td>
+                  <td style="padding:5px 6px;border-bottom:1px solid #f1f5f9;">Duration (mins.)</td>
+                  <td style="padding:5px 6px;border-bottom:1px solid #f1f5f9;">Status</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p style="font-size:0.7rem;color:#94a3b8;margin-top:8px;">Row 1 is treated as a header and skipped. Time format: <strong>9:00 AM</strong> or <strong>2026-08-29 09:00 AM</strong>.</p>
         </div>
 
       </div><!-- /profile-body -->
@@ -2307,9 +2321,13 @@
         }
         return `<div class="appt-item" style="${a.arrival_status === 'done' ? 'background:#f8fafc;' : ''}">
           <div class="appt-time">${a.appointment_time}</div>
-          <div style="flex:1;">
+          <div style="flex:1;min-width:0;">
             <div class="appt-name" style="${a.arrival_status === 'done' ? 'color:#475569;' : ''}">${a.name}</div>
-            ${a.phone_number ? `<div class="appt-phone">${a.phone_number}</div>` : ''}
+            <div style="display:flex;align-items:center;gap:6px;font-size:0.72rem;color:#64748b;margin-top:2px;">
+              ${a.service ? `<span style="color:#0284c7;font-weight:600;">${a.service}</span> • ` : ''}
+              ${a.phone_number ? `<span>${a.phone_number}</span> • ` : ''}
+              <span>${a.duration_mins || 15} min</span>
+            </div>
           </div>
           <div class="appt-badge ${sc}">${sl}</div>
         </div>`;

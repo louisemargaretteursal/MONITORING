@@ -287,19 +287,58 @@ module.exports = (io, upload) => {
 
       let imported = 0, skipped = 0;
       const insertAppt = db.prepare(`
-        INSERT INTO appointments (name, phone_number, email, appointment_time, clerk_id, type, date)
-        VALUES (?, ?, ?, ?, ?, 'direct', ?)
+        INSERT INTO appointments (name, phone_number, email, appointment_time, clerk_id, type, date, service, duration_mins, booking_status)
+        VALUES (?, ?, ?, ?, ?, 'direct', ?, ?, ?, ?)
       `);
 
       worksheet.eachRow((row, rowNumber) => {
         if (rowNumber === 1) return;
-        const name  = row.getCell(1).value?.toString()?.trim();
-        const phone = row.getCell(2).value?.toString()?.trim();
-        const email = row.getCell(3).value?.toString()?.trim();
-        const time  = row.getCell(4).value?.toString()?.trim();
-        // Column 5 (clerk name) is ignored — we already know the clerk
-        if (!name || !time) { skipped++; return; }
-        insertAppt.run(name, phone || null, email || null, time, clerk_id, today);
+
+        const c1 = row.getCell(1).value;
+        const c2 = row.getCell(2).value?.toString()?.trim();
+        const c3 = row.getCell(3).value?.toString()?.trim();
+        const c4 = row.getCell(4).value?.toString()?.trim();
+        const c5 = row.getCell(5).value?.toString()?.trim();
+        const c6 = row.getCell(6).value?.toString()?.trim();
+        const c7 = row.getCell(7).value;
+        const c8 = row.getCell(8).value?.toString()?.trim();
+
+        let timeStr = '';
+        let name = '';
+        let email = null;
+        let phone = null;
+        let service = null;
+        let duration = 15;
+        let bookingStatus = 'Confirmed';
+
+        // Check if official 8-column format (Col 1: Date & Time, Col 2: Name)
+        if (c1 instanceof Date) {
+          timeStr = c1.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+          name = c2 || '';
+          email = c3 || null;
+          phone = c4 || null;
+          service = c6 || null;
+          duration = c7 ? parseInt(c7) || 15 : 15;
+          bookingStatus = c8 || 'Confirmed';
+        } else if (typeof c1 === 'string' && (c1.includes('/') || c1.includes('-') || c1.includes(':') || c1.toLowerCase().includes('am') || c1.toLowerCase().includes('pm')) && c2) {
+          const parts = c1.trim().split(/\s+/);
+          timeStr = parts.length >= 2 ? parts.slice(1).join(' ') : c1.trim();
+          name = c2 || '';
+          email = c3 || null;
+          phone = c4 || null;
+          service = c6 || null;
+          duration = c7 ? parseInt(c7) || 15 : 15;
+          bookingStatus = c8 || 'Confirmed';
+        } else {
+          // Legacy 4-column format fallback (Col 1: Name, Col 2: Phone, Col 3: Email, Col 4: Time)
+          name = c1?.toString()?.trim() || '';
+          phone = c2 || null;
+          email = c3 || null;
+          timeStr = c4 || '';
+        }
+
+        if (!name || !timeStr) { skipped++; return; }
+        insertAppt.run(name, phone, email, timeStr, clerk_id, today, service, duration, bookingStatus);
         imported++;
       });
 
