@@ -1417,9 +1417,9 @@
               </svg>
               Long-Waiting Members (&gt; 15 Mins ARTA SLA Threshold)
             </h3>
-            <span id="wait-alert-count" class="badge badge-green">0 SLA Breaches</span>
+            <span id="page-wait-alert-count" class="badge badge-green">0 SLA Breaches</span>
           </div>
-          <div class="card-body" id="wait-alerts">
+          <div class="card-body" id="page-wait-alerts">
             <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:16px 20px;display:flex;align-items:center;gap:14px;">
               <div style="width:36px;height:36px;border-radius:50%;background:#dcfce7;color:#15803d;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
                 <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
@@ -2245,6 +2245,7 @@
       if (targetNav) targetNav.classList.add('active');
 
       if (id === 'live') loadLiveDashboard();
+      if (id === 'alerts') { loadLiveDashboard(); loadNoShowAlerts(); }
       if (id === 'tasks') { populateAssigneeDropdowns(); loadTasks(); }
       if (id === 'performance') loadPerformance();
       if (id === 'csm') loadArtaCsm();
@@ -2278,88 +2279,66 @@
 
         document.getElementById('flow-finished').textContent = data.stats.finished || 0;
         document.getElementById('flow-rejected').textContent = data.stats.rejected || 0;
-        document.getElementById('flow-verification').textContent = data.stats.for_verification || 0;
-        document.getElementById('flow-appointment').textContent = data.stats.for_appointment || 0;
+        document.getElementById('flow-held').textContent = data.stats.held || 0;
+        document.getElementById('flow-appointment').textContent = data.stats.appointment || 0;
 
-        // Render Physical Station-Centric Grid
-        const grid = document.getElementById('counter-grid');
+        // Physical Stations Grid Rendering
+        const grid = document.getElementById('stations-grid');
         grid.innerHTML = '';
 
-        PHYSICAL_STATIONS.forEach(station => {
-          const presence = data.activePresence?.find(p => {
-            if (station.id === 'pacd') return p.station === 'PACD Desk' || p.station === 'PACD';
-            if (station.id === 'ecenter') return p.station === 'E-Center Station' || p.station === 'E-Center';
-            if (station.id === 'side') return p.station === 'Side Counter';
-            return p.station === station.name;
-          });
+        PHYSICAL_STATIONS.forEach(st => {
+          const clerkData = data.clerks?.find(c =>
+            c.counter?.toLowerCase() === st.name.toLowerCase() ||
+            (st.id === 'pacd' && c.counter?.toLowerCase().includes('pacd')) ||
+            (st.id === 'ecenter' && c.counter?.toLowerCase().includes('e-center'))
+          );
 
-          const serving = data.currentlyServing?.find(s => {
-            if (station.id === 'pacd') return s.routed_to === 'pacd' || s.counter === 'PACD' || s.counter === 'PACD Desk';
-            if (station.id === 'ecenter') return s.routed_to === 'ecenter' || s.counter?.includes('E-Center');
-            if (station.id === 'side') return s.counter === 'Side Counter';
-            return s.counter === station.name;
-          });
+          const activeTx = data.activeTransactions?.find(t =>
+            t.counter?.toLowerCase() === st.name.toLowerCase() ||
+            (st.id === 'pacd' && t.counter?.toLowerCase().includes('pacd')) ||
+            (st.id === 'ecenter' && t.counter?.toLowerCase().includes('e-center'))
+          );
 
-          const stationTxs = data.byCounter?.filter(b => {
-            if (station.id === 'pacd') return b.counter === 'PACD' || b.counter === 'PACD Desk';
-            if (station.id === 'ecenter') return b.counter?.includes('E-Center');
-            if (station.id === 'side') return b.counter === 'Side Counter';
-            return b.counter === station.name;
-          }) || [];
+          const isOnline = clerkData && (clerkData.is_active === 1 || clerkData.status === 'online');
+          const isServing = !!activeTx;
+          const totalServed = clerkData ? clerkData.served_today : 0;
+          const avgDur = clerkData && clerkData.avg_duration ? `${parseFloat(clerkData.avg_duration).toFixed(1)}m` : '—';
 
-          const totalServed = stationTxs.reduce((sum, x) => sum + (x.served || 0), 0);
-          const avgDur = stationTxs.length > 0 && stationTxs[0].avg_duration ? `${parseFloat(stationTxs[0].avg_duration).toFixed(1)}m avg` : '—';
-          const officerName = presence?.clerkName || serving?.clerk_name || null;
-          const isActive = !!presence || !!serving;
-          const isServing = !!serving;
+          let statusBadge = '<span class="badge badge-gray">Offline</span>';
+          if (isServing) {
+            statusBadge = '<span class="badge badge-blue">● Serving</span>';
+          } else if (isOnline) {
+            statusBadge = '<span class="badge badge-green">● Available</span>';
+          }
 
           const div = document.createElement('div');
-          div.className = 'station-pod';
+          div.className = `station-card ${isServing ? 'serving' : isOnline ? 'online' : 'offline'}`;
           div.innerHTML = `
-            <div class="station-pod-header">
-              <div class="station-title-box">
-                <div class="station-icon" style="background:${station.color}15;color:${station.color};">
-                  <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
-                </div>
-                <div>
-                  <div class="station-name">${station.name}</div>
-                  <span class="station-type" style="background:${station.color}12;color:${station.color};">${station.type}</span>
-                </div>
-              </div>
+            <div class="station-header">
               <div>
-                ${isServing
-              ? `<span class="badge badge-green" style="display:inline-flex;align-items:center;gap:5px;font-weight:700;"><span class="pulse-dot"></span> In Service</span>`
-              : isActive
-                ? `<span class="badge badge-blue" style="font-weight:700;">● Online</span>`
-                : `<span class="badge badge-gray" style="font-weight:600;">○ Standby</span>`}
+                <div class="station-name">${st.name}</div>
+                <div class="station-role" style="color:${st.color};">${st.type}</div>
               </div>
+              <div>${statusBadge}</div>
             </div>
 
-            <div style="font-size:0.8rem;color:var(--text-muted);display:flex;align-items:center;gap:6px;">
-              <span>Officer:</span>
-              <strong style="color:${isActive ? '#0f172a' : '#94a3b8'};">${officerName || 'Uncrewed / Not Logged In'}</strong>
+            <div class="station-officer">
+              <span class="officer-label">Manned By:</span>
+              <span class="officer-name">${clerkData ? clerkData.name : '<span style="color:#94a3b8;font-weight:normal;font-style:italic;">No clerk assigned</span>'}</span>
             </div>
 
-            <div class="station-serving-box ${isServing ? 'serving-active' : ''}">
+            <div class="current-ticket-box ${isServing ? 'active' : ''}">
               ${isServing
-              ? `<div style="font-weight:700;color:#15803d;display:flex;align-items:center;gap:6px;">
-                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                    <span>${serving.queue_number ? `#${serving.queue_number} ` : ''}${serving.member_name}</span>
-                   </div>
-                   <div style="font-size:0.75rem;color:#166534;margin-top:2px;">
-                     ${serving.confirmed_transaction_type || serving.transaction_type || 'Processing'}
-                   </div>`
-              : isActive
-                ? `<div style="color:var(--sss-blue);font-weight:600;display:flex;align-items:center;gap:6px;">
+                ? `<div class="ticket-num">#${activeTx.queue_number || '—'}</div>
+                   <div class="ticket-name">${activeTx.member_name}</div>
+                   <div class="ticket-service">${activeTx.transaction_type}</div>
+                   <div class="ticket-timer">Serving: ⏱ ${activeTx.duration_minutes ? Math.round(activeTx.duration_minutes) : 0} min</div>`
+                : isOnline
+                ? `<div style="color:#16a34a;font-weight:700;font-size:0.88rem;display:flex;align-items:center;justify-content:center;gap:6px;">
                     <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
                     Ready &amp; Waiting for Next Member
                    </div>`
                 : `<div style="color:#94a3b8;">Station offline / uncrewed.</div>`}
-            </div>
-
-            <div class="station-metrics">
-              <span>Today: <strong>${totalServed} served</strong></span>
-              <span>Avg Time: <strong>${avgDur}</strong></span>
             </div>`;
           grid.appendChild(div);
         });
@@ -2374,52 +2353,103 @@
 
     // ── Live Wait Alerts Engine ────────────────────────────────────────────
     function renderLiveWaitAlerts(longWaiting) {
-      const container = document.getElementById('wait-alerts');
-      const countEl = document.getElementById('wait-alert-count');
+      const containers = [document.getElementById('wait-alerts'), document.getElementById('page-wait-alerts')].filter(Boolean);
+      const countEls = [document.getElementById('wait-alert-count'), document.getElementById('page-wait-alert-count')].filter(Boolean);
       const badge = document.getElementById('alert-badge');
-      if (!container) return;
 
       if (!longWaiting || longWaiting.length === 0) {
-        if (countEl) { countEl.textContent = '0 SLA Breaches'; countEl.className = 'badge badge-green'; }
+        countEls.forEach(el => { el.textContent = '0 SLA Breaches'; el.className = 'badge badge-green'; });
         if (badge) badge.style.display = 'none';
-        container.innerHTML = `
-          <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:16px 20px;display:flex;align-items:center;gap:14px;">
-            <div style="width:36px;height:36px;border-radius:50%;background:#dcfce7;color:#15803d;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-            </div>
-            <div>
-              <div style="font-weight:800;color:#15803d;font-size:0.92rem;">All Queues Operating Within ARTA 15-Minute SLA</div>
-              <div style="font-size:0.78rem;color:#166534;margin-top:2px;">No members have exceeded the statutory maximum wait time threshold across any desk.</div>
-            </div>
-          </div>`;
-      } else {
-        if (countEl) { countEl.textContent = `${longWaiting.length} Over-SLA Alert(s)`; countEl.className = 'badge badge-red'; }
-        if (badge) { badge.textContent = longWaiting.length; badge.style.display = 'inline-flex'; }
-        container.innerHTML = '';
-        longWaiting.forEach(m => {
-          const div = document.createElement('div');
-          div.style.cssText = 'background:#fff1f2;border:1px solid #fecdd3;border-left:4px solid #dc2626;border-radius:8px;padding:14px 18px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;gap:14px;';
-          div.innerHTML = `
-            <div style="display:flex;align-items:center;gap:14px;flex:1;">
-              <div style="width:40px;height:40px;border-radius:8px;background:#fee2e2;color:#dc2626;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-weight:900;font-size:0.95rem;">
-                ${m.queue_number || '—'}
+        containers.forEach(c => {
+          c.innerHTML = `
+            <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:16px 20px;display:flex;align-items:center;gap:14px;">
+              <div style="width:36px;height:36px;border-radius:50%;background:#dcfce7;color:#15803d;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
               </div>
               <div>
-                <div style="font-weight:800;color:#991b1b;font-size:0.95rem;display:flex;align-items:center;gap:8px;">
-                  <span>${m.name}</span>
-                  <span style="font-size:0.7rem;padding:2px 8px;border-radius:999px;font-weight:700;background:#fee2e2;color:#b91c1c;border:1px solid #fecaca;">${(m.routed_to || 'Counter').toUpperCase()} QUEUE</span>
+                <div style="font-weight:800;color:#15803d;font-size:0.92rem;">All Queues Operating Within ARTA 15-Minute SLA</div>
+                <div style="font-size:0.78rem;color:#166534;margin-top:2px;">No members have exceeded the statutory maximum wait time threshold across any desk.</div>
+              </div>
+            </div>`;
+        });
+      } else {
+        countEls.forEach(el => { el.textContent = `${longWaiting.length} Over-SLA Alert(s)`; el.className = 'badge badge-red'; });
+        if (badge) { badge.textContent = longWaiting.length; badge.style.display = 'inline-flex'; }
+
+        containers.forEach(c => {
+          c.innerHTML = '';
+          longWaiting.forEach(m => {
+            const div = document.createElement('div');
+            div.style.cssText = 'background:#fff1f2;border:1px solid #fecdd3;border-left:4px solid #dc2626;border-radius:8px;padding:14px 18px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;gap:14px;';
+            div.innerHTML = `
+              <div style="display:flex;align-items:center;gap:14px;flex:1;">
+                <div style="width:40px;height:40px;border-radius:8px;background:#fee2e2;color:#dc2626;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-weight:900;font-size:0.95rem;">
+                  ${m.queue_number || '—'}
                 </div>
-                <div style="font-size:0.8rem;color:#7f1d1d;margin-top:3px;">
-                  Service: <strong>${m.transaction_type}</strong> • Checked in at <strong>${m.check_in_time ? m.check_in_time.slice(11, 16) : '—'}</strong>
+                <div>
+                  <div style="font-weight:800;color:#991b1b;font-size:0.95rem;display:flex;align-items:center;gap:8px;">
+                    <span>${m.name}</span>
+                    <span style="font-size:0.7rem;padding:2px 8px;border-radius:999px;font-weight:700;background:#fee2e2;color:#b91c1c;border:1px solid #fecaca;">${(m.routed_to || 'Counter').toUpperCase()} QUEUE</span>
+                  </div>
+                  <div style="font-size:0.8rem;color:#7f1d1d;margin-top:3px;">
+                    Service: <strong>${m.transaction_type}</strong> • Checked in at <strong>${m.check_in_time ? m.check_in_time.slice(11, 16) : '—'}</strong>
+                  </div>
                 </div>
               </div>
+              <div style="text-align:right;flex-shrink:0;">
+                <div style="font-size:1.15rem;font-weight:900;color:#dc2626;">⏱ ${m.wait_minutes} min</div>
+                <div style="font-size:0.72rem;color:#b91c1c;font-weight:700;">ARTA Breach (&gt;15m)</div>
+              </div>`;
+            c.appendChild(div);
+          });
+        });
+      }
+    }
+
+    // ── No-Show Alerts Engine ──────────────────────────────────────────────
+    async function loadNoShowAlerts() {
+      const container = document.getElementById('noshow-alerts');
+      if (!container) return;
+      try {
+        const r = await fetch('/api/appointments');
+        const appts = await r.json();
+        const now = new Date();
+        const curH = now.getHours();
+        const curM = now.getMinutes();
+        const curMinutes = curH * 60 + curM;
+
+        const potentialNoShows = appts.filter(a => {
+          if (a.arrival_status === 'done' || a.arrival_status === 'in-lobby') return false;
+          if (a.arrival_status === 'no-show') return true;
+          if (a.appointment_time) {
+            const parts = a.appointment_time.split(':');
+            const apptMin = parseInt(parts[0], 10) * 60 + parseInt(parts[1], 10);
+            return (curMinutes - apptMin) >= 20;
+          }
+          return false;
+        });
+
+        if (potentialNoShows.length === 0) {
+          container.innerHTML = '<div style="color:var(--text-muted);font-size:0.85rem;">No active no-show alerts for today.</div>';
+          return;
+        }
+
+        container.innerHTML = '';
+        potentialNoShows.forEach(a => {
+          const div = document.createElement('div');
+          div.style.cssText = 'background:#fffbeb;border:1px solid #fde68a;border-left:4px solid #d97706;border-radius:8px;padding:12px 16px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;gap:12px;';
+          div.innerHTML = `
+            <div>
+              <div style="font-weight:800;color:#92400e;font-size:0.92rem;">${a.name} — <span style="font-weight:normal;color:#78350f;">Booked for ${a.appointment_time}</span></div>
+              <div style="font-size:0.78rem;color:#b45309;margin-top:2px;">Service: ${a.service || 'Appointment'} • Officer: ${a.clerk_name || 'Assigned Officer'} (${a.counter || 'Counter 1'})</div>
             </div>
-            <div style="text-align:right;flex-shrink:0;">
-              <div style="font-size:1.15rem;font-weight:900;color:#dc2626;">⏱ ${m.wait_minutes} min</div>
-              <div style="font-size:0.72rem;color:#b91c1c;font-weight:700;">ARTA Breach (&gt;15m)</div>
+            <div style="text-align:right;">
+              <span class="badge badge-amber" style="font-size:0.75rem;padding:4px 8px;font-weight:800;">Potential No-Show</span>
             </div>`;
           container.appendChild(div);
         });
+      } catch (e) {
+        console.error('Error loading no-show alerts:', e);
       }
     }
 
