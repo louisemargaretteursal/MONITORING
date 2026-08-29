@@ -1552,11 +1552,13 @@
       row.style.cssText = 'display:flex;align-items:center;gap:10px;';
       row.innerHTML = `
         <div class="member-queue" style="background:#8b5cf6;flex-shrink:0;"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
-        <div class="member-info" style="flex:1;">
-          <div class="member-name">${a.name}</div>
-          <div class="member-meta">
+        <div class="member-info" style="flex:1;min-width:0;">
+          <div class="member-name" style="font-weight:700;font-size:0.92rem;color:#0f172a;">${a.name}</div>
+          ${a.service ? `<div style="font-size:0.74rem;color:#0284c7;font-weight:600;margin:1px 0 3px 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${a.service}</div>` : ''}
+          <div class="member-meta" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
             <span style="display:inline-block;padding:2px 8px;border-radius:999px;font-size:0.7rem;font-weight:700;background:${statusBg};color:${statusColor};">${statusLabel}</span>
-            <span class="badge badge-gray">${a.appointment_time}</span>
+            <span class="badge badge-gray" style="font-weight:700;">${a.appointment_time}</span>
+            ${a.phone_number ? `<span style="font-size:0.72rem;color:#64748b;font-weight:600;">📞 ${a.phone_number}</span>` : ''}
             ${a.is_late ? `<span style="display:inline-block;padding:2px 8px;border-radius:999px;font-size:0.7rem;font-weight:700;background:#fef2f2;color:#b91c1c;border:1px solid #fecaca;">⏰ Late</span>` : ''}
           </div>
         </div>`;
