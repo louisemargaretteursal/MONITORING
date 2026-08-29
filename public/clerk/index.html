@@ -286,10 +286,10 @@
       font-size: 0.68rem; font-weight: 700; padding: 2px 7px;
       border-radius: 999px; flex-shrink: 0;
     }
-    .appt-badge.arrived  { background: #f0fdf4; color: #15803d; }
-    .appt-badge.waiting  { background: #fffbeb; color: #b45309; }
-    .appt-badge.noshow   { background: #fef2f2; color: #b91c1c; }
-    .appt-badge.served   { background: #eff6ff; color: #1e40af; border: 1px solid #bfdbfe; }
+    .appt-badge.arrived    { background: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0; }
+    .appt-badge.notarrived { background: #f8fafc; color: #64748b; border: 1px solid #e2e8f0; }
+    .appt-badge.noshow     { background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca; }
+    .appt-badge.served     { background: #eff6ff; color: #1e40af; border: 1px solid #bfdbfe; }
   </style>
 </head>
 <body>
@@ -2313,7 +2313,7 @@
         return;
       }
       list.innerHTML = appts.map(a => {
-        let sc = 'waiting', sl = 'Waiting';
+        let sc = 'notarrived', sl = 'Not Arrived';
         if (a.arrival_status === 'done' || a.arrival_status === 'served') {
           sc = 'served'; sl = '<svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px;margin-right:3px;"><polyline points="20 6 9 17 4 12"/></svg>Served';
         } else if (a.arrival_status === 'in-lobby') {
