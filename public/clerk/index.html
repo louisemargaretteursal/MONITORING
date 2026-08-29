@@ -1130,6 +1130,19 @@
   }
   socket.on('stations:presence', () => updateCounterAvailability());
 
+  // ── Live Portal Appointment Refresh ─────────────────────────────────────
+  // Fires when a portal member checks in at the kiosk — no manual refresh needed
+  socket.on('appointment:arrived', () => {
+    if (!clerk) return;
+    loadQueues();
+    loadMyAppointments();
+  });
+  socket.on('appointments:refresh', () => {
+    if (!clerk) return;
+    loadQueues();
+    loadMyAppointments();
+  });
+
   function filterDropdown() {
     const input = document.getElementById('login-name');
     const query = input.value.trim().toLowerCase();
