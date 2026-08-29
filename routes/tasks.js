@@ -283,7 +283,7 @@ module.exports = (io) => {
       // Subtitle
       ws.mergeCells('A2:I2');
       const today = new Date().toISOString().split('T')[0];
-      ws.getCell('A2').value = `SSS Toledo Branch (07-TLD) • Generated: ${today} | Total Assignments: ${tasks.length}`;
+      ws.getCell('A2').value = `SSS Toledo Branch • Generated: ${today} | Total Assignments: ${tasks.length}`;
       ws.getCell('A2').font = { name: 'Segoe UI', size: 9.5, italic: true, color: { argb: 'FF1E3A8A' } };
       ws.getCell('A2').fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE0E7FF' } };
       ws.getCell('A2').alignment = { vertical: 'middle', horizontal: 'center' };
