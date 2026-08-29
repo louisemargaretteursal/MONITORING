@@ -2271,77 +2271,106 @@
         const r = await fetch('/api/transactions/stats/today');
         const data = await r.json();
 
-        document.getElementById('stat-total').textContent = data.stats.total || 0;
-        document.getElementById('stat-waiting').textContent = data.waiting.count || 0;
-        document.getElementById('stat-avgwait').textContent = data.stats.avg_wait ? `${parseFloat(data.stats.avg_wait).toFixed(1)}m` : '0.0m';
-        const avgR = data.stats.avg_rating;
-        document.getElementById('stat-rating').innerHTML = avgR ? `<svg viewBox="0 0 16 16" width="13" height="13" style="display:inline;vertical-align:middle;margin-right:2px;color:#d97706;" fill="currentColor"><path d="M8 1l1.8 3.6L14 5.3l-3 2.9.7 4.1L8 10.3l-3.7 2 .7-4.1-3-2.9 4.2-.7z"/></svg> ${parseFloat(avgR).toFixed(2)}` : '<svg viewBox="0 0 16 16" width="13" height="13" style="display:inline;vertical-align:middle;margin-right:2px;color:#d97706;" fill="currentColor"><path d="M8 1l1.8 3.6L14 5.3l-3 2.9.7 4.1L8 10.3l-3.7 2 .7-4.1-3-2.9 4.2-.7z"/></svg> 5.0';
+        const setTxt = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
 
-        document.getElementById('flow-finished').textContent = data.stats.finished || 0;
-        document.getElementById('flow-rejected').textContent = data.stats.rejected || 0;
-        document.getElementById('flow-held').textContent = data.stats.held || 0;
-        document.getElementById('flow-appointment').textContent = data.stats.appointment || 0;
+        setTxt('stat-total', data.stats.total || 0);
+        setTxt('stat-waiting', data.waiting?.count || 0);
+        setTxt('stat-avgwait', data.stats.avg_wait ? `${parseFloat(data.stats.avg_wait).toFixed(1)}m` : '0.0m');
+        const avgR = data.stats.avg_rating;
+        const ratingEl = document.getElementById('stat-rating');
+        if (ratingEl) {
+          ratingEl.innerHTML = avgR ? `<svg viewBox="0 0 16 16" width="13" height="13" style="display:inline;vertical-align:middle;margin-right:2px;color:#d97706;" fill="currentColor"><path d="M8 1l1.8 3.6L14 5.3l-3 2.9.7 4.1L8 10.3l-3.7 2 .7-4.1-3-2.9 4.2-.7z"/></svg> ${parseFloat(avgR).toFixed(2)}` : '<svg viewBox="0 0 16 16" width="13" height="13" style="display:inline;vertical-align:middle;margin-right:2px;color:#d97706;" fill="currentColor"><path d="M8 1l1.8 3.6L14 5.3l-3 2.9.7 4.1L8 10.3l-3.7 2 .7-4.1-3-2.9 4.2-.7z"/></svg> 5.0';
+        }
+
+        setTxt('flow-finished', data.stats.finished || 0);
+        setTxt('flow-rejected', data.stats.rejected || 0);
+        setTxt('flow-verification', data.stats.for_verification || data.stats.held || 0);
+        setTxt('flow-appointment', data.stats.for_appointment || data.stats.appointment || 0);
 
         // Physical Stations Grid Rendering
-        const grid = document.getElementById('stations-grid');
-        grid.innerHTML = '';
+        const grid = document.getElementById('counter-grid') || document.getElementById('stations-grid');
+        if (grid) {
+          grid.innerHTML = '';
 
-        PHYSICAL_STATIONS.forEach(st => {
-          const clerkData = data.clerks?.find(c =>
-            c.counter?.toLowerCase() === st.name.toLowerCase() ||
-            (st.id === 'pacd' && c.counter?.toLowerCase().includes('pacd')) ||
-            (st.id === 'ecenter' && c.counter?.toLowerCase().includes('e-center'))
-          );
+          PHYSICAL_STATIONS.forEach(station => {
+            const presence = data.activePresence?.find(p => {
+              if (station.id === 'pacd') return p.station === 'PACD Desk' || p.station === 'PACD';
+              if (station.id === 'ecenter') return p.station === 'E-Center Station' || p.station === 'E-Center';
+              if (station.id === 'side') return p.station === 'Side Counter';
+              return p.station === station.name;
+            });
 
-          const activeTx = data.activeTransactions?.find(t =>
-            t.counter?.toLowerCase() === st.name.toLowerCase() ||
-            (st.id === 'pacd' && t.counter?.toLowerCase().includes('pacd')) ||
-            (st.id === 'ecenter' && t.counter?.toLowerCase().includes('e-center'))
-          );
+            const serving = data.currentlyServing?.find(s => {
+              if (station.id === 'pacd') return s.routed_to === 'pacd' || s.counter === 'PACD' || s.counter === 'PACD Desk';
+              if (station.id === 'ecenter') return s.routed_to === 'ecenter' || s.counter?.includes('E-Center');
+              if (station.id === 'side') return s.counter === 'Side Counter';
+              return s.counter === station.name;
+            });
 
-          const isOnline = clerkData && (clerkData.is_active === 1 || clerkData.status === 'online');
-          const isServing = !!activeTx;
-          const totalServed = clerkData ? clerkData.served_today : 0;
-          const avgDur = clerkData && clerkData.avg_duration ? `${parseFloat(clerkData.avg_duration).toFixed(1)}m` : '—';
+            const stationTxs = data.byCounter?.filter(b => {
+              if (station.id === 'pacd') return b.counter === 'PACD' || b.counter === 'PACD Desk';
+              if (station.id === 'ecenter') return b.counter?.includes('E-Center');
+              if (station.id === 'side') return b.counter === 'Side Counter';
+              return b.counter === station.name;
+            }) || [];
 
-          let statusBadge = '<span class="badge badge-gray">Offline</span>';
-          if (isServing) {
-            statusBadge = '<span class="badge badge-blue">● Serving</span>';
-          } else if (isOnline) {
-            statusBadge = '<span class="badge badge-green">● Available</span>';
-          }
+            const totalServed = stationTxs.reduce((sum, x) => sum + (x.served || 0), 0);
+            const avgDur = stationTxs.length > 0 && stationTxs[0].avg_duration ? `${parseFloat(stationTxs[0].avg_duration).toFixed(1)}m avg` : '—';
+            const officerName = presence?.clerkName || serving?.clerk_name || null;
+            const isActive = !!presence || !!serving;
+            const isServing = !!serving;
 
-          const div = document.createElement('div');
-          div.className = `station-card ${isServing ? 'serving' : isOnline ? 'online' : 'offline'}`;
-          div.innerHTML = `
-            <div class="station-header">
-              <div>
-                <div class="station-name">${st.name}</div>
-                <div class="station-role" style="color:${st.color};">${st.type}</div>
+            const div = document.createElement('div');
+            div.className = 'station-pod';
+            div.innerHTML = `
+              <div class="station-pod-header">
+                <div class="station-title-box">
+                  <div class="station-icon" style="background:${station.color}15;color:${station.color};">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+                  </div>
+                  <div>
+                    <div class="station-name">${station.name}</div>
+                    <span class="station-type" style="background:${station.color}12;color:${station.color};">${station.type}</span>
+                  </div>
+                </div>
+                <div>
+                  ${isServing
+                    ? `<span class="badge badge-green" style="display:inline-flex;align-items:center;gap:5px;font-weight:700;"><span class="pulse-dot"></span> In Service</span>`
+                    : isActive
+                      ? `<span class="badge badge-blue" style="font-weight:700;">● Online</span>`
+                      : `<span class="badge badge-gray" style="font-weight:600;">○ Standby</span>`}
+                </div>
               </div>
-              <div>${statusBadge}</div>
-            </div>
 
-            <div class="station-officer">
-              <span class="officer-label">Manned By:</span>
-              <span class="officer-name">${clerkData ? clerkData.name : '<span style="color:#94a3b8;font-weight:normal;font-style:italic;">No clerk assigned</span>'}</span>
-            </div>
+              <div style="font-size:0.8rem;color:var(--text-muted);display:flex;align-items:center;gap:6px;">
+                <span>Officer:</span>
+                <strong style="color:${isActive ? '#0f172a' : '#94a3b8'};">${officerName || 'Uncrewed / Not Logged In'}</strong>
+              </div>
 
-            <div class="current-ticket-box ${isServing ? 'active' : ''}">
-              ${isServing
-                ? `<div class="ticket-num">#${activeTx.queue_number || '—'}</div>
-                   <div class="ticket-name">${activeTx.member_name}</div>
-                   <div class="ticket-service">${activeTx.transaction_type}</div>
-                   <div class="ticket-timer">Serving: ⏱ ${activeTx.duration_minutes ? Math.round(activeTx.duration_minutes) : 0} min</div>`
-                : isOnline
-                ? `<div style="color:#16a34a;font-weight:700;font-size:0.88rem;display:flex;align-items:center;justify-content:center;gap:6px;">
-                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-                    Ready &amp; Waiting for Next Member
-                   </div>`
-                : `<div style="color:#94a3b8;">Station offline / uncrewed.</div>`}
-            </div>`;
-          grid.appendChild(div);
-        });
+              <div class="station-serving-box ${isServing ? 'serving-active' : ''}">
+                ${isServing
+                  ? `<div style="font-weight:700;color:#15803d;display:flex;align-items:center;gap:6px;">
+                      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                      <span>${serving.queue_number ? `#${serving.queue_number} ` : ''}${serving.member_name}</span>
+                     </div>
+                     <div style="font-size:0.75rem;color:#166534;margin-top:2px;">
+                       ${serving.confirmed_transaction_type || serving.transaction_type || 'Processing'}
+                     </div>`
+                  : isActive
+                    ? `<div style="color:var(--sss-blue);font-weight:600;display:flex;align-items:center;gap:6px;">
+                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                        Ready for Member
+                       </div>`
+                    : `<div style="color:var(--text-muted);">Station Standby</div>`}
+              </div>
+
+              <div class="station-metrics">
+                <span>Today: <strong>${totalServed} served</strong></span>
+                <span>Avg Time: <strong>${avgDur}</strong></span>
+              </div>`;
+            grid.appendChild(div);
+          });
+        }
 
         // SLA Watchdog
         renderLiveWaitAlerts(data.longWaiting || []);
