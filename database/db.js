@@ -130,18 +130,21 @@ try {
   db.prepare("UPDATE transactions SET counter = 'E-Center Station' WHERE (counter = 'Branch Staff' OR counter IS NULL) AND member_id IN (SELECT id FROM members WHERE routed_to = 'ecenter')").run();
   db.prepare("UPDATE transactions SET counter = 'Counter 1' WHERE counter = 'Branch Staff' OR counter = 'Main Counter' OR counter IS NULL").run();
 
-  // Rename previous demo staff to official demo roster
+  // Rename previous demo staff to official demo roster & cleanup
+  db.prepare("DELETE FROM clerks WHERE name = 'Warren Torres'").run();
+  db.prepare("UPDATE clerks SET name = 'Sophie Blanche' WHERE name = 'Nichailla Tuco'").run();
   db.prepare("UPDATE clerks SET name = 'Noeme Mamac' WHERE name = 'Marga Ursal'").run();
   db.prepare("UPDATE clerks SET name = 'Glory May Tagpuno' WHERE name = 'Laarnie Alibong'").run();
   db.prepare("UPDATE clerks SET name = 'Emmie Flores' WHERE name = 'Sheina Torrecampo'").run();
   db.prepare("UPDATE clerks SET name = 'Mabelle Paz' WHERE name = 'Sheila Vasquez'").run();
 } catch(e) {}
 
-// ─── SEED DEFAULT CLERKS (ensure all 6 official staff + Admin exist) ──────────
+// ─── SEED DEFAULT CLERKS (ensure all official staff + Admin exist) ──────────
 const officialClerks = [
   ['Christie Sillar',   'Branch Staff', '1234'],
   ['Noeme Mamac',       'Branch Staff', '1234'],
   ['Glory May Tagpuno', 'Branch Staff', '1234'],
+  ['Sophie Blanche',    'Branch Staff', '1234'],
   ['Emmie Flores',      'Branch Staff', '1234'],
   ['Mabelle Paz',       'Branch Staff', '1234'],
   ['Maricar Boniao',    'Branch Staff', '1234'],
