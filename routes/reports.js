@@ -1214,87 +1214,95 @@ module.exports = () => {
 
       const apptRows = db.prepare(apptSql).all(...apptParams);
 
-      if (apptRows.length > 0) {
-        const wsAppts = wb.addWorksheet('Appointments Log', { views: [{ state: 'frozen', xSplit: 0, ySplit: 6, showGridLines: true }] });
-        wsAppts.pageSetup = { orientation: 'landscape', paperSize: 9, fitToPage: true, fitToWidth: 1, fitToHeight: 0 };
+      // ALWAYS create the Appointments Log tab so it is permanently visible in Excel
+      const wsAppts = wb.addWorksheet('Appointments Log', { views: [{ state: 'frozen', xSplit: 0, ySplit: 6, showGridLines: true }] });
+      wsAppts.pageSetup = { orientation: 'landscape', paperSize: 9, fitToPage: true, fitToWidth: 1, fitToHeight: 0 };
 
-        // Banner
-        wsAppts.mergeCells('A1:P1');
-        const apptTitle = wsAppts.getCell('A1');
-        apptTitle.value = `SOCIAL SECURITY SYSTEM — TOLEDO BRANCH | ${clerkId ? 'MY APPOINTMENTS LOG & ATTENDANCE RECORD' : 'APPOINTMENTS LOG & ATTENDANCE RECORD'}`;
-        apptTitle.font = { name: 'Segoe UI', size: 13, bold: true, color: { argb: 'FFFFFFFF' } };
-        apptTitle.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF' + NAVY_DARK } };
-        apptTitle.alignment = { vertical: 'middle', horizontal: 'center' };
-        wsAppts.getRow(1).height = 28;
+      // Banner
+      wsAppts.mergeCells('A1:P1');
+      const apptTitle = wsAppts.getCell('A1');
+      apptTitle.value = `SOCIAL SECURITY SYSTEM — TOLEDO BRANCH | ${clerkId ? 'MY APPOINTMENTS LOG & ATTENDANCE RECORD' : 'APPOINTMENTS LOG & ATTENDANCE RECORD'}`;
+      apptTitle.font = { name: 'Segoe UI', size: 13, bold: true, color: { argb: 'FFFFFFFF' } };
+      apptTitle.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF' + NAVY_DARK } };
+      apptTitle.alignment = { vertical: 'middle', horizontal: 'center' };
+      wsAppts.getRow(1).height = 28;
 
-        wsAppts.mergeCells('A2:P2');
-        const apptSub = wsAppts.getCell('A2');
-        apptSub.value = subtitleText;
-        apptSub.font = { name: 'Segoe UI', size: 10, italic: true, color: { argb: 'FFFFFFFF' } };
-        apptSub.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF' + SSS_BLUE } };
-        apptSub.alignment = { vertical: 'middle', horizontal: 'center' };
-        wsAppts.getRow(2).height = 20;
+      wsAppts.mergeCells('A2:P2');
+      const apptSub = wsAppts.getCell('A2');
+      apptSub.value = subtitleText;
+      apptSub.font = { name: 'Segoe UI', size: 10, italic: true, color: { argb: 'FFFFFFFF' } };
+      apptSub.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF' + SSS_BLUE } };
+      apptSub.alignment = { vertical: 'middle', horizontal: 'center' };
+      wsAppts.getRow(2).height = 20;
 
-        // KPI Summary Row
-        const totalAppts = apptRows.length;
-        const servedAppts = apptRows.filter(r => r.computed_status === 'Served').length;
-        const noShowAppts = apptRows.filter(r => r.computed_status === 'No-Show').length;
-        const inLobbyAppts = apptRows.filter(r => r.computed_status === 'In Lobby').length;
-        const pendingAppts = apptRows.filter(r => r.computed_status === 'Pending').length;
+      // KPI Summary Row
+      const totalAppts = apptRows.length;
+      const servedAppts = apptRows.filter(r => r.computed_status === 'Served').length;
+      const noShowAppts = apptRows.filter(r => r.computed_status === 'No-Show').length;
+      const inLobbyAppts = apptRows.filter(r => r.computed_status === 'In Lobby').length;
+      const pendingAppts = apptRows.filter(r => r.computed_status === 'Pending').length;
 
-        wsAppts.mergeCells('A4:C4');
-        wsAppts.getCell('A4').value = `Total Bookings: ${totalAppts}`;
-        wsAppts.getCell('A4').font = { name: 'Segoe UI', size: 10, bold: true, color: { argb: 'FF1E3A8A' } };
-        wsAppts.getCell('A4').fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE0F2FE' } };
-        wsAppts.getCell('A4').alignment = { vertical: 'middle', horizontal: 'center' };
+      wsAppts.mergeCells('A4:C4');
+      wsAppts.getCell('A4').value = `Total Bookings: ${totalAppts}`;
+      wsAppts.getCell('A4').font = { name: 'Segoe UI', size: 10, bold: true, color: { argb: 'FF1E3A8A' } };
+      wsAppts.getCell('A4').fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE0F2FE' } };
+      wsAppts.getCell('A4').alignment = { vertical: 'middle', horizontal: 'center' };
 
-        wsAppts.mergeCells('D4:F4');
-        wsAppts.getCell('D4').value = `Served: ${servedAppts} (${totalAppts ? Math.round(servedAppts/totalAppts*100) : 0}%)`;
-        wsAppts.getCell('D4').font = { name: 'Segoe UI', size: 10, bold: true, color: { argb: 'FF15803D' } };
-        wsAppts.getCell('D4').fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFDCFCE7' } };
-        wsAppts.getCell('D4').alignment = { vertical: 'middle', horizontal: 'center' };
+      wsAppts.mergeCells('D4:F4');
+      wsAppts.getCell('D4').value = `Served: ${servedAppts} (${totalAppts ? Math.round(servedAppts/totalAppts*100) : 0}%)`;
+      wsAppts.getCell('D4').font = { name: 'Segoe UI', size: 10, bold: true, color: { argb: 'FF15803D' } };
+      wsAppts.getCell('D4').fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFDCFCE7' } };
+      wsAppts.getCell('D4').alignment = { vertical: 'middle', horizontal: 'center' };
 
-        wsAppts.mergeCells('G4:I4');
-        wsAppts.getCell('G4').value = `No-Show: ${noShowAppts} (${totalAppts ? Math.round(noShowAppts/totalAppts*100) : 0}%)`;
-        wsAppts.getCell('G4').font = { name: 'Segoe UI', size: 10, bold: true, color: { argb: 'FFB91C1C' } };
-        wsAppts.getCell('G4').fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFEE2E2' } };
-        wsAppts.getCell('G4').alignment = { vertical: 'middle', horizontal: 'center' };
+      wsAppts.mergeCells('G4:I4');
+      wsAppts.getCell('G4').value = `No-Show: ${noShowAppts} (${totalAppts ? Math.round(noShowAppts/totalAppts*100) : 0}%)`;
+      wsAppts.getCell('G4').font = { name: 'Segoe UI', size: 10, bold: true, color: { argb: 'FFB91C1C' } };
+      wsAppts.getCell('G4').fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFEE2E2' } };
+      wsAppts.getCell('G4').alignment = { vertical: 'middle', horizontal: 'center' };
 
-        wsAppts.mergeCells('J4:L4');
-        wsAppts.getCell('J4').value = `In Lobby: ${inLobbyAppts} | Pending: ${pendingAppts}`;
-        wsAppts.getCell('J4').font = { name: 'Segoe UI', size: 10, bold: true, color: { argb: 'FF1E3A8A' } };
-        wsAppts.getCell('J4').fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE0F2FE' } };
-        wsAppts.getCell('J4').alignment = { vertical: 'middle', horizontal: 'center' };
+      wsAppts.mergeCells('J4:L4');
+      wsAppts.getCell('J4').value = `In Lobby: ${inLobbyAppts} | Pending: ${pendingAppts}`;
+      wsAppts.getCell('J4').font = { name: 'Segoe UI', size: 10, bold: true, color: { argb: 'FF1E3A8A' } };
+      wsAppts.getCell('J4').fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE0F2FE' } };
+      wsAppts.getCell('J4').alignment = { vertical: 'middle', horizontal: 'center' };
 
-        wsAppts.getRow(4).height = 22;
+      wsAppts.getRow(4).height = 22;
 
-        // Table Header
-        const apptHeaders = [
-          '#', 'Date', 'Appt Time', 'Member Name', 'Contact Phone', 'Email Address',
-          'Service / Purpose', 'Assigned Officer', 'Counter / Desk', 'Status / Mark',
-          'Late?', 'Check-in Time', 'Duration (min)', 'Outcome', 'CSAT Rating', 'Instructions / Remarks'
-        ];
+      // Table Header
+      const apptHeaders = [
+        '#', 'Date', 'Appt Time', 'Member Name', 'Contact Phone', 'Email Address',
+        'Service / Purpose', 'Assigned Officer', 'Counter / Desk', 'Status / Mark',
+        'Late?', 'Check-in Time', 'Duration (min)', 'Outcome', 'CSAT Rating', 'Instructions / Remarks'
+      ];
 
-        const apptHeaderRow = wsAppts.getRow(6);
-        apptHeaderRow.values = apptHeaders;
-        apptHeaderRow.height = 26;
-        apptHeaderRow.eachCell((cell) => {
-          cell.font = { name: 'Segoe UI', size: 9.5, bold: true, color: { argb: 'FFFFFFFF' } };
-          cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF' + HEADER_BG } };
-          cell.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true };
-          cell.border = {
-            top: { style: 'medium', color: { argb: 'FF' + NAVY_DARK } },
-            bottom: { style: 'medium', color: { argb: 'FF' + NAVY_DARK } },
-            left: { style: 'thin', color: { argb: 'FFFFFFFF' } },
-            right: { style: 'thin', color: { argb: 'FFFFFFFF' } }
-          };
-        });
-
-        wsAppts.autoFilter = {
-          from: { row: 6, column: 1 },
-          to: { row: 6, column: apptHeaders.length }
+      const apptHeaderRow = wsAppts.getRow(6);
+      apptHeaderRow.values = apptHeaders;
+      apptHeaderRow.height = 26;
+      apptHeaderRow.eachCell((cell) => {
+        cell.font = { name: 'Segoe UI', size: 9.5, bold: true, color: { argb: 'FFFFFFFF' } };
+        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF' + HEADER_BG } };
+        cell.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true };
+        cell.border = {
+          top: { style: 'medium', color: { argb: 'FF' + NAVY_DARK } },
+          bottom: { style: 'medium', color: { argb: 'FF' + NAVY_DARK } },
+          left: { style: 'thin', color: { argb: 'FFFFFFFF' } },
+          right: { style: 'thin', color: { argb: 'FFFFFFFF' } }
         };
+      });
 
+      wsAppts.autoFilter = {
+        from: { row: 6, column: 1 },
+        to: { row: 6, column: apptHeaders.length }
+      };
+
+      if (apptRows.length === 0) {
+        const emptyRow = wsAppts.getRow(7);
+        emptyRow.values = [1, targetDate || today, '—', 'No appointment records found for this date/filter.', '', '', '', '', '', 'No Bookings', '', '', 0, '—', '—', ''];
+        emptyRow.eachCell((cell) => {
+          cell.font = { name: 'Segoe UI', size: 9, italic: true, color: { argb: 'FF64748B' } };
+          cell.alignment = { vertical: 'middle', horizontal: 'center' };
+        });
+      } else {
         // Populate Data
         apptRows.forEach((r, idx) => {
           const row = wsAppts.getRow(7 + idx);
@@ -1357,13 +1365,13 @@ module.exports = () => {
             statusCell.font = { name: 'Segoe UI', size: 9, bold: true, color: { argb: 'FF64748B' } };
           }
         });
-
-        // Column widths
-        const apptColWidths = [6, 12, 12, 24, 16, 22, 30, 18, 16, 16, 10, 12, 12, 16, 14, 28];
-        apptColWidths.forEach((w, i) => {
-          wsAppts.getColumn(i + 1).width = w;
-        });
       }
+
+      // Column widths
+      const apptColWidths = [6, 12, 12, 24, 16, 22, 30, 18, 16, 16, 10, 12, 12, 16, 14, 28];
+      apptColWidths.forEach((w, i) => {
+        wsAppts.getColumn(i + 1).width = w;
+      });
 
       // ── CATEGORY SHEETS: ONLY CREATED IF ROWS EXIST (No Empty Clutter Tabs) ──
       // ── INDIVIDUAL TRANSACTION TYPE TABS (Exact Transacted Types) ──────────
