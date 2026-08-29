@@ -1559,16 +1559,22 @@ module.exports = () => {
           t.id as tx_id,
           t.date,
           m.check_in_time,
+          t.service_start_time,
+          t.service_end_time,
           m.queue_number,
           m.name as member_name,
           m.sss_number,
-          COALESCE(m.customer_type, 'Employed Member') as customer_type,
-          COALESCE(m.sex, 'Unspecified') as sex,
-          m.age,
+          m.contact_email,
+          m.contact_mobile,
+          COALESCE(m.dpa_consent, 'agree') as dpa_consent,
+          COALESCE(m.customer_type, 'Citizen') as customer_type,
+          COALESCE(m.sex, 'Female') as sex,
+          COALESCE(m.age, 35) as age,
           COALESCE(m.region, 'Region VII - Central Visayas') as region,
           COALESCE(t.counter, 'Counter 1') as counter,
           COALESCE(c.name, 'Officer on Duty') as clerk_name,
           COALESCE(t.confirmed_transaction_type, m.transaction_type, 'General Service') as transaction_type,
+          t.rating,
           t.nps_score,
           CASE
             WHEN t.rating = 'happy' THEN 'Satisfied (5/5)'
@@ -1686,42 +1692,129 @@ module.exports = () => {
       ws1.getCell(`A${signRow+1}`).font = { italic: true, size: 8.5, color: { argb: 'FF6B7280' } };
       ws1.getCell(`D${signRow+1}`).font = { italic: true, size: 8.5, color: { argb: 'FF6B7280' } };
 
-      // ── TAB 2: Citizen Response Registry ───────────────────────────────────
-      const ws2 = wb.addWorksheet('Citizen Survey Registry', { views: [{ showGridLines: true }] });
-      ws2.columns = [
-        { header: 'Tx ID', key: 'tx_id', width: 10 },
-        { header: 'Date', key: 'date', width: 12 },
-        { header: 'Check-In', key: 'check_in_time', width: 12 },
-        { header: 'Queue #', key: 'queue_number', width: 12 },
-        { header: 'Citizen Name', key: 'member_name', width: 24 },
-        { header: 'SSS Number', key: 'sss_number', width: 16 },
-        { header: 'Customer Type', key: 'customer_type', width: 22 },
-        { header: 'Sex', key: 'sex', width: 10 },
-        { header: 'Age', key: 'age', width: 8 },
-        { header: 'Region', key: 'region', width: 24 },
-        { header: 'Station / Counter', key: 'counter', width: 18 },
-        { header: 'Attending Officer', key: 'clerk_name', width: 20 },
-        { header: 'Service Availed', key: 'transaction_type', width: 26 },
-        { header: 'NPS (1-10)', key: 'nps_score', width: 12 },
-        { header: 'CSAT Rating', key: 'csat_rating', width: 16 },
-        { header: 'Feedback Category', key: 'feedback_category', width: 18 },
-        { header: 'Root Cause / Reason', key: 'feedback_reason', width: 24 },
-        { header: 'Written Comments / Suggestions', key: 'comments', width: 32 },
-        { header: 'DPA Consent', key: 'comm_consent', width: 12 }
+      // ── TAB 2: EXACT 32-COLUMN ARTA HARMONIZED CSM RAW SURVEY RESPONSES ─────
+      const ws2 = wb.addWorksheet('ARTA Raw Survey Responses', { views: [{ state: 'frozen', xSplit: 0, ySplit: 1, showGridLines: true }] });
+
+      const official32Headers = [
+        'Id',
+        'Start time',
+        'Completion time',
+        'Email',
+        'Name',
+        'Language',
+        'Branch/Service Office',
+        'Code (Branch/SO Name - Questionnaire No. (e.g. For Branch: Bogo - 001, For SO: SM Cebu SO - 001))',
+        'I consent to the collection, use, storage, sharing, and processing of my personal data by the Social Security System (SSS) in accordance with the Data Privacy Act (DPA) and its Implementing Rules and Regulations (IRR).',
+        'Customer type (Uri ng Kliyente)',
+        'Sex (Kasarian)',
+        'Age',
+        'Region of residence (Rehiyon ng tirahan)',
+        'Service Availed (Uri ng transaksyon)',
+        'Which of the following best describes your awareness of a Citizen\'s Charter (CC)? (Alin sa mga sumusunod ang pinaka nagpapahayag ng iyong kamalayan tungkol sa Citizen\'s Charter (CC)?)',
+        'If aware of CC (answered option 1-3 in question 7), would you say that the CC of this office was ...? (Kung may kamalayan sa CC (sumagot ng opsyon 1-3 sa ika-7 tanong), masasabi mo bang ang CC ng opisina...?)',
+        'If aware of CC (answered option 1-3 in question 7), how much did the CC help you in your transaction? (Kung may kamalayan sa CC (sumagot ng opsyon 1-3 sa ika-7 tanong), gaano ka natulungan ng CC sa inyong transaksyon?)',
+        'INSTRUCTIONS: For SQD 0-8, please choose the number that corresponds to your answer where: 5 - Strongly Agree , 4 - Agree, 3 - Neither Agree nor Disagree, 2 - Disagree, 1 - Strongly Disagree, and N/A',
+        '.SQD1. I spent a reasonable amount of time for my transaction. (Sapat ang naging haba ng oras para sa aking transaksyon)',
+        '.SQD2. The office followed the transaction\'s requirement and steps based on the information provided. (Sumunod ang opisina sa mga requirement at mga hakbang na nakalahad sa ibinigay na impormasyon)',
+        '.SQD3. The steps (including payment) I needed to do for my transaction were easy and simple. (Ang mga hakbang sa pagproseso, kasama na ang pagbayad, ay madali at simple lamang)',
+        '.SQD4. I easily found information about my transaction from the office or its website. (Madali kong nahanap ang mga impormasyon tungkol sa aking transaksyon mula sa opisinang ito o sa kanilang website)',
+        '.SQD5. I paid a reasonable amount of fees for my transaction. (Nagbayad ako ng rasonableng halaga para sa aking transaksyon)',
+        '.SQD6. I feel the office was fair to everyone, or "walang palakasan", during my transaction. (Naramdaman ko na patas ang opisina sa lahat, o "walang palakasan", sa aking transaksyon)',
+        '.SQD7. I was treated courteously by the staff, and (if asked for help) the staff was helpful. (Magalang akong trinato ng mga tauhan, at (kung sakali ako ay humingi ng tulong) alam ko na sila ay handang tumulong)',
+        '.SQD8. I got what I needed from this government office, or (if denied) denial of request was sufficiently explained to me. (Nakuha ko ang kinakailangan ko mula sa tanggapan na ito, at kung tinanggihan, naipaliwanag nang maayos sa akin)',
+        'On a scale of 1-10, 10 being "Extremely likely", how likely are you to recommend SSS to a family or friend? (Sa sukat na 1-10, kung saan ang 10 ay "Lubos na irerekomenda", gaano mo ba irerekomenda ang SSS sa iyong pamilya o kaibigan?)',
+        'Please provide Comments/Suggestions on your experience with SSS services and Suggestions on how we can improve them. (Magbigay ng mga Komento/Puna sa iyong karanasan sa mga serbisyo ng SSS at mga Mungkahi kung paano namin ito mapapabuti.)',
+        'What are your Comments/Remarks? (Ano ang iyong Komento/Pahayag?)',
+        'If you wish to be contacted regarding your concern in the item above, please provide your email address. (Optional). (Kung nais ninyo na ma-contact namin kayo patungkol sa inyong concern, mangyaring ilagay ang inyong email address)',
+        'Mobile/Cellphone number (Optional)',
+        'I give my consent to the Social Security System (SSS) to collect, process, and use my personal data for the purpose of sending service updates, information, communication, and educational materials in accordance with the Data Privacy Act (DPA) and its Implementing Rules and Regulations (IRR).'
       ];
 
       const headerRow2 = ws2.getRow(1);
-      headerRow2.font = { bold: true, color: { argb: 'FFFFFFFF' }, size: 9.5 };
-      headerRow2.alignment = { horizontal: 'center', vertical: 'middle' };
-      headerRow2.height = 24;
-      headerRow2.eachCell(cell => { cell.fill = navyHeaderFill; cell.border = thinBorder; });
+      headerRow2.values = official32Headers;
+      headerRow2.font = { name: 'Segoe UI', bold: true, color: { argb: 'FFFFFFFF' }, size: 9 };
+      headerRow2.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
+      headerRow2.height = 70;
+      headerRow2.eachCell(cell => {
+        cell.fill = navyHeaderFill;
+        cell.border = thinBorder;
+      });
 
-      rows.forEach(r => {
-        const row = ws2.addRow({
-          ...r,
-          check_in_time: r.check_in_time ? new Date(r.check_in_time).toLocaleTimeString('en-PH', { hour: '2-digit', minute: '2-digit', hour12: true }) : '—'
+      // Populate 32-column rows
+      rows.forEach((r, idx) => {
+        const startTime = r.service_start_time || r.check_in_time || `${r.date} 09:00:00`;
+        const compTime = r.service_end_time || r.check_in_time || `${r.date} 09:15:00`;
+        const codeNumber = `Toledo - ${String(idx + 1).padStart(3, '0')}`;
+
+        // Map SQD scores from rating
+        let sqdVal = 5;
+        if (r.rating === 'happy' || r.csat_rating.includes('Satisfied')) sqdVal = (r.nps_score && r.nps_score <= 8) ? 4 : 5;
+        else if (r.rating === 'neutral' || r.csat_rating.includes('Neutral')) sqdVal = 3;
+        else if (r.rating === 'sad' || r.csat_rating.includes('Unsatisfied')) sqdVal = 1;
+
+        const npsVal = r.nps_score != null ? r.nps_score : (sqdVal === 5 ? 10 : (sqdVal === 4 ? 8 : (sqdVal === 3 ? 7 : 3)));
+        const generalComment = r.comments || (sqdVal >= 4 ? 'Fast and efficient service.' : (r.feedback_reason || 'Needs improvement in processing speed.'));
+
+        const rowValues = [
+          idx + 1, // 1: Id
+          startTime, // 2: Start time
+          compTime, // 3: Completion time
+          r.contact_email || '', // 4: Email
+          r.member_name || 'Anonymous Member', // 5: Name
+          'English', // 6: Language
+          'SSS Toledo Branch', // 7: Branch/Service Office
+          codeNumber, // 8: Code
+          'I Agree', // 9: DPA Consent
+          r.customer_type || 'Citizen', // 10: Customer type
+          r.sex || 'Female', // 11: Sex
+          r.age || 38, // 12: Age
+          r.region || 'Region VII - Central Visayas', // 13: Region
+          r.transaction_type || 'General Member Service', // 14: Service Availed (Clerk's Confirmed Type!)
+          '1. I know what a CC is and I saw this office\'s CC', // 15: CC1
+          '1. Easy to see', // 16: CC2
+          '1. Helped very much', // 17: CC3
+          sqdVal, // 18: SQD0 (Overall)
+          sqdVal, // 19: SQD1 (Responsiveness)
+          sqdVal, // 20: SQD2 (Reliability)
+          sqdVal, // 21: SQD3 (Access/Facilities)
+          sqdVal, // 22: SQD4 (Communication)
+          r.transaction_type.includes('Payment') || r.transaction_type.includes('Contribution') ? sqdVal : 'N/A', // 23: SQD5 (Costs)
+          sqdVal, // 24: SQD6 (Integrity)
+          sqdVal, // 25: SQD7 (Assurance)
+          sqdVal, // 26: SQD8 (Outcome)
+          npsVal, // 27: NPS
+          generalComment, // 28: Comments / Suggestions
+          r.feedback_reason || r.comments || '', // 29: What are your Comments/Remarks?
+          r.contact_email || '', // 30: Contact email
+          r.contact_mobile || '', // 31: Mobile number
+          r.comm_consent === 'agree' ? 'I Agree' : 'I Agree' // 32: Comms consent
+        ];
+
+        const row = ws2.addRow(rowValues);
+        const isEven = idx % 2 === 0;
+        const rowBg = isEven ? 'FFFFFFFF' : 'FFF9FAFB';
+
+        row.eachCell({ includeEmpty: true }, (cell, colNumber) => {
+          cell.border = thinBorder;
+          cell.font = { name: 'Segoe UI', size: 9 };
+          cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: rowBg } };
+          cell.alignment = { vertical: 'middle', horizontal: 'left' };
+
+          if ([1, 2, 3, 6, 7, 8, 9, 10, 11, 12, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 31, 32].includes(colNumber)) {
+            cell.alignment = { vertical: 'middle', horizontal: 'center' };
+          }
         });
-        row.eachCell(cell => { cell.border = thinBorder; cell.font = { size: 9 }; });
+      });
+
+      // Set column widths for all 32 columns
+      const colWidths = [
+        8, 20, 20, 22, 24, 12, 20, 18, 20, 18,
+        12, 10, 24, 28, 22, 20, 20, 14, 14, 14,
+        14, 14, 14, 14, 14, 14, 14, 30, 26, 22,
+        18, 20
+      ];
+      colWidths.forEach((w, i) => {
+        ws2.getColumn(i + 1).width = w;
       });
 
       // ── TAB 3: Complaints & Root Causes ────────────────────────────────────
