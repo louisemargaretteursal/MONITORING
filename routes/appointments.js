@@ -139,6 +139,17 @@ module.exports = (io, upload) => {
     }
   });
 
+  // GET download official sample template file
+  router.get('/template', (req, res) => {
+    const filePath = require('path').join(__dirname, '..', 'SSS_Toledo_Sample_Appointment_Bookings.xlsx');
+    res.download(filePath, 'SSS_Toledo_Sample_Appointment_Bookings.xlsx', (err) => {
+      if (err) {
+        console.error('Template download error:', err);
+        res.status(500).json({ error: 'Failed to download sample appointment template.' });
+      }
+    });
+  });
+
   // POST import Excel appointments (admin — scoped per-clerk deletion)
   router.post('/import', upload.single('file'), async (req, res) => {
     if (!req.file) return res.status(400).json({ error: 'No file uploaded.' });

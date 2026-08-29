@@ -1339,17 +1339,34 @@
           </div>
         </div>
 
-        <div class="card">
-          <div class="card-header">
+          <div class="card-header" style="flex-wrap:wrap;gap:10px;">
             <h3>Import Appointment Schedule</h3>
-            <label class="btn btn-primary btn-sm" for="excel-upload">
-              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5">
-                <polyline points="16 16 12 12 8 16" />
-                <line x1="12" y1="12" x2="12" y2="21" />
-                <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3" />
-              </svg>
-              Upload Excel File
-            </label>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;">
+              <a href="/api/appointments/template" download class="btn btn-ghost btn-sm" style="display:flex;align-items:center;gap:6px;border:1.5px solid #cbd5e1;text-decoration:none;color:var(--sss-blue);font-weight:700;">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                  <polyline points="7 10 12 15 17 10" />
+                  <line x1="12" y1="15" x2="12" y2="3" />
+                </svg>
+                Download Sample Template (.xlsx)
+              </a>
+              <a href="/api/appointments/export/excel" class="btn btn-ghost btn-sm" style="display:flex;align-items:center;gap:6px;border:1.5px solid #cbd5e1;text-decoration:none;">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                  <polyline points="7 10 12 15 17 10" />
+                  <line x1="12" y1="15" x2="12" y2="3" />
+                </svg>
+                Export Today's Bookings
+              </a>
+              <label class="btn btn-primary btn-sm" for="excel-upload" style="cursor:pointer;margin:0;">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <polyline points="16 16 12 12 8 16" />
+                  <line x1="12" y1="12" x2="12" y2="21" />
+                  <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3" />
+                </svg>
+                Upload Excel File
+              </label>
+            </div>
           </div>
           <div class="card-body">
             <div class="import-zone" onclick="document.getElementById('excel-upload').click()">
