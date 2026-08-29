@@ -1215,13 +1215,13 @@ module.exports = () => {
       const apptRows = db.prepare(apptSql).all(...apptParams);
 
       if (apptRows.length > 0) {
-        const wsAppts = wb.addWorksheet(clerkId ? 'My Appointments' : 'Appointments Schedule', { views: [{ state: 'frozen', xSplit: 0, ySplit: 6, showGridLines: true }] });
+        const wsAppts = wb.addWorksheet('Appointments Log', { views: [{ state: 'frozen', xSplit: 0, ySplit: 6, showGridLines: true }] });
         wsAppts.pageSetup = { orientation: 'landscape', paperSize: 9, fitToPage: true, fitToWidth: 1, fitToHeight: 0 };
 
         // Banner
         wsAppts.mergeCells('A1:P1');
         const apptTitle = wsAppts.getCell('A1');
-        apptTitle.value = `SOCIAL SECURITY SYSTEM — TOLEDO BRANCH | ${clerkId ? 'MY APPOINTMENTS & ATTENDANCE LOG' : 'APPOINTMENT SCHEDULE & ATTENDANCE LOG'}`;
+        apptTitle.value = `SOCIAL SECURITY SYSTEM — TOLEDO BRANCH | ${clerkId ? 'MY APPOINTMENTS LOG & ATTENDANCE RECORD' : 'APPOINTMENTS LOG & ATTENDANCE RECORD'}`;
         apptTitle.font = { name: 'Segoe UI', size: 13, bold: true, color: { argb: 'FFFFFFFF' } };
         apptTitle.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF' + NAVY_DARK } };
         apptTitle.alignment = { vertical: 'middle', horizontal: 'center' };
@@ -1368,7 +1368,7 @@ module.exports = () => {
       // ── CATEGORY SHEETS: ONLY CREATED IF ROWS EXIST (No Empty Clutter Tabs) ──
       // ── INDIVIDUAL TRANSACTION TYPE TABS (Exact Transacted Types) ──────────
       // Create a dedicated worksheet tab for each exact transaction type that was transacted on this day/period
-      const usedSheetNames = new Set(['sss service matrix', 'master log', 'my appointments', 'appointments schedule', 'staff performance', 'tx types breakdown']);
+      const usedSheetNames = new Set(['sss service matrix', 'master log', 'appointments log', 'my appointments', 'appointments schedule', 'staff performance', 'tx types breakdown']);
 
       matrixRows.forEach(mItem => {
         const typeName = mItem.name;
