@@ -233,7 +233,7 @@
             <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
             Mark Assignment Completed
           </h3>
-          <button class="btn btn-ghost btn-sm" onclick="document.getElementById('task-complete-modal').classList.add('hidden')">✕</button>
+          <button class="btn btn-ghost btn-sm" onclick="document.getElementById('task-complete-modal').classList.add('hidden')" style="font-size:0.8rem;padding:4px 8px;">Close</button>
         </div>
         <div class="modal-body">
           <p style="font-size:0.85rem;margin:0 0 12px 0;">Record accomplishment notes for: <strong id="complete-task-title"></strong></p>
@@ -386,7 +386,7 @@
           <!-- Searchable wrapper -->
           <div class="tx-search-wrap" id="tx-search-wrap" style="position:relative;">
             <div style="position:relative;">
-              <input type="text" id="tx-search-input" autocomplete="off" placeholder="🔍 Type to search transaction…"
+              <input type="text" id="tx-search-input" autocomplete="off" placeholder="Search transaction type..."
                 style="width:100%;box-sizing:border-box;padding:8px 34px 8px 10px;font-size:0.85rem;border:1.5px solid #d1d5db;border-radius:8px;outline:none;background:#fff;cursor:text;"
                 onfocus="openTxDropdown()" oninput="filterTxOptions()" onkeydown="txSearchKeyNav(event)">
               <svg id="tx-search-chevron" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#6b7280" stroke-width="2.5"
@@ -637,30 +637,30 @@
           Palihug pili og usa para sa inyong grado
         </div>
 
-        <!-- 4 Emoji Rating Buttons with SVGs -->
+        <!-- 4 Action Rating Buttons with Clean Icons -->
         <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:20px;">
           <button onclick="submitEcenterRating('happy', 5)" style="background:#f0fdf4;border:2px solid #bbf7d0;border-radius:16px;padding:16px 8px;cursor:pointer;display:flex;flex-direction:column;align-items:center;transition:all 0.15s ease;">
             <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="#16a34a" stroke-width="2.2" style="margin-bottom:6px;"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
             <strong style="color:#15803d;font-size:1.05rem;">Maayo Kaayo</strong>
-            <span style="font-size:0.72rem;color:#16a34a;font-weight:600;">Very Satisfied (5★)</span>
+            <span style="font-size:0.72rem;color:#16a34a;font-weight:600;">Very Satisfied (5 Stars)</span>
           </button>
 
-          <button onclick="submitEcenterRating('happy', 4)" style="background:#f0f9ff;border:2px solid #bae6fd;border-radius:16px;padding:16px 8px;cursor:pointer;display:flex;flex-direction:column;align-items:center;transition:all 0.15s ease;">
+          <button onclick="submitEcenterRating('happy', 4)" style="background:#f0fdf4;border:2px solid #bae6fd;border-radius:16px;padding:16px 8px;cursor:pointer;display:flex;flex-direction:column;align-items:center;transition:all 0.15s ease;">
             <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="#0284c7" stroke-width="2.2" style="margin-bottom:6px;"><circle cx="12" cy="12" r="10"/><path d="M8 13.5c1.2 1.5 2.8 2 4 2s2.8-.5 4-2"/><line x1="9" y1="9.5" x2="9.01" y2="9.5"/><line x1="15" y1="9.5" x2="15.01" y2="9.5"/></svg>
             <strong style="color:#0369a1;font-size:1.05rem;">Maayo</strong>
-            <span style="font-size:0.72rem;color:#0284c7;font-weight:600;">Satisfied (4★)</span>
+            <span style="font-size:0.72rem;color:#0284c7;font-weight:600;">Satisfied (4 Stars)</span>
           </button>
 
           <button onclick="submitEcenterRating('neutral', 3)" style="background:#fffbeb;border:2px solid #fed7aa;border-radius:16px;padding:16px 8px;cursor:pointer;display:flex;flex-direction:column;align-items:center;transition:all 0.15s ease;">
             <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="#d97706" stroke-width="2.2" style="margin-bottom:6px;"><circle cx="12" cy="12" r="10"/><line x1="8" y1="15" x2="16" y2="15"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
             <strong style="color:#b45309;font-size:1.05rem;">Sakto Ra</strong>
-            <span style="font-size:0.72rem;color:#d97706;font-weight:600;">Neutral (3★)</span>
+            <span style="font-size:0.72rem;color:#d97706;font-weight:600;">Neutral (3 Stars)</span>
           </button>
 
           <button onclick="submitEcenterRating('sad', 1)" style="background:#fef2f2;border:2px solid #fecaca;border-radius:16px;padding:16px 8px;cursor:pointer;display:flex;flex-direction:column;align-items:center;transition:all 0.15s ease;">
             <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="#dc2626" stroke-width="2.2" style="margin-bottom:6px;"><circle cx="12" cy="12" r="10"/><path d="M16 16s-1.5-2-4-2-4 2-4 2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
             <strong style="color:#b91c1c;font-size:1.05rem;">Dili Maayo</strong>
-            <span style="font-size:0.72rem;color:#dc2626;font-weight:600;">Unsatisfied (1★)</span>
+            <span style="font-size:0.72rem;color:#dc2626;font-weight:600;">Unsatisfied (1-2 Stars)</span>
           </button>
         </div>
 
@@ -979,7 +979,7 @@
             timerStart = new Date();
           }
           showActivePanel(data.member);
-          showToast(`✓ Resumed ongoing session for ${data.member.name}`, 'info');
+          showToast(`Resumed ongoing session for ${data.member.name}`, 'info');
         }
       } catch (e) {}
     }
@@ -1447,11 +1447,11 @@
               <div style="display:flex;gap:6px;">
                 ${t.status !== 'completed' ? `
                   ${t.status !== 'ongoing' ? `
-                    <button class="btn btn-ghost btn-sm" onclick="setMyTaskStatus(${t.id}, 'ongoing')" style="font-size:0.75rem;color:#1e40af;border-color:#bfdbfe;background:#eff6ff;">▶ Start Working</button>
+                    <button class="btn btn-ghost btn-sm" onclick="setMyTaskStatus(${t.id}, 'ongoing')" style="font-size:0.75rem;color:#1e40af;border-color:#bfdbfe;background:#eff6ff;">Start Working</button>
                   ` : ''}
-                  <button class="btn btn-primary btn-sm" onclick="openCompleteTaskModal(${t.id}, '${t.title.replace(/'/g, "\\'")}')" style="font-size:0.75rem;background:#15803d;border-color:#15803d;">✓ Mark Done</button>
+                  <button class="btn btn-primary btn-sm" onclick="openCompleteTaskModal(${t.id}, '${t.title.replace(/'/g, "\\'")}')" style="font-size:0.75rem;background:#15803d;border-color:#15803d;">Mark Done</button>
                 ` : `
-                  <span style="color:#15803d;font-weight:700;font-size:0.75rem;">✓ Accomplished at ${t.completed_at}</span>
+                  <span style="color:#15803d;font-weight:700;font-size:0.75rem;">Accomplished at ${t.completed_at}</span>
                 `}
               </div>
             </div>

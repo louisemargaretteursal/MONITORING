@@ -669,7 +669,7 @@
           <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
           Mark Assignment Completed
         </h3>
-        <button class="btn btn-ghost btn-sm" onclick="document.getElementById('task-complete-modal').classList.add('hidden')">✕</button>
+        <button class="btn btn-ghost btn-sm" onclick="document.getElementById('task-complete-modal').classList.add('hidden')" style="font-size:0.8rem;padding:4px 8px;">Close</button>
       </div>
       <div class="modal-body">
         <p style="font-size:0.85rem;margin:0 0 12px 0;">Record accomplishment notes for: <strong id="complete-task-title"></strong></p>
@@ -797,7 +797,7 @@
           <!-- Searchable wrapper -->
           <div class="tx-search-wrap" id="tx-search-wrap" style="position:relative;">
             <div style="position:relative;">
-              <input type="text" id="tx-search-input" autocomplete="off" placeholder="🔍 Type to search transaction…"
+              <input type="text" id="tx-search-input" autocomplete="off" placeholder="Search transaction type..."
                 style="width:100%;box-sizing:border-box;padding:8px 34px 8px 10px;font-size:0.85rem;border:1.5px solid #d1d5db;border-radius:8px;outline:none;background:#fff;cursor:text;"
                 onfocus="openTxDropdown()" oninput="filterTxOptions()" onkeydown="txSearchKeyNav(event)">
               <svg id="tx-search-chevron" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#6b7280" stroke-width="2.5"
@@ -1383,7 +1383,7 @@
         }
 
         showActivePanel(data.member);
-        showToast(`✓ Resumed ongoing transaction for ${data.member.name}`, 'info');
+        showToast(`Resumed ongoing transaction for ${data.member.name}`, 'info');
       }
     } catch (e) {
       console.error('Error checking ongoing transaction:', e);
@@ -1558,8 +1558,8 @@
           <div class="member-meta" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
             <span style="display:inline-block;padding:2px 8px;border-radius:999px;font-size:0.7rem;font-weight:700;background:${statusBg};color:${statusColor};">${statusLabel}</span>
             <span class="badge badge-gray" style="font-weight:700;">${a.appointment_time}</span>
-            ${a.phone_number ? `<span style="font-size:0.72rem;color:#64748b;font-weight:600;">📞 ${a.phone_number}</span>` : ''}
-            ${a.is_late ? `<span style="display:inline-block;padding:2px 8px;border-radius:999px;font-size:0.7rem;font-weight:700;background:#fef2f2;color:#b91c1c;border:1px solid #fecaca;">⏰ Late</span>` : ''}
+            ${a.phone_number ? `<span style="font-size:0.72rem;color:#64748b;font-weight:600;">${a.phone_number}</span>` : ''}
+            ${a.is_late ? `<span style="display:inline-block;padding:2px 8px;border-radius:999px;font-size:0.7rem;font-weight:700;background:#fef2f2;color:#b91c1c;border:1px solid #fecaca;">Late</span>` : ''}
           </div>
         </div>`;
       div.appendChild(row);
@@ -2115,11 +2115,11 @@
         
         let statusBadge = '<span style="display:inline-block;padding:2px 8px;border-radius:999px;font-size:0.72rem;font-weight:700;background:#f1f5f9;color:#64748b;">Pending</span>';
         if (a.computed_status === 'Served') {
-          statusBadge = '<span style="display:inline-block;padding:2px 8px;border-radius:999px;font-size:0.72rem;font-weight:700;background:#dcfce7;color:#15803d;">✓ Served</span>';
+          statusBadge = '<span style="display:inline-block;padding:2px 8px;border-radius:999px;font-size:0.72rem;font-weight:700;background:#dcfce7;color:#15803d;">Served</span>';
         } else if (a.computed_status === 'No-Show') {
-          statusBadge = '<span style="display:inline-block;padding:2px 8px;border-radius:999px;font-size:0.72rem;font-weight:700;background:#fee2e2;color:#b91c1c;">✕ No-Show</span>';
+          statusBadge = '<span style="display:inline-block;padding:2px 8px;border-radius:999px;font-size:0.72rem;font-weight:700;background:#fee2e2;color:#b91c1c;">No-Show</span>';
         } else if (a.computed_status === 'In Lobby') {
-          statusBadge = '<span style="display:inline-block;padding:2px 8px;border-radius:999px;font-size:0.72rem;font-weight:700;background:#dbeafe;color:#1d4ed8;">⏱ In Lobby</span>';
+          statusBadge = '<span style="display:inline-block;padding:2px 8px;border-radius:999px;font-size:0.72rem;font-weight:700;background:#dbeafe;color:#1d4ed8;">In Lobby</span>';
         }
 
         const outBadge = a.outcome ? chip(outcomeMap[a.outcome]) : (a.computed_status === 'Served' ? '<span style="color:#15803d;font-weight:600;font-size:0.78rem;">Finished</span>' : '<span style="color:#9ca3af">—</span>');
@@ -2358,7 +2358,7 @@
           resultEl.style.background = '#f0fdf4';
           resultEl.style.color = '#15803d';
           resultEl.style.border = '1px solid #bbf7d0';
-          resultEl.textContent = `✓ Imported ${data.imported} appointment${data.imported !== 1 ? 's' : ''} for today!`;
+          resultEl.textContent = `Successfully imported ${data.imported} appointment${data.imported !== 1 ? 's' : ''} for today.`;
           showToast(`${data.imported} appointments uploaded for today.`, 'success');
         }
         loadProfileAppointments();
@@ -2487,11 +2487,11 @@
             <div style="display:flex;gap:6px;">
               ${t.status !== 'completed' ? `
                 ${t.status !== 'ongoing' ? `
-                  <button class="btn btn-ghost btn-sm" onclick="setMyTaskStatus(${t.id}, 'ongoing')" style="font-size:0.75rem;color:#1e40af;border-color:#bfdbfe;background:#eff6ff;">▶ Start Working</button>
+                  <button class="btn btn-ghost btn-sm" onclick="setMyTaskStatus(${t.id}, 'ongoing')" style="font-size:0.75rem;color:#1e40af;border-color:#bfdbfe;background:#eff6ff;">Start Working</button>
                 ` : ''}
-                <button class="btn btn-primary btn-sm" onclick="openCompleteTaskModal(${t.id}, '${t.title.replace(/'/g, "\\'")}')" style="font-size:0.75rem;background:#15803d;border-color:#15803d;">✓ Mark Done</button>
+                <button class="btn btn-primary btn-sm" onclick="openCompleteTaskModal(${t.id}, '${t.title.replace(/'/g, "\\'")}')" style="font-size:0.75rem;background:#15803d;border-color:#15803d;">Mark Done</button>
               ` : `
-                <span style="color:#15803d;font-weight:700;font-size:0.75rem;">✓ Accomplished at ${t.completed_at}</span>
+                <span style="color:#15803d;font-weight:700;font-size:0.75rem;">Accomplished at ${t.completed_at}</span>
               `}
             </div>
           </div>

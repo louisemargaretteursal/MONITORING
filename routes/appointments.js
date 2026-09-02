@@ -334,11 +334,11 @@ module.exports = (io, upload) => {
 
       let warning = null;
       if (pastDates.length > 0 && futureDates.length === 0 && !uniqueDates.includes(today)) {
-        warning = `⚠️ Past Date Notice: The uploaded file is for past date (${pastDates.join(', ')}). These records will not appear in today's live queue.`;
+        warning = `Past Date Notice: The uploaded file is for past date (${pastDates.join(', ')}). These records will not appear in today's live queue.`;
       } else if (futureDates.length > 0 && !uniqueDates.includes(today)) {
-        warning = `📅 Advance Booking Notice: File is scheduled for future date (${futureDates.join(', ')}). They will automatically activate on that day and will not show in today's live queue (${today}).`;
+        warning = `Advance Booking Notice: File is scheduled for future date (${futureDates.join(', ')}). They will automatically activate on that day and will not show in today's live queue (${today}).`;
       } else if (pastDates.length > 0 || futureDates.length > 0) {
-        warning = `ℹ️ Multi-Date Notice: File has dates (${uniqueDates.join(', ')}). Only today's records (${today}) appear in today's live queue.`;
+        warning = `Multi-Date Notice: File has dates (${uniqueDates.join(', ')}). Only today's records (${today}) appear in today's live queue.`;
       }
 
       io.to('admin').emit('appointments:imported', { count: imported, date: today, dates: uniqueDates });
@@ -449,11 +449,11 @@ module.exports = (io, upload) => {
 
       let warning = null;
       if (pastDates.length > 0 && futureDates.length === 0 && !uniqueDates.includes(today)) {
-        warning = `⚠️ Past Date Notice: Uploaded file is for past date (${pastDates.join(', ')}). These will not appear on today's live queue.`;
+        warning = `Past Date Notice: Uploaded file is for past date (${pastDates.join(', ')}). These will not appear on today's live queue.`;
       } else if (futureDates.length > 0 && !uniqueDates.includes(today)) {
-        warning = `📅 Advance Booking Notice: File is scheduled for future date (${futureDates.join(', ')}). They will automatically activate on that day and will not show in today's live queue (${today}).`;
+        warning = `Advance Booking Notice: File is scheduled for future date (${futureDates.join(', ')}). They will automatically activate on that day and will not show in today's live queue (${today}).`;
       } else if (pastDates.length > 0 || futureDates.length > 0) {
-        warning = `ℹ️ Multi-Date Notice: File has dates (${uniqueDates.join(', ')}). Only today's records (${today}) appear in today's live queue.`;
+        warning = `Multi-Date Notice: File has dates (${uniqueDates.join(', ')}). Only today's records (${today}) appear in today's live queue.`;
       }
 
       // Notify all affected clerks and admin

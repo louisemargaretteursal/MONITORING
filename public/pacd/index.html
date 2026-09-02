@@ -222,7 +222,7 @@
             <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
             Mark Assignment Completed
           </h3>
-          <button class="btn btn-ghost btn-sm" onclick="document.getElementById('task-complete-modal').classList.add('hidden')">✕</button>
+          <button class="btn btn-ghost btn-sm" onclick="document.getElementById('task-complete-modal').classList.add('hidden')" style="font-size:0.8rem;padding:4px 8px;">Close</button>
         </div>
         <div class="modal-body">
           <p style="font-size:0.85rem;margin:0 0 12px 0;">Record accomplishment notes for: <strong id="complete-task-title"></strong></p>
@@ -375,7 +375,7 @@
           <!-- Searchable wrapper -->
           <div class="tx-search-wrap" id="tx-search-wrap" style="position:relative;">
             <div style="position:relative;">
-              <input type="text" id="tx-search-input" autocomplete="off" placeholder="🔍 Type to search transaction…"
+              <input type="text" id="tx-search-input" autocomplete="off" placeholder="Search transaction type..."
                 style="width:100%;box-sizing:border-box;padding:8px 34px 8px 10px;font-size:0.85rem;border:1.5px solid #d1d5db;border-radius:8px;outline:none;background:#fff;cursor:text;"
                 onfocus="openTxDropdown()" oninput="filterTxOptions()" onkeydown="txSearchKeyNav(event)">
               <svg id="tx-search-chevron" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#6b7280" stroke-width="2.5"
@@ -924,7 +924,7 @@
             timerStart = new Date();
           }
           showActivePanel(data.member);
-          showToast(`✓ Resumed ongoing transaction for ${data.member.name}`, 'info');
+          showToast(`Resumed ongoing transaction for ${data.member.name}`, 'info');
         }
       } catch (e) {}
     }
@@ -1351,11 +1351,11 @@
               <div style="display:flex;gap:6px;">
                 ${t.status !== 'completed' ? `
                   ${t.status !== 'ongoing' ? `
-                    <button class="btn btn-ghost btn-sm" onclick="setMyTaskStatus(${t.id}, 'ongoing')" style="font-size:0.75rem;color:#1e40af;border-color:#bfdbfe;background:#eff6ff;">▶ Start Working</button>
+                    <button class="btn btn-ghost btn-sm" onclick="setMyTaskStatus(${t.id}, 'ongoing')" style="font-size:0.75rem;color:#1e40af;border-color:#bfdbfe;background:#eff6ff;">Start Working</button>
                   ` : ''}
-                  <button class="btn btn-primary btn-sm" onclick="openCompleteTaskModal(${t.id}, '${t.title.replace(/'/g, "\\'")}')" style="font-size:0.75rem;background:#15803d;border-color:#15803d;">✓ Mark Done</button>
+                  <button class="btn btn-primary btn-sm" onclick="openCompleteTaskModal(${t.id}, '${t.title.replace(/'/g, "\\'")}')" style="font-size:0.75rem;background:#15803d;border-color:#15803d;">Mark Done</button>
                 ` : `
-                  <span style="color:#15803d;font-weight:700;font-size:0.75rem;">✓ Accomplished at ${t.completed_at}</span>
+                  <span style="color:#15803d;font-weight:700;font-size:0.75rem;">Accomplished at ${t.completed_at}</span>
                 `}
               </div>
             </div>

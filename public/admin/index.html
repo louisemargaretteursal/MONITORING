@@ -1224,7 +1224,7 @@
                 style="background:var(--sss-blue);color:#fff;border:none;font-weight:600;font-size:0.8rem;padding:5px 12px;">Detailed
                 Log</button>
               <button id="btn-view-matrix" class="btn btn-sm btn-ghost" onclick="switchTxView('matrix')"
-                style="color:#475569;border:none;font-weight:600;font-size:0.8rem;padding:5px 12px;">📊 SSS Service
+                style="color:#475569;border:none;font-weight:600;font-size:0.8rem;padding:5px 12px;">SSS Service
                 Matrix (A / R / Total)</button>
             </div>
             <button class="btn btn-ghost btn-sm" onclick="refreshTxData()"
@@ -1296,11 +1296,11 @@
               <option value="for-appointment">For Appt</option>
             </select>
             <select id="tx-filter-rating" class="form-select" onchange="loadMasterTransactions()"
-              style="width:120px;font-size:0.82rem;">
+              style="width:135px;font-size:0.82rem;">
               <option value="">All CSAT</option>
-              <option value="happy">Satisfied (5★)</option>
-              <option value="neutral">Neutral (3★)</option>
-              <option value="sad">Unsatisfied (1★)</option>
+              <option value="happy">Satisfied (4-5 Stars)</option>
+              <option value="neutral">Neutral (3 Stars)</option>
+              <option value="sad">Unsatisfied (1-2 Stars)</option>
             </select>
             <button class="btn btn-ghost btn-sm" onclick="resetMasterFilters()"
               style="font-size:0.8rem;padding:6px 10px;" title="Reset all filters">Reset</button>
@@ -1839,7 +1839,7 @@
                       <line x1="9" y1="9" x2="9.01" y2="9" />
                       <line x1="15" y1="9" x2="15.01" y2="9" />
                     </svg>
-                    Very Satisfied (5★)
+                    Very Satisfied (5 Stars)
                   </span>
                   <strong id="csm-csat-5">0</strong>
                 </div>
@@ -1851,7 +1851,7 @@
                       <line x1="9" y1="9.5" x2="9.01" y2="9.5" />
                       <line x1="15" y1="9.5" x2="15.01" y2="9.5" />
                     </svg>
-                    Satisfied (4★)
+                    Satisfied (4 Stars)
                   </span>
                   <strong id="csm-csat-4">0</strong>
                 </div>
@@ -1863,7 +1863,7 @@
                       <line x1="9" y1="9" x2="9.01" y2="9" />
                       <line x1="15" y1="9" x2="15.01" y2="9" />
                     </svg>
-                    Neutral (3★)
+                    Neutral (3 Stars)
                   </span>
                   <strong id="csm-csat-3">0</strong>
                 </div>
@@ -1875,7 +1875,7 @@
                       <line x1="9" y1="9" x2="9.01" y2="9" />
                       <line x1="15" y1="9" x2="15.01" y2="9" />
                     </svg>
-                    Unsatisfied (1★)
+                    Unsatisfied (1-2 Stars)
                   </span>
                   <strong id="csm-csat-1">0</strong>
                 </div>
@@ -1994,7 +1994,7 @@
                 Reset Password
               </h3>
               <button class="btn btn-ghost btn-sm"
-                onclick="document.getElementById('pin-reset-modal').classList.add('hidden')">✕</button>
+                onclick="document.getElementById('pin-reset-modal').classList.add('hidden')" style="font-size:0.8rem;padding:4px 8px;">Close</button>
             </div>
             <div class="modal-body">
               <p style="font-size:0.85rem;margin-bottom:14px;">Set a new 4-digit password for <strong
@@ -2059,7 +2059,7 @@
             Print / Save as PDF
           </button>
           <button class="btn btn-ghost btn-sm" onclick="closeArtaPrintModal()"
-            style="color:#ffffff;border-color:rgba(255,255,255,0.3);">✕ Close</button>
+            style="color:#ffffff;border-color:rgba(255,255,255,0.3);">Close</button>
         </div>
       </div>
 
@@ -2116,20 +2116,20 @@
                 <td style="padding:6px 10px;border:1px solid #cbd5e1;font-weight:700;color:#15803d;">VALID</td>
               </tr>
               <tr>
-                <td style="padding:6px 10px;border:1px solid #cbd5e1;">Promoters (Score 9-10 / 5★)</td>
+                <td style="padding:6px 10px;border:1px solid #cbd5e1;">Promoters (Score 9-10 / 5 Stars)</td>
                 <td style="padding:6px 10px;border:1px solid #cbd5e1;font-weight:700;color:#15803d;"
                   id="print-promoters-val">0</td>
                 <td style="padding:6px 10px;border:1px solid #cbd5e1;">Loyal Advocates</td>
                 <td style="padding:6px 10px;border:1px solid #cbd5e1;">OPTIMAL</td>
               </tr>
               <tr>
-                <td style="padding:6px 10px;border:1px solid #cbd5e1;">Passives (Score 7-8 / 3★)</td>
+                <td style="padding:6px 10px;border:1px solid #cbd5e1;">Passives (Score 7-8 / 3-4 Stars)</td>
                 <td style="padding:6px 10px;border:1px solid #cbd5e1;" id="print-passives-val">0</td>
                 <td style="padding:6px 10px;border:1px solid #cbd5e1;">Satisfied</td>
                 <td style="padding:6px 10px;border:1px solid #cbd5e1;">ACCEPTABLE</td>
               </tr>
               <tr>
-                <td style="padding:6px 10px;border:1px solid #cbd5e1;">Detractors (Score 1-6 / 1★)</td>
+                <td style="padding:6px 10px;border:1px solid #cbd5e1;">Detractors (Score 1-6 / 1-2 Stars)</td>
                 <td style="padding:6px 10px;border:1px solid #cbd5e1;font-weight:700;color:#dc2626;"
                   id="print-detractors-val">0</td>
                 <td style="padding:6px 10px;border:1px solid #cbd5e1;">&lt; 10.0%</td>
@@ -2197,7 +2197,7 @@
           </svg>
           Create MSS Assignment (Step 1–3)
         </h3>
-        <button class="btn btn-ghost btn-sm" onclick="closeCreateTaskModal()">✕</button>
+        <button class="btn btn-ghost btn-sm" onclick="closeCreateTaskModal()" style="font-size:0.8rem;padding:4px 8px;">Close</button>
       </div>
       <div class="modal-body" style="display:flex;flex-direction:column;gap:14px;">
         <div class="form-group">
@@ -2215,8 +2215,8 @@
             <select id="task-in-category" class="form-select">
               <option value="E-4 & Member Records">E-4 &amp; Member Records</option>
               <option value="Claims & Benefits">Claims &amp; Benefits</option>
-              <option value="ACOP & Pensioners">ACOP &amp; Pensioners</option>
-              <option value="Loans & Contributions">Loans &amp; Contributions</option>
+              <option value="ACOP & Pensioners">ACOP & Pensioners</option>
+              <option value="Loans & Contributions">Loans & Contributions</option>
               <option value="General Admin">General Admin / Operations</option>
             </select>
           </div>
@@ -2264,7 +2264,7 @@
           Reassign MSS Task
         </h3>
         <button class="btn btn-ghost btn-sm"
-          onclick="document.getElementById('task-reassign-modal').classList.add('hidden')">✕</button>
+          onclick="document.getElementById('task-reassign-modal').classList.add('hidden')" style="font-size:0.8rem;padding:4px 8px;">Close</button>
       </div>
       <div class="modal-body" style="display:flex;flex-direction:column;gap:14px;">
         <p style="font-size:0.85rem;margin:0;">Reassign <strong id="reassign-task-title"></strong> to a new officer:</p>
@@ -2960,7 +2960,7 @@
               </tbody>
               <tfoot>
                 <tr style="background:#fef3c7;border-top:2px solid #1E3A8A;font-weight:800;color:#1E3A8A;">
-                  <td style="text-align:center;">★</td>
+                  <td style="text-align:center;">—</td>
                   <td style="border-right:2px solid #cbd5e1;">DAILY BRANCH GRAND TOTAL</td>
                   <td style="text-align:center;color:#15803d;background:#dcfce7;font-size:0.9rem;">${data.totals.accepted}</td>
                   <td style="text-align:center;color:#b91c1c;background:#fee2e2;font-size:0.9rem;">${data.totals.rejected}</td>
@@ -3064,8 +3064,8 @@
         const statusMap = {
           'not-arrived': '<span class="badge badge-gray">Not Arrived</span>',
           'in-lobby': '<span class="badge badge-green">In Lobby</span>',
-          'done': '<span class="badge badge-green" style="background:#f0fdf4;color:#15803d;border:1px solid #bbf7d0;">✓ Served</span>',
-          'served': '<span class="badge badge-green" style="background:#f0fdf4;color:#15803d;border:1px solid #bbf7d0;">✓ Served</span>',
+          'done': '<span class="badge badge-green" style="background:#f0fdf4;color:#15803d;border:1px solid #bbf7d0;">Served</span>',
+          'served': '<span class="badge badge-green" style="background:#f0fdf4;color:#15803d;border:1px solid #bbf7d0;">Served</span>',
           'no-show': '<span class="badge badge-red">No Show</span>'
         };
         const tr = document.createElement('tr');
@@ -3107,7 +3107,7 @@
           } else {
             result.className = 'badge badge-green';
             result.style.cssText = 'display:block;padding:10px 14px;background:#f0fdf4;color:#15803d;border:1px solid #bbf7d0;border-radius:8px;font-size:0.85rem;font-weight:700;';
-            result.textContent = `✓ Successfully imported ${d.imported} appointments for today!`;
+            result.textContent = `Successfully imported ${d.imported} appointments for today.`;
             showToast(`Imported ${d.imported} appointments for today.`, 'success');
           }
           loadAppointments();
@@ -3205,7 +3205,7 @@
                       <td><span class="badge badge-blue">${c.served}</span></td>
                       <td>${c.avg_wait ? parseFloat(c.avg_wait).toFixed(1) + 'm' : '—'}</td>
                       <td>${c.avg_duration ? parseFloat(c.avg_duration).toFixed(1) + 'm' : '—'}</td>
-                      <td>${c.avg_rating ? '★ ' + parseFloat(c.avg_rating).toFixed(1) : '—'}</td>
+                      <td>${c.avg_rating ? parseFloat(c.avg_rating).toFixed(1) + ' / 5.0' : '—'}</td>
                     </tr>
                   `).join('')}
                 </tbody>
@@ -3474,7 +3474,7 @@
             </div>
             ${t.completed_at ? `
               <div style="background:#f0fdf4;padding:8px 10px;border-radius:6px;border:1px solid #bbf7d0;font-size:0.78rem;">
-                <div style="font-weight:700;color:#15803d;margin-bottom:2px;">✓ Accomplished at ${t.completed_at}</div>
+                <div style="font-weight:700;color:#15803d;margin-bottom:2px;">Accomplished at ${t.completed_at}</div>
                 <div style="color:#166534;">${t.accomplishment_notes || 'No notes.'}</div>
               </div>` : ''}
           </div>
