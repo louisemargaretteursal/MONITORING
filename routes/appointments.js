@@ -23,6 +23,20 @@ function formatTimeTo12Hour(tStr) {
   return trimmed;
 }
 
+function extractCellString(val) {
+  if (val === null || val === undefined) return '';
+  if (typeof val === 'string') return val.trim();
+  if (typeof val === 'number') return String(val).trim();
+  if (typeof val === 'object') {
+    if (val.text) return String(val.text).trim();
+    if (val.result) return String(val.result).trim();
+    if (val.richText && Array.isArray(val.richText)) {
+      return val.richText.map(r => r.text || '').join('').trim();
+    }
+  }
+  return String(val).trim();
+}
+
 function normalizeAppointmentDateTime(val, defaultDate) {
   const today = defaultDate || (db.getTodayDate ? db.getTodayDate() : new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Manila' }).format(new Date()));
   if (!val) return { date: today, time: '' };
@@ -265,13 +279,13 @@ module.exports = (io, upload) => {
         if (rowNumber === 1) return; // Skip header row
 
         const c1 = row.getCell(1).value;
-        const c2 = row.getCell(2).value?.toString()?.trim();
-        const c3 = row.getCell(3).value?.toString()?.trim();
-        const c4 = row.getCell(4).value?.toString()?.trim();
-        const c5 = row.getCell(5).value?.toString()?.trim();
-        const c6 = row.getCell(6).value?.toString()?.trim();
+        const c2 = extractCellString(row.getCell(2).value);
+        const c3 = extractCellString(row.getCell(3).value);
+        const c4 = extractCellString(row.getCell(4).value);
+        const c5 = extractCellString(row.getCell(5).value);
+        const c6 = extractCellString(row.getCell(6).value);
         const c7 = row.getCell(7).value;
-        const c8 = row.getCell(8).value?.toString()?.trim();
+        const c8 = extractCellString(row.getCell(8).value);
 
         const dt = normalizeAppointmentDateTime(c1, today);
         const dateStr = dt.date || today;
@@ -375,13 +389,13 @@ module.exports = (io, upload) => {
         if (rowNumber === 1) return;
 
         const c1 = row.getCell(1).value;
-        const c2 = row.getCell(2).value?.toString()?.trim();
-        const c3 = row.getCell(3).value?.toString()?.trim();
-        const c4 = row.getCell(4).value?.toString()?.trim();
-        const c5 = row.getCell(5).value?.toString()?.trim();
-        const c6 = row.getCell(6).value?.toString()?.trim();
+        const c2 = extractCellString(row.getCell(2).value);
+        const c3 = extractCellString(row.getCell(3).value);
+        const c4 = extractCellString(row.getCell(4).value);
+        const c5 = extractCellString(row.getCell(5).value);
+        const c6 = extractCellString(row.getCell(6).value);
         const c7 = row.getCell(7).value;
-        const c8 = row.getCell(8).value?.toString()?.trim();
+        const c8 = extractCellString(row.getCell(8).value);
 
         const dt = normalizeAppointmentDateTime(c1, today);
         const dateStr = dt.date || today;
