@@ -1146,22 +1146,25 @@
                 <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
                 PACD / Senior / PWD Assistance
               </span>
-              <strong style="color:#0369a1;background:#e0f2fe;padding:3px 8px;border-radius:6px;font-weight:800;">000's</strong>
+              <strong style="color:#0369a1;background:#e0f2fe;padding:3px 8px;border-radius:6px;font-weight:800;">001 – 099</strong>
             </div>
             <div style="display:flex;justify-content:space-between;align-items:center;font-size:0.84rem;">
               <span style="display:flex;align-items:center;gap:8px;font-weight:700;color:#15803d;">
                 <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/></svg>
                 Main Service Counters (1 to 4 &amp; Side)
               </span>
-              <strong style="color:#15803d;background:#dcfce7;padding:3px 8px;border-radius:6px;font-weight:800;">2000's &amp; 3000's</strong>
+              <strong style="color:#15803d;background:#dcfce7;padding:3px 8px;border-radius:6px;font-weight:800;">2001–2999 &amp; 3001–3999</strong>
             </div>
             <div style="display:flex;justify-content:space-between;align-items:center;font-size:0.84rem;">
               <span style="display:flex;align-items:center;gap:8px;font-weight:700;color:#7c3aed;">
                 <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
                 E-Center Web Online Services
               </span>
-              <strong style="color:#7c3aed;background:#f3e8ff;padding:3px 8px;border-radius:6px;font-weight:800;">4000's</strong>
+              <strong style="color:#7c3aed;background:#f3e8ff;padding:3px 8px;border-radius:6px;font-weight:800;">4001 – 4999</strong>
             </div>
+          </div>
+          <div style="margin-top:10px;padding-top:8px;border-top:1px dashed #cbd5e1;font-size:0.75rem;color:#b91c1c;font-weight:600;">
+            Ang tanang ticket nagsugod sa numero 1 (Dili balido ang 000, 2000, 3000, 4000).
           </div>
         </div>
 
@@ -1256,11 +1259,13 @@
 
       if (!queue || !name || !tx) { showToast('Please fill in all required fields.', 'error'); return; }
 
-      const qNum = parseInt(queue);
-      const isValidRange = (!isNaN(qNum) && (
+      const qNum = parseInt(queue, 10);
+      const isBlockedZeroBase = (qNum === 0 || qNum === 2000 || qNum === 3000 || qNum === 4000);
+      const isValidRange = (!isNaN(qNum) && !isBlockedZeroBase && (
         (qNum >= 1 && qNum <= 99) ||
-        (qNum >= 2000 && qNum <= 3999) ||
-        (qNum >= 4000 && qNum <= 4999)
+        (qNum >= 2001 && qNum <= 2999) ||
+        (qNum >= 3001 && qNum <= 3999) ||
+        (qNum >= 4001 && qNum <= 4999)
       ));
       if (!isValidRange) {
         showInvalidQueueModal(queue);

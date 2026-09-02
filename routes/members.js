@@ -101,20 +101,24 @@ module.exports = (io) => {
       return res.status(400).json({ error: 'Name and transaction type are required.' });
     }
 
-    // Determine routing based on queue number prefix
+    // Determine routing based on queue number prefix (strictly starting at 1; excluding 0, 000, 2000, 3000, 4000)
     let routed_to = null;
-    const qNum = parseInt(queue_number);
+    const qNum = parseInt(queue_number, 10);
     if (!isNaN(qNum)) {
-      if (qNum >= 1 && qNum <= 99) routed_to = 'pacd';
-      else if (qNum >= 2000 && qNum <= 3999) routed_to = 'counter-pool';
-      else if (qNum >= 4000 && qNum <= 4999) routed_to = 'ecenter';
+      if (qNum >= 1 && qNum <= 99) {
+        routed_to = 'pacd';
+      } else if ((qNum >= 2001 && qNum <= 2999) || (qNum >= 3001 && qNum <= 3999)) {
+        routed_to = 'counter-pool';
+      } else if (qNum >= 4001 && qNum <= 4999) {
+        routed_to = 'ecenter';
+      }
     }
     if (entry_type === 'portal-appointment') routed_to = 'portal-pool';
     if (entry_type === 'direct-appointment') routed_to = routed_to || 'counter-pool';
 
     if (!routed_to) {
       return res.status(400).json({
-        error: "Invalid queue ticket number. Valid Toledo series are: 000's (PACD), 2000's & 3000's (Main Counters), and 4000's (E-Center)."
+        error: "Invalid queue ticket number. Ticket numbers start at 1: 001–099 (PACD), 2001–2999 / 3001–3999 (Main Counters), and 4001–4999 (E-Center). Numbers such as 000, 2000, 3000, and 4000 cannot be routed."
       });
     }
 
