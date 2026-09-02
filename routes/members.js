@@ -4,8 +4,31 @@ const db = require('../database/db');
 module.exports = (io) => {
   const router = express.Router();
 
+  // Helper to auto-expire unserved members past 7:00 PM (19:00) so queues stay clean
+  function checkAndExpireAfterHours() {
+    try {
+      const now = new Date();
+      const manilaHour = parseInt(new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Manila', hour: 'numeric', hour12: false }).format(now), 10);
+      if (manilaHour >= 19 || manilaHour < 6) {
+        const today = (db.getTodayDate ? db.getTodayDate() : new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Manila' }).format(new Date()));
+        const unserved = db.prepare(`SELECT id FROM members WHERE status IN ('waiting', 'on-hold') AND date <= ?`).all(today);
+        if (unserved.length > 0) {
+          db.prepare(`UPDATE members SET status = 'unserved' WHERE status IN ('waiting', 'on-hold') AND date <= ?`).run(today);
+          db.prepare(`UPDATE appointments SET arrival_status = 'no-show' WHERE date <= ? AND arrival_status IN ('not-arrived', 'in-lobby')`).run(today);
+          if (io) {
+            io.emit('member:updated');
+            io.emit('appointments:refresh');
+          }
+        }
+      }
+    } catch (e) {
+      console.error('Error during after-hours check:', e);
+    }
+  }
+
   // GET all active members for today (waiting/being-served)
   router.get('/', (req, res) => {
+    checkAndExpireAfterHours();
     const today = (db.getTodayDate ? db.getTodayDate() : new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Manila' }).format(new Date()));
     const members = db.prepare(`
       SELECT m.*, c.name as clerk_name
@@ -73,6 +96,7 @@ module.exports = (io) => {
 
   // GET members by department/routing
   router.get('/pool/:routed_to', (req, res) => {
+    checkAndExpireAfterHours();
     const today = (db.getTodayDate ? db.getTodayDate() : new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Manila' }).format(new Date()));
     const { routed_to } = req.params;
     const members = db.prepare(`

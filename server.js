@@ -213,21 +213,68 @@ function autoCloseUnreturnedMembers() {
   }
 }
 
+// ─── 7:00 PM END-OF-DAY AUTO-PURGE (Unserved Waiting Members) ───────────────
+// Auto-expires unserved members left in the pool after 7:00 PM so queues start clean
+function autoExpireUnservedMembers() {
+  const today = (db.getTodayDate ? db.getTodayDate() : new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Manila' }).format(new Date()));
+  try {
+    const unserved = db.prepare(`
+      SELECT id FROM members
+      WHERE status IN ('waiting', 'on-hold')
+        AND date <= ?
+    `).all(today);
+
+    if (unserved.length > 0) {
+      db.prepare(`
+        UPDATE members
+        SET status = 'unserved'
+        WHERE status IN ('waiting', 'on-hold')
+          AND date <= ?
+      `).run(today);
+
+      db.prepare(`
+        UPDATE appointments
+        SET arrival_status = 'no-show'
+        WHERE date <= ? AND arrival_status IN ('not-arrived', 'in-lobby')
+      `).run(today);
+
+      console.log(`🌙 [7:00 PM Closeout] Auto-expired ${unserved.length} unserved member(s) from the queue pool.`);
+      io.emit('member:updated');
+      io.emit('appointments:refresh');
+      io.to('pacd').emit('member:updated');
+      io.to('counter-pool').emit('member:updated');
+      io.to('ecenter').emit('member:updated');
+      io.to('admin').emit('member:updated');
+    }
+  } catch (err) {
+    console.error('Error during 7:00 PM auto-expire:', err);
+  }
+}
+
 // ─── SCHEDULED DAILY JOBS ───────────────────────────────────────────────────
-// Runs every minute to check for 5:30 PM closeout and daily reporting
+// Runs every minute to check for 5:30 PM and 7:00 PM closeout and daily reporting
 setInterval(() => {
   const now = new Date();
+  const manilaHour = parseInt(new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Manila', hour: 'numeric', hour12: false }).format(now), 10);
+  const manilaMin = parseInt(new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Manila', minute: 'numeric' }).format(now), 10);
+
   // 5:30 PM (17:30) — Auto-close unreturned for-verification members & generate report
-  if (now.getHours() === 17 && now.getMinutes() === 30) {
+  if (manilaHour === 17 && manilaMin === 30) {
     autoCloseUnreturnedMembers();
     generateDailyReport();
+  }
+
+  // 7:00 PM (19:00) — Auto-expire unserved waiting members from the pool
+  if (manilaHour === 19 && manilaMin === 0) {
+    autoExpireUnservedMembers();
   }
 }, 60 * 1000);
 
 // API endpoint for manual or test trigger of EOD closeout
 app.post('/api/transactions/eod-closeout', (req, res) => {
   autoCloseUnreturnedMembers();
-  res.json({ success: true, message: '5:30 PM End-of-Day closeout executed.' });
+  autoExpireUnservedMembers();
+  res.json({ success: true, message: 'End-of-Day closeout & unserved pool purge executed.' });
 });
 
 function generateDailyReport() {
