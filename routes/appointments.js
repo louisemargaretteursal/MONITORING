@@ -37,6 +37,36 @@ function extractCellString(val) {
   return String(val).trim();
 }
 
+function findClerkByName(staffName) {
+  if (!staffName || !staffName.trim()) return null;
+  const raw = staffName.trim().toLowerCase().replace(/[^a-z0-9\s]/g, '');
+  const clerks = db.prepare('SELECT id, name FROM clerks WHERE is_active = 1').all();
+
+  // 1. Direct contains match
+  for (const c of clerks) {
+    const cName = c.name.toLowerCase().replace(/[^a-z0-9\s]/g, '');
+    if (cName.includes(raw) || raw.includes(cName)) return c.id;
+  }
+
+  // 2. Token / Name part match (e.g. handle Emie -> Emmie Flores)
+  const tokens = raw.split(/\s+/).filter(Boolean);
+  for (const c of clerks) {
+    const cTokens = c.name.toLowerCase().replace(/[^a-z0-9\s]/g, '').split(/\s+/).filter(Boolean);
+    for (const t of tokens) {
+      if (t.length >= 3) {
+        const normT = t.replace(/(.)\1+/g, '$1');
+        for (const ct of cTokens) {
+          const normCT = ct.replace(/(.)\1+/g, '$1');
+          if (normT === normCT || ct.includes(t) || t.includes(ct)) {
+            return c.id;
+          }
+        }
+      }
+    }
+  }
+  return null;
+}
+
 function normalizeAppointmentDateTime(val, defaultDate) {
   const today = defaultDate || (db.getTodayDate ? db.getTodayDate() : new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Manila' }).format(new Date()));
   if (!val) return { date: today, time: '' };
@@ -302,8 +332,7 @@ module.exports = (io, upload) => {
 
         let clerkId = null;
         if (staffName) {
-          const clerk = db.prepare('SELECT id FROM clerks WHERE LOWER(name) LIKE LOWER(?)').get(`%${staffName.trim()}%`);
-          if (clerk) clerkId = clerk.id;
+          clerkId = findClerkByName(staffName);
         }
         rows.push({ name, phone, email, time: timeStr, date: dateStr, clerkId, service, duration, bookingStatus });
       });
@@ -412,9 +441,9 @@ module.exports = (io, upload) => {
 
         let targetClerkId = clerk_id;
         if (staffName) {
-          const matched = db.prepare('SELECT id FROM clerks WHERE LOWER(name) LIKE LOWER(?)').get(`%${staffName.trim()}%`);
-          if (matched) {
-            targetClerkId = matched.id;
+          const matchedId = findClerkByName(staffName);
+          if (matchedId) {
+            targetClerkId = matchedId;
           }
         }
 
