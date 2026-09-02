@@ -95,6 +95,30 @@
       padding: 10px 14px; color: #991b1b; font-size: 0.82rem; font-weight: 600;
       margin-top: 14px; display: none;
     }
+    @media (max-width: 900px) {
+      .dashboard-body {
+        grid-template-columns: 1fr;
+        height: auto;
+      }
+      .action-panel {
+        border-left: none;
+        border-top: 1px solid var(--border);
+      }
+      .tasks-panel {
+        width: 100vw !important;
+      }
+    }
+    @media (max-width: 640px) {
+      .topbar {
+        padding: 8px 12px;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+      .topbar-right {
+        gap: 6px;
+        flex-wrap: wrap;
+      }
+    }
   </style>
 </head>
 <body>

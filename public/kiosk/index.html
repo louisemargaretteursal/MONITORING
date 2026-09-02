@@ -512,6 +512,26 @@
       justify-content: center;
       gap: 6px;
     }
+
+    /* ── Responsive Touchscreen & Mobile Media Queries ── */
+    @media (max-width: 768px) {
+      .kiosk-header {
+        padding: 10px 16px !important;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+      .kiosk-main {
+        padding: 16px 10px !important;
+      }
+      .kiosk-panel {
+        width: 100% !important;
+        max-width: 100% !important;
+      }
+      .channel-grid {
+        grid-template-columns: 1fr !important;
+        gap: 12px !important;
+      }
+    }
   </style>
 </head>
 

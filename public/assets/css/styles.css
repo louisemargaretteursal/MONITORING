@@ -480,11 +480,69 @@ p  { color: var(--text-secondary); line-height: 1.65; }
   display: flex; gap: 10px; justify-content: flex-end; flex-shrink: 0; background: #fff;
 }
 @media print {
-  body > *:not(#log-print-area) { display: none !important; }
-  #log-print-area {
-    display: block !important; position: fixed; inset: 0;
-    background: #fff; padding: 32px; font-family: Arial, sans-serif; font-size: 11pt;
+  body > *:not(#log-print-area):not(#arta-printable-sheet) { display: none !important; }
+  #log-print-area, #arta-printable-sheet {
+    display: block !important; position: static;
+    background: #fff; padding: 20px; font-family: Arial, sans-serif; font-size: 10pt;
+    width: 100% !important;
   }
   .no-print { display: none !important; }
 }
 #log-print-area { display: none; }
+
+/* ─── COMPREHENSIVE RESPONSIVE MEDIA QUERIES ──────────────────────────────── */
+@media (max-width: 1024px) {
+  .card {
+    padding: 16px;
+  }
+  .log-panel {
+    width: min(100vw, 720px);
+  }
+}
+
+@media (max-width: 768px) {
+  body {
+    font-size: 13px;
+  }
+  .topbar {
+    padding: 10px 14px;
+    height: auto;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .topbar-left, .topbar-right {
+    gap: 8px;
+  }
+  .log-summary {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+  .modal {
+    width: 94vw !important;
+    max-width: 94vw !important;
+    margin: 12px auto;
+  }
+  .form-input, .form-select, textarea {
+    font-size: 16px !important; /* Prevents auto-zoom on mobile safari */
+  }
+  .table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+@media (max-width: 480px) {
+  .topbar-title {
+    font-size: 0.95rem;
+  }
+  .topbar-sub {
+    display: none;
+  }
+  .log-summary {
+    grid-template-columns: 1fr;
+  }
+  .btn {
+    padding: 8px 12px;
+  }
+}
+

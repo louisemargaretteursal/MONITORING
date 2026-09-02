@@ -515,21 +515,105 @@
       animation: pulse-ring 2s infinite ease-in-out;
     }
 
-    /* ── Responsive ── */
+    /* ── Responsive & Print Media Queries ── */
     @media (max-width: 1024px) {
       .admin-layout {
         grid-template-columns: 1fr;
         height: auto;
+        min-height: 100vh;
       }
 
       .sidebar {
         flex-direction: row;
+        align-items: center;
         overflow-x: auto;
-        padding: 8px 12px;
+        padding: 8px 14px;
+        height: auto;
+        position: sticky;
+        top: 0;
+        z-index: 500;
+        border-right: none;
+        border-bottom: 1px solid rgba(255,255,255,0.1);
+      }
+
+      .sidebar-brand {
+        padding: 0 12px 0 0;
+        margin-bottom: 0;
+        border-bottom: none;
+        border-right: 1px solid rgba(255,255,255,0.15);
+      }
+
+      .sidebar-menu {
+        display: flex;
+        flex-direction: row;
+        overflow-x: auto;
+        gap: 4px;
+        padding: 0 8px;
+        flex: 1;
+        white-space: nowrap;
+      }
+
+      .sidebar-footer {
+        border-top: none;
+        border-left: 1px solid rgba(255,255,255,0.15);
+        padding: 0 0 0 12px;
+        margin-top: 0;
       }
 
       .nav-section-label {
         display: none;
+      }
+
+      .executive-kpi-grid, .stats-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .topbar {
+        padding: 10px 14px;
+        height: auto;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .topbar-right {
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+
+      .executive-kpi-grid, .stats-grid {
+        grid-template-columns: 1fr !important;
+      }
+
+      .card {
+        padding: 14px;
+      }
+
+      .modal {
+        width: 95vw !important;
+        max-width: 95vw !important;
+      }
+    }
+
+    @media print {
+      body > *:not(.modal-overlay:not(.hidden)) {
+        display: none !important;
+      }
+      .modal-overlay, #arta-print-modal {
+        position: static !important;
+        background: none !important;
+        padding: 0 !important;
+        display: block !important;
+      }
+      .modal-header, .btn, .no-print {
+        display: none !important;
+      }
+      #arta-printable-sheet {
+        padding: 0 !important;
+        box-shadow: none !important;
+        border: none !important;
+        width: 100% !important;
       }
     }
   </style>
