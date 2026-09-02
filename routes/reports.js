@@ -7,23 +7,23 @@ module.exports = () => {
 
   // GET daily report
   router.get('/daily', (req, res) => {
-    const date = req.query.date || new Date().toISOString().split('T')[0];
+    const date = req.query.date || (db.getTodayDate ? db.getTodayDate() : new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Manila' }).format(new Date()));
     const stats = buildDailyStats(date);
     res.json(stats);
   });
 
   // GET weekly report
   router.get('/weekly', (req, res) => {
-    const endDate = req.query.end || new Date().toISOString().split('T')[0];
+    const endDate = req.query.end || (db.getTodayDate ? db.getTodayDate() : new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Manila' }).format(new Date()));
     const end = new Date(endDate);
     const start = new Date(end);
     start.setDate(start.getDate() - 6);
-    const startDate = start.toISOString().split('T')[0];
+    const startDate = (db.getTodayDate ? db.getTodayDate(start) : new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Manila' }).format(start));
 
     const stats = buildRangeStats(startDate, endDate);
     const daily = [];
     for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
-      const dateStr = d.toISOString().split('T')[0];
+      const dateStr = (db.getTodayDate ? db.getTodayDate(d) : new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Manila' }).format(d));
       const dayStats = buildDailyStats(dateStr);
       daily.push({ date: dateStr, ...dayStats.summary });
     }
@@ -37,7 +37,7 @@ module.exports = () => {
     const m = month || (new Date().getMonth() + 1);
     const startDate = `${y}-${String(m).padStart(2, '0')}-01`;
     const end = new Date(y, m, 0);
-    const endDate = end.toISOString().split('T')[0];
+    const endDate = (db.getTodayDate ? db.getTodayDate(end) : new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Manila' }).format(end));
 
     const stats = buildRangeStats(startDate, endDate);
     res.json({ range: { from: startDate, to: endDate }, ...stats });
@@ -50,7 +50,7 @@ module.exports = () => {
       const stats = buildRangeStats(from, to);
       return res.json({ range: { from, to }, stats: stats.summary, summary: stats.summary, ...stats });
     }
-    const targetDate = date || new Date().toISOString().split('T')[0];
+    const targetDate = date || (db.getTodayDate ? db.getTodayDate() : new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Manila' }).format(new Date()));
     const stats = buildDailyStats(targetDate);
     res.json({ date: targetDate, stats: stats.summary, summary: stats.summary, ...stats });
   });
@@ -73,7 +73,7 @@ module.exports = () => {
     if (!fs.existsSync(dbPath)) {
       return res.status(404).json({ error: 'Database file not found.' });
     }
-    const today = new Date().toISOString().split('T')[0];
+    const today = (db.getTodayDate ? db.getTodayDate() : new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Manila' }).format(new Date()));
     const filename = `sss_toledo_backup_${today}.db`;
     res.download(dbPath, filename, (err) => {
       if (err && !res.headersSent) {
@@ -175,7 +175,7 @@ module.exports = () => {
   // GET clerk's personal service log for today (for end-of-day output)
   router.get('/clerk/:id/today', (req, res) => {
     const { id } = req.params;
-    const date = req.query.date || new Date().toISOString().split('T')[0];
+    const date = req.query.date || (db.getTodayDate ? db.getTodayDate() : new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Manila' }).format(new Date()));
     const isOjt = id === 'ojt' || id === '0' || id === 'null' || id === 'undefined';
 
     const records = isOjt
@@ -343,7 +343,7 @@ module.exports = () => {
   // ── LIVE EXCEL FEEDS (Power Query / Web Query / One-Click Export) ─────────
   // 1. Transactions Feed & Export
   router.get('/feed/transactions.csv', (req, res) => {
-    const today = new Date().toISOString().split('T')[0];
+    const today = (db.getTodayDate ? db.getTodayDate() : new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Manila' }).format(new Date()));
     const isAll = req.query.all === '1' || req.query.all === 'true';
     const fromDate = req.query.from;
     const toDate = req.query.to;
@@ -390,42 +390,35 @@ module.exports = () => {
       FROM transactions t
       JOIN members m ON t.member_id = m.id
       LEFT JOIN clerks c ON t.clerk_id = c.id
-      LEFT JOIN appointments a ON a.member_id = m.id
+      WHERE t.service_end_time IS NOT NULL
     `;
-
-    const whereClauses = [];
     const params = [];
 
-    if (clerkId) {
-      whereClauses.push('t.clerk_id = ?');
-      params.push(clerkId);
-    }
-
     if (fromDate && toDate) {
-      whereClauses.push('t.date BETWEEN ? AND ?');
+      query += ` AND t.date BETWEEN ? AND ?`;
       params.push(fromDate, toDate);
-    } else if (targetDate && !isAll) {
-      whereClauses.push('t.date = ?');
+    } else if (targetDate) {
+      query += ` AND t.date = ?`;
       params.push(targetDate);
     }
 
-    if (whereClauses.length > 0) {
-      query += ` WHERE ${whereClauses.join(' AND ')}`;
+    if (clerkId) {
+      query += ` AND t.clerk_id = ?`;
+      params.push(clerkId);
     }
 
-    query += ` ORDER BY t.date DESC, t.service_start_time DESC`;
+    query += ` ORDER BY t.date DESC, t.service_end_time DESC`;
 
     const rows = db.prepare(query).all(...params);
-
     const headers = [
-      'Date', 'Queue Number', 'Member Name', 'SSS Number', 'Entry Type',
-      'Transaction Type', 'Clerk Name', 'Counter', 'Check-in Time',
-      'Service Start', 'Service End', 'Wait Time (min)', 'Service Duration (min)',
-      'Outcome', 'Satisfaction', 'Remarks', 'Instructions for Member', 'Late Arrival'
+      'Tx ID', 'Date', 'Counter', 'Clerk Name', 'Queue Number', 'Member Name', 'SSS Number',
+      'Transaction Type', 'Channel', 'Check-in Time', 'Service Start', 'Service End',
+      'Wait Time (min)', 'Handle Time (min)', 'Outcome (A/R)', 'CSAT Rating',
+      'Remarks / Rejection Reason', 'Member Category', 'Sex', 'Age', 'Residence'
     ];
 
-    const filename = `sss_transactions_${fromDate && toDate ? `${fromDate}_to_${toDate}` : (isAll ? 'all' : targetDate)}.csv`;
-    const csvData = '\uFEFF' + buildCSV(headers, rows); // UTF-8 BOM for Excel
+    const csvData = '\uFEFF' + buildCSV(headers, rows);
+    const filename = `sss_service_log_${targetDate || (fromDate + '_to_' + toDate) || 'all'}.csv`;
     res.setHeader('Content-Type', 'text/csv; charset=utf-8');
     res.setHeader('Content-Disposition', `${isDownload ? 'attachment' : 'inline'}; filename="${filename}"`);
     res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
@@ -434,7 +427,7 @@ module.exports = () => {
 
   // 2. Live Clerk Performance Feed
   router.get('/feed/clerks.csv', (req, res) => {
-    const today = req.query.date || new Date().toISOString().split('T')[0];
+    const today = req.query.date || (db.getTodayDate ? db.getTodayDate() : new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Manila' }).format(new Date()));
     const isDownload = req.query.download === '1' || req.query.download === 'true';
 
     const rows = db.prepare(`
@@ -473,7 +466,7 @@ module.exports = () => {
 
   // 3. Live Hourly Traffic Feed
   router.get('/feed/hourly.csv', (req, res) => {
-    const today = req.query.date || new Date().toISOString().split('T')[0];
+    const today = req.query.date || (db.getTodayDate ? db.getTodayDate() : new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Manila' }).format(new Date()));
     const isDownload = req.query.download === '1' || req.query.download === 'true';
 
     const rows = db.prepare(`
@@ -501,7 +494,7 @@ module.exports = () => {
   // ── SSS SERVICE LOG MATRIX API (A / R / TOTAL) ───────────────────────────
   router.get('/matrix', (req, res) => {
     try {
-      const today = new Date().toISOString().split('T')[0];
+      const today = (db.getTodayDate ? db.getTodayDate() : new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Manila' }).format(new Date()));
       const isAll = req.query.all === '1' || req.query.all === 'true';
       const fromDate = req.query.from;
       const toDate = req.query.to;
@@ -612,7 +605,7 @@ module.exports = () => {
   // ── STYLED EXCEL WORKBOOK EXPORT (.XLSX) ───────────────────────────────────
   router.get(['/export/excel', '/export/transactions.xlsx'], async (req, res) => {
     try {
-      const today = new Date().toISOString().split('T')[0];
+      const today = (db.getTodayDate ? db.getTodayDate() : new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Manila' }).format(new Date()));
       const isAll = req.query.all === '1' || req.query.all === 'true';
       const fromDate = req.query.from;
       const toDate = req.query.to;
@@ -1542,7 +1535,7 @@ module.exports = () => {
   router.get('/export/arta-excel', async (req, res) => {
     try {
       const { from, to, date } = req.query;
-      const today = new Date().toISOString().split('T')[0];
+      const today = (db.getTodayDate ? db.getTodayDate() : new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Manila' }).format(new Date()));
       let dateFilter = '';
       const params = [];
 

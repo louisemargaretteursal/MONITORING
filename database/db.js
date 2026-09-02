@@ -174,7 +174,7 @@ if (taskCount.count === 0) {
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `);
 
-  const todayStr = new Date().toISOString().split('T')[0];
+  const todayStr = getTodayDate();
 
   if (christie) {
     insertTask.run(
@@ -227,6 +227,32 @@ if (taskCount.count === 0) {
   console.log('✅ Default MSS task assignments seeded.');
 }
 
+function getTodayDate(d = new Date()) {
+  return new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Manila' }).format(d);
+}
+
+function getNowDateTime(d = new Date()) {
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Manila',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false
+  }).formatToParts(d);
+  
+  const map = {};
+  parts.forEach(p => map[p.type] = p.value);
+  return `${map.year}-${map.month}-${map.day} ${map.hour}:${map.minute}:${map.second}`;
+}
+
+db.getTodayDate = getTodayDate;
+db.getNowDateTime = getNowDateTime;
+
 module.exports = db;
+module.exports.getTodayDate = getTodayDate;
+module.exports.getNowDateTime = getNowDateTime;
 
 

@@ -714,7 +714,7 @@
       document.getElementById('log-summary').innerHTML = '';
       document.getElementById('log-empty').classList.add('hidden');
 
-      const today = new Date().toISOString().split('T')[0];
+      const today = new Date().toLocaleDateString('en-CA');
       const clerkParam = EC_CLERK.id || 'ojt';
       const res = await fetch(`/api/reports/clerk/${clerkParam}/today?date=${today}`);
       const data = await res.json();
@@ -790,7 +790,7 @@
 
     function exportEcLogToExcel() {
       if (!EC_CLERK) return;
-      const today = new Date().toISOString().split('T')[0];
+      const today = new Date().toLocaleDateString('en-CA');
       const clerkParam = EC_CLERK.id ? `clerk_id=${EC_CLERK.id}&` : '';
       window.location.href = `/api/reports/export/excel?${clerkParam}date=${today}`;
     }

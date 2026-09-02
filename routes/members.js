@@ -6,7 +6,7 @@ module.exports = (io) => {
 
   // GET all active members for today (waiting/being-served)
   router.get('/', (req, res) => {
-    const today = new Date().toISOString().split('T')[0];
+    const today = (db.getTodayDate ? db.getTodayDate() : new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Manila' }).format(new Date()));
     const members = db.prepare(`
       SELECT m.*, c.name as clerk_name
       FROM members m
@@ -29,7 +29,7 @@ module.exports = (io) => {
     }
 
     try {
-      const today = new Date().toISOString().split('T')[0];
+      const today = (db.getTodayDate ? db.getTodayDate() : new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Manila' }).format(new Date()));
       const ongoing = db.prepare(`
         SELECT t.id as transaction_id, t.service_start_time, t.counter, t.clerk_id, t.confirmed_transaction_type,
                m.id as member_id, m.name, m.queue_number, m.sss_number, m.transaction_type, m.entry_type, m.routed_to,
@@ -73,7 +73,7 @@ module.exports = (io) => {
 
   // GET members by department/routing
   router.get('/pool/:routed_to', (req, res) => {
-    const today = new Date().toISOString().split('T')[0];
+    const today = (db.getTodayDate ? db.getTodayDate() : new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Manila' }).format(new Date()));
     const { routed_to } = req.params;
     const members = db.prepare(`
       SELECT m.*, c.name as clerk_name
@@ -118,7 +118,7 @@ module.exports = (io) => {
       });
     }
 
-    const today = new Date().toISOString().split('T')[0];
+    const today = (db.getTodayDate ? db.getTodayDate() : new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Manila' }).format(new Date()));
 
     // ── Duplicate check: block if this queue number was already logged today ───
     if (queue_number) {

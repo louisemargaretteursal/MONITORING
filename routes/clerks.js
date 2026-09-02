@@ -58,7 +58,7 @@ module.exports = (io, activeStations) => {
     const clerk = db.prepare('SELECT id, name, counter, is_active, created_at FROM clerks WHERE id = ?').get(id);
     if (!clerk) return res.status(404).json({ error: 'Clerk not found.' });
 
-    const today = new Date().toISOString().split('T')[0];
+    const today = (db.getTodayDate ? db.getTodayDate() : new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Manila' }).format(new Date()));
     const stats = db.prepare(`
       SELECT
         COUNT(*) as total_served,

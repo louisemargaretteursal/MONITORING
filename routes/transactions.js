@@ -14,7 +14,7 @@ module.exports = (io, activeStations) => {
     }
 
     const now = new Date();
-    const nowStr = now.toISOString().replace('T', ' ').slice(0, 19);
+    const nowStr = (db.getNowDateTime ? db.getNowDateTime(now) : now.toLocaleDateString('en-CA') + ' ' + now.toTimeString().slice(0, 8));
 
     const tx = db.prepare('SELECT * FROM transactions WHERE id = ?').get(id);
     if (!tx) return res.status(404).json({ error: 'Transaction not found.' });
@@ -159,7 +159,7 @@ module.exports = (io, activeStations) => {
 
   // GET today's transaction stats
   router.get('/stats/today', (req, res) => {
-    const today = new Date().toISOString().split('T')[0];
+    const today = (db.getTodayDate ? db.getTodayDate() : new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Manila' }).format(new Date()));
 
     const stats = db.prepare(`
       SELECT

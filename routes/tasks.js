@@ -8,7 +8,7 @@ module.exports = (io) => {
   // Helper to auto-evaluate and update overdue tasks
   function refreshOverdueTasks() {
     try {
-      const nowStr = new Date().toISOString().replace('T', ' ').slice(0, 16);
+      const nowStr = (db.getNowDateTime ? db.getNowDateTime() : new Date().toLocaleString('en-CA')).slice(0, 16);
       db.prepare(`
         UPDATE mss_tasks
         SET status = 'overdue'
@@ -169,7 +169,7 @@ module.exports = (io) => {
     }
 
     try {
-      const nowStr = new Date().toISOString().replace('T', ' ').slice(0, 16);
+      const nowStr = (db.getNowDateTime ? db.getNowDateTime() : new Date().toLocaleString('en-CA')).slice(0, 16);
       const existing = db.prepare('SELECT * FROM mss_tasks WHERE id = ?').get(id);
       if (!existing) return res.status(404).json({ error: 'Task not found.' });
 
@@ -282,7 +282,7 @@ module.exports = (io) => {
 
       // Subtitle
       ws.mergeCells('A2:I2');
-      const today = new Date().toISOString().split('T')[0];
+      const today = (db.getTodayDate ? db.getTodayDate() : new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Manila' }).format(new Date()));
       ws.getCell('A2').value = `SSS Toledo Branch • Generated: ${today} | Total Assignments: ${tasks.length}`;
       ws.getCell('A2').font = { name: 'Segoe UI', size: 9.5, italic: true, color: { argb: 'FF1E3A8A' } };
       ws.getCell('A2').fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE0E7FF' } };

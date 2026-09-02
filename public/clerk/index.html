@@ -2061,7 +2061,7 @@
     document.getElementById('log-appts-empty').classList.add('hidden');
     switchLogTab('tx');
 
-    const today = new Date().toISOString().split('T')[0];
+    const today = new Date().toLocaleDateString('en-CA');
     const res = await fetch(`/api/reports/clerk/${clerk.id}/today?date=${today}`);
     const data = await res.json();
 
@@ -2192,7 +2192,7 @@
 
   function exportClerkLogToExcel() {
     if (!clerk) return;
-    const today = new Date().toISOString().split('T')[0];
+    const today = new Date().toLocaleDateString('en-CA');
     window.location.href = `/api/reports/export/excel?clerk_id=${clerk.id}&date=${today}`;
   }
 
@@ -2288,13 +2288,13 @@
   // \u2500\u2500 Profile Panel \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
     function exportMyHistoryExcel() {
     if (!clerk) return;
-    const dateInput = document.getElementById('profile-history-date')?.value || new Date().toISOString().split('T')[0];
+    const dateInput = document.getElementById('profile-history-date')?.value || new Date().toLocaleDateString('en-CA');
     window.location.href = `/api/reports/export/excel?clerk_id=${clerk.id}&date=${dateInput}`;
   }
 
   function exportClerkLogToExcel() {
     if (!clerk) return;
-    const dateInput = new Date().toISOString().split('T')[0];
+    const dateInput = new Date().toLocaleDateString('en-CA');
     window.location.href = `/api/reports/export/excel?clerk_id=${clerk.id}&date=${dateInput}`;
   }
 
@@ -2302,7 +2302,7 @@
     if (!clerk) return;
     document.getElementById('profile-overlay').classList.add('open');
     const dateInp = document.getElementById('profile-history-date');
-    if (dateInp && !dateInp.value) dateInp.value = new Date().toISOString().split('T')[0];
+    if (dateInp && !dateInp.value) dateInp.value = new Date().toLocaleDateString('en-CA');
     loadProfile();
   }
   function closeProfile() {

@@ -665,7 +665,7 @@
       document.getElementById('log-summary').innerHTML = '';
       document.getElementById('log-empty').classList.add('hidden');
 
-      const today = new Date().toISOString().split('T')[0];
+      const today = new Date().toLocaleDateString('en-CA');
       const res = await fetch(`/api/reports/clerk/${PACD_CLERK.id}/today?date=${today}`);
       const data = await res.json();
 
@@ -740,7 +740,7 @@
 
     function exportPacdLogToExcel() {
       if (!PACD_CLERK) return;
-      const today = new Date().toISOString().split('T')[0];
+      const today = new Date().toLocaleDateString('en-CA');
       window.location.href = `/api/reports/export/excel?clerk_id=${PACD_CLERK.id}&date=${today}`;
     }
 

@@ -122,7 +122,7 @@ app.set('activeStations', activeStations);
 // ─── NO-SHOW ALERT JOB (runs every minute) ────────────────────────────────────
 setInterval(() => {
   const now = new Date();
-  const today = now.toISOString().split('T')[0];
+  const today = (db.getTodayDate ? db.getTodayDate(now) : new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Manila' }).format(now));
   const threshold = new Date(now.getTime() - 15 * 60 * 1000); // 15 min ago
   const thresholdStr = threshold.toTimeString().slice(0, 5); // HH:MM
 
@@ -144,8 +144,8 @@ setInterval(() => {
 // ─── 5:30 PM END-OF-DAY AUTO-CLOSEOUT (For Verification / On-Hold Members) ───
 // Auto-marks all unreturned for-verification members as served at 5:30 PM
 function autoCloseUnreturnedMembers() {
-  const today = new Date().toISOString().split('T')[0];
-  const nowStr = new Date().toISOString().replace('T', ' ').slice(0, 19);
+  const today = (db.getTodayDate ? db.getTodayDate() : new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Manila' }).format(new Date()));
+  const nowStr = (db.getNowDateTime ? db.getNowDateTime() : new Date().toLocaleString('en-CA'));
 
   try {
     // 1. Find all members still 'on-hold' from today
@@ -231,7 +231,7 @@ app.post('/api/transactions/eod-closeout', (req, res) => {
 });
 
 function generateDailyReport() {
-  const today = new Date().toISOString().split('T')[0];
+  const today = (db.getTodayDate ? db.getTodayDate() : new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Manila' }).format(new Date()));
   const stats = db.prepare(`
     SELECT
       COUNT(*) as total_served,

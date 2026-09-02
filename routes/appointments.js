@@ -24,7 +24,7 @@ function formatTimeTo12Hour(tStr) {
 }
 
 function normalizeAppointmentDateTime(val, defaultDate) {
-  const today = defaultDate || new Date().toISOString().split('T')[0];
+  const today = defaultDate || (db.getTodayDate ? db.getTodayDate() : new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Manila' }).format(new Date()));
   if (!val) return { date: today, time: '' };
 
   if (val instanceof Date) {
@@ -96,7 +96,7 @@ module.exports = (io, upload) => {
 
   // GET today's appointments
   router.get('/', (req, res) => {
-    const today = new Date().toISOString().split('T')[0];
+    const today = (db.getTodayDate ? db.getTodayDate() : new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Manila' }).format(new Date()));
     const appointments = db.prepare(`
       SELECT a.*, c.name as clerk_name, c.counter
       FROM appointments a
@@ -109,7 +109,7 @@ module.exports = (io, upload) => {
 
   // GET appointments for a specific clerk
   router.get('/clerk/:clerk_id', (req, res) => {
-    const today = new Date().toISOString().split('T')[0];
+    const today = (db.getTodayDate ? db.getTodayDate() : new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Manila' }).format(new Date()));
     const { clerk_id } = req.params;
     const appointments = db.prepare(`
       SELECT a.*, c.name as clerk_name
@@ -123,7 +123,7 @@ module.exports = (io, upload) => {
 
   // GET portal appointments (only ones still actively waiting — not yet served)
   router.get('/portal', (req, res) => {
-    const today = new Date().toISOString().split('T')[0];
+    const today = (db.getTodayDate ? db.getTodayDate() : new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Manila' }).format(new Date()));
     const appointments = db.prepare(`
       SELECT a.*,
              m.status as member_status,
@@ -141,7 +141,7 @@ module.exports = (io, upload) => {
   // GET export appointments in official 8-column format
   router.get('/export/excel', async (req, res) => {
     try {
-      const today = new Date().toISOString().split('T')[0];
+      const today = (db.getTodayDate ? db.getTodayDate() : new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Manila' }).format(new Date()));
       const targetDate = req.query.date || today;
       const clerkId = req.query.clerk_id;
 
@@ -248,7 +248,7 @@ module.exports = (io, upload) => {
       await workbook.xlsx.load(req.file.buffer);
       const worksheet = workbook.worksheets[0];
 
-      const today = new Date().toISOString().split('T')[0];
+      const today = (db.getTodayDate ? db.getTodayDate() : new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Manila' }).format(new Date()));
       let imported = 0;
       let skipped = 0;
 
@@ -363,7 +363,7 @@ module.exports = (io, upload) => {
       await workbook.xlsx.load(req.file.buffer);
       const worksheet = workbook.worksheets[0];
 
-      const today = new Date().toISOString().split('T')[0];
+      const today = (db.getTodayDate ? db.getTodayDate() : new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Manila' }).format(new Date()));
       let imported = 0, skipped = 0;
       const insertAppt = db.prepare(`
         INSERT INTO appointments (name, phone_number, email, appointment_time, clerk_id, type, date, service, duration_mins, booking_status)
@@ -473,7 +473,7 @@ module.exports = (io, upload) => {
   // DELETE clear a clerk's own today appointments
   router.delete('/clerk/:clerk_id/today', (req, res) => {
     const { clerk_id } = req.params;
-    const today = new Date().toISOString().split('T')[0];
+    const today = (db.getTodayDate ? db.getTodayDate() : new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Manila' }).format(new Date()));
     db.prepare(`DELETE FROM appointments WHERE date = ? AND type = 'direct' AND clerk_id = ?`).run(today, clerk_id);
     io.to(`clerk-${clerk_id}`).emit('appointments:refresh');
     io.to('admin').emit('appointments:refresh');
@@ -488,17 +488,19 @@ module.exports = (io, upload) => {
     // Fetch current appointment to get appointment_time
     const existing = db.prepare('SELECT * FROM appointments WHERE id = ?').get(id);
 
+    if (!existing) {
+      return res.status(404).json({ error: 'Appointment not found' });
+    }
+
     // Determine if the member is arriving late
     let isLate = 0;
-    if (existing && existing.appointment_time) {
+    if (existing.appointment_time) {
       try {
         const now = new Date();
         const timeStr = existing.appointment_time.trim();
         let apptHour = 0, apptMin = 0;
 
-        // Handle "HH:MM AM/PM" format
         const ampm = timeStr.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
-        // Handle "HH:MM" 24-hr format
         const h24  = timeStr.match(/^(\d{1,2}):(\d{2})$/);
 
         if (ampm) {
@@ -518,30 +520,32 @@ module.exports = (io, upload) => {
       } catch (e) { /* if parsing fails, don't mark late */ }
     }
 
+    // Update appointment arrival status, linked member_id, and late flag
     db.prepare(`
-      UPDATE appointments SET arrival_status = 'in-lobby', member_id = ?, is_late = ? WHERE id = ?
+      UPDATE appointments
+      SET arrival_status = 'in-lobby',
+          member_id = ?,
+          is_late = ?
+      WHERE id = ?
     `).run(member_id || null, isLate, id);
 
-    const appt = db.prepare(`
-      SELECT a.*, c.name as clerk_name, c.counter
-      FROM appointments a LEFT JOIN clerks c ON a.clerk_id = c.id
-      WHERE a.id = ?
-    `).get(id);
+    const updated = db.prepare('SELECT * FROM appointments WHERE id = ?').get(id);
 
-    // Notify the assigned clerk
-    if (appt.clerk_id) {
-      io.to(`clerk-${appt.clerk_id}`).emit('appointment:arrived', appt);
+    // Notify the assigned clerk in real-time
+    if (updated.clerk_id) {
+      io.to(`clerk-${updated.clerk_id}`).emit('appointments:refresh');
     }
-    io.to('portal-pool').emit('appointment:arrived', appt);
-    io.to('admin').emit('appointment:arrived', appt);
+    // Also broadcast so Portal/PACD/Admin see the updated state immediately
+    io.emit('appointments:refresh');
+    io.to('admin').emit('appointment:arrived', updated);
 
-    res.json({ success: true, appointment: appt });
+    res.json({ success: true, appointment: updated });
   });
 
   // POST verify appointment (kiosk name + phone check - flexible & forgiving)
   router.post('/verify', (req, res) => {
     const { name, phone } = req.body;
-    const today = new Date().toISOString().split('T')[0];
+    const today = (db.getTodayDate ? db.getTodayDate() : new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Manila' }).format(new Date()));
 
     const allTodayAppts = db.prepare(`
       SELECT a.*, c.name as clerk_name, c.counter
@@ -655,7 +659,7 @@ module.exports = (io, upload) => {
       name, sss_number, appointment_time, transaction_type,
       customer_type, sex, age, region, dpa_consent
     } = req.body;
-    const today = new Date().toISOString().split('T')[0];
+    const today = (db.getTodayDate ? db.getTodayDate() : new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Manila' }).format(new Date()));
 
     if (!name || !appointment_time) {
       return res.status(400).json({ error: 'Name and appointment time are required.' });

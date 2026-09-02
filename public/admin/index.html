@@ -3733,7 +3733,7 @@
       const to = document.getElementById('csm-date-to')?.value;
       const params = new URLSearchParams();
       if (from && to) { params.set('from', from); params.set('to', to); }
-      else { params.set('date', new Date().toISOString().split('T')[0]); }
+      else { params.set('date', new Date().toLocaleDateString('en-CA')); }
 
       try {
         const res = await fetch(`/api/reports/arta-csm?${params.toString()}`);
@@ -3823,7 +3823,7 @@
     }
 
     function resetCsmDates() {
-      const today = new Date().toISOString().split('T')[0];
+      const today = new Date().toLocaleDateString('en-CA');
       const fromEl = document.getElementById('csm-date-from');
       const toEl = document.getElementById('csm-date-to');
       if (fromEl) fromEl.value = today;
@@ -3851,7 +3851,7 @@
       const to = document.getElementById('csm-date-to')?.value;
       const params = new URLSearchParams();
       if (from && to) { params.set('from', from); params.set('to', to); }
-      else { params.set('date', new Date().toISOString().split('T')[0]); }
+      else { params.set('date', new Date().toLocaleDateString('en-CA')); }
       window.location.href = `/api/reports/export/arta-excel?${params.toString()}`;
     }
 
@@ -3861,7 +3861,7 @@
       const to = document.getElementById('csm-date-to')?.value;
       const params = new URLSearchParams();
       if (from && to) { params.set('from', from); params.set('to', to); }
-      else { params.set('date', new Date().toISOString().split('T')[0]); }
+      else { params.set('date', new Date().toLocaleDateString('en-CA')); }
 
       try {
         const res = await fetch(`/api/reports/arta-csm?${params.toString()}`);
