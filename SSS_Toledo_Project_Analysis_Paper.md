@@ -202,28 +202,82 @@ The platform is structured into **six (6) interconnected modules**, each enginee
 
 ---
 
-### 5.6 Subsystem 6: Branch Management & Analytics Hub (`/admin`)
-*Target User: Branch Head, Administrative Officer, Section Supervisors*
+### 5.6 Subsystem 6: Branch Management & Live Monitoring Hub (`/admin`)
+*Target User: Branch Head, Administrative Officer, Section Supervisors, Technical Auditors*
 
-* **Real-Time Branch Operations Radar:** Live cards of all counters showing active officer, current serving citizen, queue depth, and online/offline status.
-* **Citizen's Charter SLA Watchdog:** Real-time visual alerts for citizens whose wait time exceeds 15 minutes.
-* **ARTA CSM Analytics Suite:**
-  * Real-time NPS Score calculation: `(% Promoters) - (% Detractors)`.
-  * CSAT Satisfaction Percentage: `(Satisfied + Very Satisfied) / Total Responses`.
-  * Demographic distributions: Customer Type, Sex, and Age bracket heatmaps.
-  * Root-Cause Bottleneck frequency charts.
-* **Comprehensive Export Engine:**
-  * **Master SSS Service Log (`.xlsx`):** Full auditable line-item log of all branch transactions.
-  * **Official SSS Transaction Matrix (`.xlsx`):** Summary breakdown of Accepted (A) and Rejected (R) counts per clerk and transaction type.
-  * **Harmonized ARTA CSM Compliance Matrix (`.xlsx`):** CSC/ARTA-ready quarterly compliance scorecard with SQD0–SQD8 averages.
-  * **MSS Task Accomplishment Log (`.xlsx`):** Staff internal assignment completions.
-* **Staff Credential & Counter Management:** 4-digit PIN updates, account creation, and counter reassignments.
-* **Disaster Recovery & One-Click Database Backup:** Instant download of `sss_toledo_backup_YYYY-MM-DD.db` anytime during active branch operations.
-* **Branch MSS Task Ledger:** Assignment delegation system with priority levels (*Low, Normal, High, Urgent*), due date tracking, and overdue alerts.
+The **Admin Management & Analytics Hub** functions as the central mission control for SSS Toledo frontline operations, combining real-time queue orchestration, SLA monitoring, and automated compliance reporting:
+
+* **Real-Time Branch Operations Radar (Live Station Matrix):**
+  * Visual live cards for every branch station (*Counter 1, Counter 2, Counter 3, Counter 4, Side Counter, PACD, and E-Center*).
+  * Displays active officer name, currently served member's name and ticket number, verified transaction type, live elapsed service timer, and queue depth.
+  * Real-time online/offline indicator powered by Socket.io heartbeat events.
+* **Citizen’s Charter SLA Watchdog & Bottleneck Detection:**
+  * Color-coded transaction timers (Green: `<10 mins`, Yellow: `10–15 mins`, Red: `>15 mins`).
+  * Automated escalation flags for citizens waiting in the lobby longer than 15.0 minutes, enabling supervisors to deploy reserve personnel or open overflow counters immediately.
+* **Live Foot-Traffic & Hourly Arrival Heatmap:**
+  * Interactive hourly volume chart powered by Chart.js (8:00 AM to 5:00 PM).
+  * Visualizes peak arrival windows, daily check-in volume, total served, and unserved totals in real time.
+* **Staff Performance & Velocity Leaderboard:**
+  * Tracks individual officer throughput (total members served), average service duration, transaction resolution breakdown (Finished vs. Rejected), and average citizen CSAT rating.
+* **Branch MSS Internal Task Delegation Ledger:**
+  * Complete operational task manager allowing supervisors to assign branch duties (e.g., *E-4 batch processing, claims verification, contribution reconciliation*) with priority tiers (*Low, Normal, High, Urgent*), assigned deadlines, and accomplishment logs.
+* **Staff Account & Security PIN Management:**
+  * 4-digit PIN management, staff role assignment, station binding, and user activation/deactivation.
+* **Disaster Recovery & One-Click Database Snapshot:**
+  * Instant download of `sss_toledo_backup_YYYY-MM-DD.db` anytime during active operations without locking the database or interrupting frontline transactions.
 
 ---
 
-## 6. CORE ARCHITECTURAL & OPERATIONAL INNOVATIONS
+## 6. DAILY SERVICE OUTPUT & OFFICIAL REPORTING ENGINE
+
+A core pillar of the SSS Toledo Monitoring System is the automated **Daily Service Output Engine**, which replaces hours of manual tallying with certified, audit-ready reports formatted strictly according to SSS and ARTA standards.
+
+```
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│                      OFFICIAL SSS TOLEDO SERVICE OUTPUT SUITE                   │
+├────────────────────────────┬────────────────────────────┬───────────────────────┤
+│ 1. Master Daily SSS        │ 2. Official SSS Service    │ 3. Harmonized ARTA    │
+│    Service Log (.xlsx)     │    Matrix (A / R / Total)  │    CSM Report (.xlsx) │
+├────────────────────────────┼────────────────────────────┼───────────────────────┤
+│ 4. Clerk Personal Daily    │ 5. Printable A4 Executive  │ 6. Disaster Recovery  │
+│    Service Ledger (.xlsx)  │    ARTA CSM Scorecard      │    DB Snapshot (.db)  │
+└────────────────────────────┴────────────────────────────┴───────────────────────┘
+```
+
+### 6.1 Report 1: Master Daily SSS Service Log (`/api/reports/export/excel?all=1`)
+A complete, auditable line-item ledger of every citizen served at the branch. Generated via the high-performance ExcelJS engine, the log features corporate SSS styling, auto-adjusting column widths, and certified headers:
+* **Citizen Tracking Details:** Queue Number, Full Name, SSS / CRN Number, Customer Type, Entry Type (*Walk-In, Direct Appointment, Portal Appointment*).
+* **Service Timestamps:** Exact Check-In Time, Service Start Time, Service End Time, Wait Duration (mins), and Service Duration (mins).
+* **Operational Resolution:** Serving Officer, Counter Station, Confirmed Transaction Code, Service Outcome (*Finished, Rejected, For-Verification*).
+* **Citizen Feedback & Audit:** CSAT Sentiment Rating, Net Promoter Score (NPS), Root-Cause Feedback Category, and Clerk Instructions/Remarks.
+
+### 6.2 Report 2: Official SSS Transaction Service Matrix (`/api/transactions/matrix/export/excel`)
+Automates the mandatory multi-dimensional service matrix required by SSS branch management, breaking down daily branch output into:
+* **Accepted (A):** Successfully concluded and processed transactions.
+* **Rejected (R):** Transactions turned down due to lacking requirements or disqualifications (with recorded justifications).
+* **Total Transaction Volume:** Aggregate count broken down by **Service Code** (*Member Data Updating E-4, Sickness Benefit, Maternity Claim, Funeral Claim, Retirement Claim, Salary Loan, General Inquiry*) and cross-referenced across each **Counter Officer**.
+
+### 6.3 Report 3: Harmonized ARTA CSM Compliance Matrix (`/api/reports/export/arta-csm/excel`)
+Specifically designed for quarterly submission to the **Anti-Red Tape Authority (ARTA)** and the **Civil Service Commission (CSC)** under ARTA MC No. 2022-05:
+* **Demographic Cross-Tabulations:** Response counts broken down by Customer Type (*Citizen, Business, Government*), Sex (*Male, Female*), and Age brackets.
+* **Service Quality Dimensions (SQD0 to SQD8):** Mean scores, positive response percentages, and overall performance rating (*Outstanding, Very Satisfactory, Satisfactory, Needs Improvement*).
+* **NPS Scorecard:** Automated calculation of Net Promoter Score (`% Promoters - % Detractors`).
+
+### 6.4 Report 4: Clerk Personal Service Log & Appointment Attendance Modal
+Frontline clerks can review their daily output directly on their workstation (`/clerk`) by clicking **"Service Log"**:
+* **Tab 1 — Concluded Transactions:** Live chronological ledger of all citizens assisted by that specific officer today, complete with duration minutes, outcomes, and citizen CSAT ratings.
+* **Tab 2 — My Appointments Schedule & Attendance:** Attendance tracker for scheduled appointees showing real-time status (*In Lobby, Served, or No-Show*).
+* **1-Click Personal Excel Export:** Clerks can download their own certified daily accomplishment report at the end of their shift with a single click.
+
+### 6.5 Report 5: Printable A4 Executive Scorecard
+The Admin Panel includes an in-browser **Print Preview** formatted specifically for standard A4 paper:
+* Formatted with official Republic of the Philippines and SSS headers.
+* Summarizes daily total foot traffic, served percentage, average wait time, average handling time, and net CSAT score.
+* Includes certified signature lines for the **Prepared By (Officer)** and **Approved By (Branch Head)** for physical filing and audit inspections.
+
+---
+
+## 7. CORE ARCHITECTURAL & OPERATIONAL INNOVATIONS
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────────┐
