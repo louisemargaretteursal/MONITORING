@@ -71,27 +71,57 @@ To design, develop, and deploy a robust, zero-cloud, LAN-based Queue Monitoring,
 ### 4.1 Topology Overview (100% On-Premise LAN)
 The platform is engineered as a zero-cloud, high-concurrency client-server web application operating entirely within the SSS Toledo Branch Local Area Network (Ethernet / Secure Branch Wi-Fi).
 
-```
- ═══════════════════════════════════════════════════════════════════════════════════
-                      SSS TOLEDO BRANCH LOCAL NETWORK (LAN)
- ═══════════════════════════════════════════════════════════════════════════════════
-                                        │
-                         ┌──────────────┴──────────────┐
-                         ▼                             ▼
-               ┌───────────────────┐         ┌───────────────────┐
-               │  LOCAL SERVER PC  │         │  ADMIN WORKSTATION│
-               │ (Node.js/Express/ │◄────────┤ (Branch Head/AO)  │
-               │  Native SQLite)   │         │     (/admin)      │
-               └─────────┬─────────┘         └───────────────────┘
-                         │
-        ┌────────────────┼────────────────┬────────────────┐
-        ▼                ▼                ▼                ▼
- ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐
- │  E-LOGBOOK  │  │   COUNTER   │  │   PACD /    │  │   CITIZEN   │
- │    KIOSK    │  │ WORKSTATION │  │  E-CENTER   │  │   RATING    │
- │  (/kiosk)   │  │  (/clerk)   │  │  STATIONS   │  │   TABLET    │
- └─────────────┘  └─────────────┘  └─────────────┘  │   (/rate)   │
-                                                    └─────────────┘
+```mermaid
+flowchart TD
+    %% Local Area Network Perimeter
+    subgraph LAN ["SSS TOLEDO BRANCH LOCAL NETWORK (LAN / Secure Branch Wi-Fi)"]
+        
+        subgraph ServerNode ["Host Server PC (Local Branch Server)"]
+            API["Node.js + Express REST API Gateway"]
+            WS["Socket.io Real-Time Event Hub"]
+            DB[("Native SQLite Database (WAL Mode)<br/>sss_toledo.db")]
+            API --- DB
+            WS --- DB
+        end
+
+        subgraph AdminNode ["Admin & Management Workstation"]
+            AdminUI["Executive Monitoring Dashboard (/admin)"]
+        end
+
+        subgraph KioskNode ["Entrance Lobby"]
+            KioskUI["E-Logbook Touchscreen Kiosk (/kiosk)"]
+        end
+
+        subgraph CounterNodes ["Service Counter Workstations"]
+            ClerkUI["Counters 1–4 & Side Counter (/clerk)"]
+            PACDUI["PACD Triage Desk (/pacd)"]
+            ECenterUI["E-Center Web Assistance (/ecenter)"]
+        end
+
+        subgraph TabletNodes ["Citizen Facing Terminals"]
+            RateUI["Counter CSAT & ARTA Survey Tablets (/rate)"]
+        end
+
+        %% Communications
+        KioskUI -->|"HTTP POST / WebSocket (Check-In & BAS Verify)"| API
+        AdminUI <-->|"HTTP REST / Bi-Directional WebSocket"| ServerNode
+        ClerkUI <-->|"HTTP REST / WebSocket (Call, Serve, Re-Route)"| ServerNode
+        PACDUI <-->|"HTTP REST / WebSocket (Triage & Re-Route)"| ServerNode
+        ECenterUI <-->|"HTTP REST / WebSocket (Online Assists)"| ServerNode
+        ServerNode -->|"WebSocket Event (Trigger Survey on Conclude)"| RateUI
+        RateUI -->|"HTTP POST / WebSocket (Submit CSAT & SQD)"| API
+    end
+
+    %% Styling
+    classDef server fill:#071e4a,stroke:#fcd34d,stroke-width:2px,color:#ffffff;
+    classDef client fill:#f0f9ff,stroke:#0284c7,stroke-width:2px,color:#0f172a;
+    classDef tablet fill:#fefce8,stroke:#ca8a04,stroke-width:2px,color:#713f12;
+    classDef db fill:#064e3b,stroke:#34d399,stroke-width:2px,color:#ffffff;
+
+    class ServerNode,API,WS server;
+    class DB db;
+    class AdminUI,KioskUI,ClerkUI,PACDUI,ECenterUI client;
+    class RateUI tablet;
 ```
 
 ### 4.2 Technology Stack
