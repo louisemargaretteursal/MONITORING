@@ -33,7 +33,7 @@ Before the deployment of this monitoring system, the branch operated under tradi
 2. **Queue Misclassification & Bottlenecks:** Security guards or members often misclassified transaction categories. A member needing an online password reset would wait in the general counter queue for over an hour only to be informed that their service belonged to the E-Center, forcing them to restart their queue.
 3. **Disconnected Appointment Spreadsheets & Walk-In Traffic:** Online booking schedules from the SSS Branch Appointment System (BAS) were kept as static, offline Excel files on clerk computers. Because these standalone spreadsheets had no live connection to the entrance or lobby, counter clerks had no real-time visibility of which scheduled members had actually arrived and were seated in the waiting area versus those who were running late or no-shows. Clerks had to manually alt-tab, search static rows, and guess member arrival times.
 4. **Labor-Intensive Member Feedback Collection & Tallying:** Collecting paper customer satisfaction forms resulted in low response rates (<15%), illegible handwriting, and hundreds of staff hours spent manually tallying scores and comments across multiple service dimensions.
-5. **Lack of Automated Clerk Daily Output Records:** Staff members previously had to manually write down every assisted citizen on paper accomplishment sheets at the end of the day, leading to reporting discrepancies and unverified service totals.
+5. **Time-Consuming Manual Encoding of Daily Accomplishment Outputs:** At the end of every working day, counter clerks had to manually type and encode every assisted citizen's details, transaction codes, and service resolutions row-by-row into static Excel templates. This repetitive manual encoding consumed 30 to 60 minutes of administrative overtime, created encoding typos, and delayed the daily submission of branch accomplishment reports to supervisors.
 6. **Lack of Live Executive Visibility:** Branch supervisors lacked a real-time monitor showing active counter statuses, current serving times against Citizen's Charter standards, staff transaction velocities, and bottleneck hotspots.
 
 ---
@@ -81,7 +81,7 @@ flowchart TD
         subgraph ServerNode ["Host Server PC (Local Branch Server)"]
             API["Node.js + Express REST API Gateway"]
             WS["Socket.io Real-Time Event Hub"]
-            DB[("Native SQLite Database (WAL Mode)<br/>sss_toledo.db")]
+            DB[("Native SQLite Database WAL Mode<br/>sss_toledo.db")]
             API --- DB
             WS --- DB
         end
@@ -95,32 +95,33 @@ flowchart TD
         end
 
         subgraph CounterNodes ["Service Counter Workstations"]
-            ClerkUI["Counters 1–4 & Side Counter (/clerk)"]
+            ClerkUI["Counters 1 to 4 & Side Counter (/clerk)"]
             PACDUI["PACD Triage Desk (/pacd)"]
             ECenterUI["E-Center Web Assistance (/ecenter)"]
         end
 
         subgraph TabletNodes ["Citizen Facing Terminals"]
-            RateUI["Counter Member Feedback & Rating Tablets (/rate)"]
+            RateUI["Counter Member Feedback Tablets (/rate)"]
         end
 
-        %% Communications
+        %% Real-Time Communications to Server Components
         KioskUI -->|"HTTP POST / WebSocket (Check-In & BAS Verify)"| API
-        AdminUI <-->|"HTTP REST / Bi-Directional WebSocket"| ServerNode
-        ClerkUI <-->|"HTTP REST / WebSocket (Call, Serve, Re-Route)"| ServerNode
-        PACDUI <-->|"HTTP REST / WebSocket (Triage & Re-Route)"| ServerNode
-        ECenterUI <-->|"HTTP REST / WebSocket (Online Assists)"| ServerNode
-        ServerNode -->|"WebSocket Event (Trigger Survey on Conclude)"| RateUI
-        RateUI -->|"HTTP POST / WebSocket (Submit CSAT & Feedback)"| API
+        AdminUI <-->|"HTTP REST / WebSocket Events"| API
+        AdminUI <-->|"Real-Time Push Alerts"| WS
+        ClerkUI <-->|"HTTP REST / Socket (Call, Serve, Conclude)"| API
+        PACDUI <-->|"HTTP REST / Socket (Triage & Re-Route)"| API
+        ECenterUI <-->|"HTTP REST / Socket (Online Assist Logs)"| API
+        WS -->|"Trigger Rating Prompt on Conclude"| RateUI
+        RateUI -->|"HTTP POST (Submit Member Survey)"| API
     end
 
-    %% Styling
+    %% Node Styling
     classDef server fill:#071e4a,stroke:#fcd34d,stroke-width:2px,color:#ffffff;
     classDef client fill:#f0f9ff,stroke:#0284c7,stroke-width:2px,color:#0f172a;
     classDef tablet fill:#fefce8,stroke:#ca8a04,stroke-width:2px,color:#713f12;
     classDef db fill:#064e3b,stroke:#34d399,stroke-width:2px,color:#ffffff;
 
-    class ServerNode,API,WS server;
+    class API,WS server;
     class DB db;
     class AdminUI,KioskUI,ClerkUI,PACDUI,ECenterUI client;
     class RateUI tablet;
@@ -379,7 +380,7 @@ Rather than relying on complex compliance formulas, the system employs a streaml
 | **Data Privacy Protection** | Low (open public paper logbook) | **100% Compliant** (R.A. 10173 consent gate) | **Zero Leakage** |
 | **Misdirected Member Handling** | Full re-queue from outside guard | **Instant Re-Route** (1-click digital transfer) | **Zero Double Queue** |
 | **Appointment Verification** | Manual paper roster cross-referencing | **Instant Kiosk Match** (by name/phone) | **Automated** |
-| **Clerk Daily Output Tallying** | 30 – 45 mins (manual hand-written logs) | **Instant (Live Modal & 1-Click Excel)** | **100% Automated** |
+| **Clerk Daily Output Encoding** | 30 – 60 mins (manual row-by-row typing) | **Instant (Live Ledger & 1-Click Excel)** | **100% Automated** |
 | **CSAT & Survey Response Rate** | <15% (paper survey forms) | **>85%** (mandatory counter tablet trigger) | **5.6x Higher Capture** |
 | **Monthly Survey Report Prep** | 16 – 24 staff hours (manual tallying) | **1 Click (< 3 seconds)** | **100% Automated** |
 | **Hardware & Cloud Cost** | High recurring monthly SaaS costs | **₱0.00** (Local LAN, native SQLite) | **100% Free / Sovereign** |
