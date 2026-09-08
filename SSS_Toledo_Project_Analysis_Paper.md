@@ -1,5 +1,5 @@
 # PROJECT ANALYSIS & SYSTEM ARCHITECTURE PAPER
-## Smart Queue Monitoring, Transaction Routing, and ARTA CSM Compliance System
+## Smart Queue Monitoring, Transaction Routing, and Member Satisfaction Survey System
 ### Social Security System (SSS) — Toledo Branch, Region VII
 
 ---
@@ -15,7 +15,7 @@
 
 ## EXECUTIVE SUMMARY
 
-The **SSS Toledo Smart Queue Monitoring, Transaction Routing, and ARTA CSM Compliance System** is an enterprise-grade, local-network (LAN-based) digital governance platform designed to modernize frontline social security operations. Built specifically for the operational dynamics of the SSS Toledo Branch, the system addresses chronic challenges in manual paper-based logbooks, member traffic congestion, misdirected counter queues, and labor-intensive compliance reporting under **Republic Act No. 11032 (Ease of Doing Business and Efficient Government Service Delivery Act of 2018)**.
+The **SSS Toledo Smart Queue Monitoring, Transaction Routing, and Member Satisfaction Survey System** is an enterprise-grade, local-network (LAN-based) digital governance platform designed to modernize frontline social security operations. Built specifically for the operational dynamics of the SSS Toledo Branch, the system addresses chronic challenges in manual paper-based logbooks, member traffic congestion, misdirected counter queues, and labor-intensive feedback tallying under **Republic Act No. 11032 (Ease of Doing Business and Efficient Government Service Delivery Act of 2018)**.
 
 The system replaces manual paper logbooks with an automated self-service **E-Logbook Kiosk**, provides real-time **Counter Officer Dashboards** for Main Counters, PACD, and E-Center stations, activates customer-facing **Citizen Rating Tablets** for immediate sentiment capture, and delivers a centralized **Executive Analytics & Administration Panel** with one-click official government Excel and PDF export capabilities. Operating 100% locally with zero external internet dependencies and zero cloud subscription costs, the platform ensures maximum data sovereignty, strict **Data Privacy Act (R.A. 10173)** compliance, and sub-second operational responsiveness.
 
@@ -32,7 +32,7 @@ Before the deployment of this monitoring system, the branch operated under tradi
 1. **Manual Paper Logbooks & Privacy Vulnerabilities:** Arriving members recorded sensitive personal information (Full Names, SSS Numbers, Mobile Numbers, Addresses) on physical log sheets at the entrance. This violated the **Data Privacy Act of 2012 (R.A. 10173)** because open sheets were visible to any subsequent member in line.
 2. **Queue Misclassification & Bottlenecks:** Security guards or members often misclassified transaction categories. A member needing an online password reset would wait in the general counter queue for over an hour only to be informed that their service belonged to the E-Center, forcing them to restart their queue.
 3. **Disconnected Appointment & Walk-In Traffic:** Online booking schedules from the SSS Branch Appointment System (BAS) were printed on paper rosters. Counter clerks had no live digital visibility of which scheduled citizens had arrived in the lobby versus those who were late or no-shows.
-4. **Labor-Intensive ARTA CSM Compliance Tallying:** Under ARTA Memorandum Circular No. 2022-05, branches must submit quarterly Citizen Satisfaction Measurement (CSM) reports. Collecting paper survey forms resulted in low response rates (<15%), illegible entries, and hundreds of staff hours spent manually tallying scores across 8 Service Quality Dimensions (SQDs).
+4. **Labor-Intensive Member Feedback Collection & Tallying:** Collecting paper customer satisfaction forms resulted in low response rates (<15%), illegible handwriting, and hundreds of staff hours spent manually tallying scores and comments across multiple service dimensions.
 5. **Lack of Live Executive Visibility:** Branch supervisors lacked a real-time monitor showing active counter statuses, current serving times against Citizen's Charter standards, staff transaction velocities, and bottleneck hotspots.
 
 ---
@@ -40,7 +40,7 @@ Before the deployment of this monitoring system, the branch operated under tradi
 ## 2. PROJECT OBJECTIVES & SCOPE
 
 ### 2.1 General Objective
-To design, develop, and deploy a robust, zero-cloud, LAN-based Queue Monitoring, Digital Triage, and ARTA CSM Compliance Suite that automates frontline operations, enforces Citizen's Charter service timelines, and elevates citizen satisfaction across the SSS Toledo Branch.
+To design, develop, and deploy a robust, zero-cloud, LAN-based Queue Monitoring, Digital Triage, and Member Satisfaction Survey Suite that automates frontline operations, enforces Citizen's Charter service timelines, and elevates member satisfaction across the SSS Toledo Branch.
 
 ### 2.2 Specific Objectives
 1. **Automate Citizen Ingestion:** Provide an intuitive self-service touchscreen kiosk supporting walk-in registrations, priority lane triage, and automated verification of BAS online appointments.
@@ -49,18 +49,18 @@ To design, develop, and deploy a robust, zero-cloud, LAN-based Queue Monitoring,
    - `2001 – 3999`: Main Counters 1–4 and Side Counter
    - `4001 – 4999`: E-Center & Web Services
 3. **Eliminate Double-Queueing with Live Re-Routing:** Enable counter officers to digitally transfer misclassified members across stations with a single click without issuing new paper tickets or resetting their wait times.
-4. **Digitize ARTA CSM & CSAT Collection:** Connect counter terminals to dedicated citizen-facing tablets that capture 4-sentiment ARTA ratings, 1–10 Net Promoter Scores (NPS), and root-cause tags upon transaction conclusion.
-5. **Provide One-Click Government Reporting:** Automate the generation of certified Excel and printable A4 reports for SSS Service Logs, the SSS Transaction Matrix (Accepted/Rejected), ARTA CSM Scorecards, and MSS Staff Task Ledgers.
+4. **Digitize Member CSAT & Feedback Collection:** Connect counter terminals to dedicated citizen-facing tablets that capture 4-sentiment satisfaction ratings, 1–10 Net Promoter Scores (NPS), and root-cause feedback tags upon transaction conclusion.
+5. **Provide One-Click Management Reporting:** Automate the generation of certified Excel and printable A4 reports for SSS Service Logs, the SSS Transaction Matrix (Accepted/Rejected), Member Satisfaction Scorecards, and MSS Staff Task Ledgers.
 6. **Ensure Total Data Sovereignty & Reliability:** Run the entire system locally on the branch network with native SQLite Write-Ahead Logging (WAL) and single-file daily backup capabilities.
 
 ---
 
 ## 3. REGULATORY & STATUTORY COMPLIANCE FRAMEWORK
 
-| Republic Act / Circular | Mandatory Government Requirement | System Implementation & Compliance |
+| Republic Act / Policy | Government Requirement | System Implementation & Compliance |
 |---|---|---|
 | **R.A. No. 11032**<br>*(Ease of Doing Business Act)* | Adherence to the **Citizen's Charter** service standards; strict monitoring of simple (≤3 days/15 mins) and complex transactions; elimination of bureaucratic red tape. | **Live Duration Watchdog:** Automatic time logging down to the second. Timers calculate check-in to service start (Wait Time) and service start to conclusion (Service Time), flagging transactions exceeding 15.0 minutes. |
-| **ARTA MC No. 2022-05**<br>*(Harmonized CSM)* | Standardized evaluation across **8 Service Quality Dimensions (SQD0–SQD8)**, Net Promoter Score (NPS), and demographic data collection (Age, Sex, Client Type). | **Citizen Rating Tablet (`/rate`):** Touchscreen interface capturing 4-point CSAT, 1–10 NPS, and SQD root causes. Generates official ARTA CSM quarterly summary matrices automatically. |
+| **Member Satisfaction Measurement** | Standardized evaluation of customer experience, Net Promoter Score (NPS), and demographic data collection (Age, Sex, Client Type). | **Citizen Rating Tablet (`/rate`):** Touchscreen interface capturing 4-point CSAT, 1–10 NPS, and root-cause feedback. Generates comprehensive customer satisfaction summary matrices automatically. |
 | **R.A. No. 10173**<br>*(Data Privacy Act of 2012)* | Transparency, legitimate purpose, proportionality, and explicit data subject consent before collecting personal identifiable information (PII). | **Mandatory DPA Consent Gate:** The kiosk requires explicit agreement to data collection before form input. Refusal locks the form and redirects to PACD. Physical logbooks are 100% eliminated. |
 | **CSC Citizen's Charter Directives** | Mandatory operational presence of a functional **Public Assistance and Complaints Desk (PACD)** for frontline triage and priority assistance. | **Dedicated PACD Portal (`/pacd`):** Specialized triage desk handling Senior Citizens, PWDs, Pregnant Women, document pre-screening, and electronic referral generation. |
 
@@ -99,7 +99,7 @@ flowchart TD
         end
 
         subgraph TabletNodes ["Citizen Facing Terminals"]
-            RateUI["Counter CSAT & ARTA Survey Tablets (/rate)"]
+            RateUI["Counter Member Feedback & Rating Tablets (/rate)"]
         end
 
         %% Communications
@@ -109,7 +109,7 @@ flowchart TD
         PACDUI <-->|"HTTP REST / WebSocket (Triage & Re-Route)"| ServerNode
         ECenterUI <-->|"HTTP REST / WebSocket (Online Assists)"| ServerNode
         ServerNode -->|"WebSocket Event (Trigger Survey on Conclude)"| RateUI
-        RateUI -->|"HTTP POST / WebSocket (Submit CSAT & SQD)"| API
+        RateUI -->|"HTTP POST / WebSocket (Submit CSAT & Feedback)"| API
     end
 
     %% Styling
@@ -160,8 +160,8 @@ The platform is structured into **six (6) interconnected modules**, each enginee
 │ 1. Member E-Logbook      │ 2. Counter Officer       │ 3. Public Assistance &    │
 │    Kiosk (/kiosk)        │    Portal (/clerk)       │    Complaints Desk (/pacd)│
 ├──────────────────────────┼──────────────────────────┼───────────────────────────┤
-│ 4. E-Center & Online     │ 5. Citizen CSAT & ARTA   │ 6. Branch Management &    │
-│    Assistance (/ecenter) │    Survey Tablet (/rate) │    Analytics Hub (/admin) │
+│ 4. E-Center & Online     │ 5. Citizen CSAT & Survey │ 6. Branch Management &    │
+│    Assistance (/ecenter) │    Tablet (/rate)        │    Analytics Hub (/admin) │
 └──────────────────────────┴──────────────────────────┴───────────────────────────┘
 ```
 
@@ -169,7 +169,7 @@ The platform is structured into **six (6) interconnected modules**, each enginee
 *Target User: Arriving Citizens, Senior Citizens, PWDs, Scheduled Appointees*
 
 * **Tri-Modal Check-In Workflow:**
-  1. **Standard Walk-In:** Entry of Ticket Number, Full Name, SSS Number (optional), Service Category, and ARTA Demographic dimensions (Customer Type, Sex, Age).
+  1. **Standard Walk-In:** Entry of Ticket Number, Full Name, SSS Number (optional), Service Category, and Demographic dimensions (Customer Type, Sex, Age).
   2. **Branch Direct Appointment (BAS):** Instant verification against imported Excel rosters by Name or Contact Number.
   3. **My.SSS Portal Appointment:** Check-in lane for citizens who booked online.
 * **R.A. 10173 Mandatory Data Privacy Gate:** Interactive consent modal. Selecting *"I Agree"* unlocks registration; selecting *"I Disagree"* immediately locks input and directs the citizen to PACD for manual inquiry.
@@ -219,14 +219,14 @@ The platform is structured into **six (6) interconnected modules**, each enginee
 
 ---
 
-### 5.5 Subsystem 5: Citizen CSAT & ARTA Survey Tablet (`/rate`)
+### 5.5 Subsystem 5: Citizen CSAT & Member Feedback Tablet (`/rate`)
 *Target User: Citizens seated at the service counter*
 
 * **Standalone Touchscreen Display:** Desk-mounted tablet facing the member across the counter glass.
-* **Harmonized ARTA 3-Step Survey Flow:**
-  1. **Step 1 — ARTA 4-Point CSAT:** High-contrast sentiment faces (*Very Satisfied / Labawng Kontento*, *Satisfied / Kontento*, *Neutral / Walay Pagpihig*, *Unsatisfied / Wala Matagbaw*).
+* **Intuitive 3-Step Member Survey Flow:**
+  1. **Step 1 — 4-Point CSAT Rating:** High-contrast sentiment faces (*Very Satisfied / Labawng Kontento*, *Satisfied / Kontento*, *Neutral / Walay Pagpihig*, *Unsatisfied / Wala Matagbaw*).
   2. **Step 2 — Net Promoter Score (NPS 1–10):** Standard Likelihood to Recommend scale.
-  3. **Step 3 — SQD Root-Cause Analysis:** If Neutral or Unsatisfied, dynamically presents root-cause chips (e.g., *Speed of Service, Staff Courtesy, Requirement Clarity, Facility Comfort*).
+  3. **Step 3 — Root-Cause Feedback:** If Neutral or Unsatisfied, dynamically presents root-cause chips (e.g., *Speed of Service, Staff Courtesy, Requirement Clarity, Facility Comfort*).
 * **Station Pairing & Isolation:** Listens strictly to its assigned station room (e.g., `rating:Counter 1`, `rating:PACD`, `rating:E-Center`).
 * **Auto-Standby Reset:** Automatically clears citizen responses and returns to a welcoming standby screen after 30 seconds of inactivity to guarantee data hygiene.
 
@@ -260,17 +260,17 @@ The **Admin Management & Analytics Hub** functions as the central mission contro
 
 ## 6. DAILY SERVICE OUTPUT & OFFICIAL REPORTING ENGINE
 
-A core pillar of the SSS Toledo Monitoring System is the automated **Daily Service Output Engine**, which replaces hours of manual tallying with certified, audit-ready reports formatted strictly according to SSS and ARTA standards.
+A core pillar of the SSS Toledo Monitoring System is the automated **Daily Service Output Engine**, which replaces hours of manual tallying with certified, audit-ready reports formatted strictly according to SSS standards.
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────────┐
 │                      OFFICIAL SSS TOLEDO SERVICE OUTPUT SUITE                   │
 ├────────────────────────────┬────────────────────────────┬───────────────────────┤
-│ 1. Master Daily SSS        │ 2. Official SSS Service    │ 3. Harmonized ARTA    │
-│    Service Log (.xlsx)     │    Matrix (A / R / Total)  │    CSM Report (.xlsx) │
+│ 1. Master Daily SSS        │ 2. Official SSS Service    │ 3. Member Satisfaction│
+│    Service Log (.xlsx)     │    Matrix (A / R / Total)  │    Survey Report (.xlsx)│
 ├────────────────────────────┼────────────────────────────┼───────────────────────┤
 │ 4. Clerk Personal Daily    │ 5. Printable A4 Executive  │ 6. Disaster Recovery  │
-│    Service Ledger (.xlsx)  │    ARTA CSM Scorecard      │    DB Snapshot (.db)  │
+│    Service Ledger (.xlsx)  │    Service Scorecard       │    DB Snapshot (.db)  │
 └────────────────────────────┴────────────────────────────┴───────────────────────┘
 ```
 
@@ -287,8 +287,8 @@ Automates the mandatory multi-dimensional service matrix required by SSS branch 
 * **Rejected (R):** Transactions turned down due to lacking requirements or disqualifications (with recorded justifications).
 * **Total Transaction Volume:** Aggregate count broken down by **Service Code** (*Member Data Updating E-4, Sickness Benefit, Maternity Claim, Funeral Claim, Retirement Claim, Salary Loan, General Inquiry*) and cross-referenced across each **Counter Officer**.
 
-### 6.3 Report 3: Harmonized ARTA CSM Compliance Matrix (`/api/reports/export/arta-csm/excel`)
-Specifically designed for quarterly submission to the **Anti-Red Tape Authority (ARTA)** and the **Civil Service Commission (CSC)** under ARTA MC No. 2022-05:
+### 6.3 Report 3: Member Satisfaction & Feedback Summary Report (`/api/reports/export/arta-csm/excel`)
+A comprehensive customer experience scorecard summarizing:
 * **Demographic Cross-Tabulations:** Response counts broken down by Customer Type (*Citizen, Business, Government*), Sex (*Male, Female*), and Age brackets.
 * **Service Quality Dimensions (SQD0 to SQD8):** Mean scores, positive response percentages, and overall performance rating (*Outstanding, Very Satisfactory, Satisfactory, Needs Improvement*).
 * **NPS Scorecard:** Automated calculation of Net Promoter Score (`% Promoters - % Detractors`).
@@ -317,7 +317,7 @@ The Admin Panel includes an in-browser **Print Preview** formatted specifically 
 │    (Blocks 000/2000/4000)  │    (Zero Double Queueing)  │    Staff Name Parser  │
 ├────────────────────────────┼────────────────────────────┼───────────────────────┤
 │ 4. Automatic 7:00 PM Purge │ 5. Zero-Cloud LAN Mode     │ 6. 1-Click Certified  │
-│    (Next-Day Clean Slate)  │    (Native SQLite WAL)     │    ARTA Excel Exports │
+│    (Next-Day Clean Slate)  │    (Native SQLite WAL)     │    Excel Exports      │
 └────────────────────────────┴────────────────────────────┴───────────────────────┘
 ```
 
@@ -346,13 +346,13 @@ The Excel import engine (`routes/appointments.js`) uses a multi-token fuzzy matc
 To ensure tomorrow morning's waiting queue opens with a fresh, clean slate:
 * An automated background routine executes daily at 19:00 (7:00 PM).
 * Unserved waiting tickets from today are marked as `status = 'unserved'` and unserved appointments as `no-show`.
-* Active queues reset to zero for the next business day while fully preserving all historical database records for management audits and quarterly reports.
+* Active queues reset to zero for the next business day while fully preserving all historical database records for management audits and monthly reports.
 
 ---
 
-## 8. ARTA SERVICE QUALITY DIMENSIONS (SQD) COMPLIANCE MATRIX
+## 8. MEMBER SATISFACTION & SERVICE QUALITY DIMENSIONS (SQD) MATRIX
 
-| SQD Code | Dimension Title | System Measurement & Reporting Method |
+| SQD Code | Service Dimension | System Measurement & Evaluation Method |
 |---|---|---|
 | **SQD0** | Overall Satisfaction | Calculated from the 4-point sentiment score on counter tablets (`/rate`). |
 | **SQD1** | Responsiveness & Speed | Stopwatch timers calculate exact minutes from arrival to conclusion against Citizen's Charter standards. |
@@ -368,14 +368,14 @@ To ensure tomorrow morning's waiting queue opens with a fresh, clean slate:
 
 ## 9. COMPARATIVE ANALYSIS: BEFORE VS. AFTER IMPLEMENTATION
 
-| Metric / Dimension | Traditional Manual System | Smart Monitoring & ARTA System | Improvement Factor |
+| Metric / Dimension | Traditional Manual System | Smart Monitoring & Survey System | Improvement Factor |
 |---|---|---|---|
 | **Citizen Check-In Time** | 2 – 4 minutes (manual paper entry) | **15 – 30 seconds** (touchscreen kiosk) | **85% Faster** |
 | **Data Privacy Protection** | Low (open public paper logbook) | **100% Compliant** (R.A. 10173 consent gate) | **Zero Leakage** |
 | **Misdirected Member Handling** | Full re-queue from outside guard | **Instant Re-Route** (1-click digital transfer) | **Zero Double Queue** |
 | **Appointment Verification** | Manual paper roster cross-referencing | **Instant Kiosk Match** (by name/phone) | **Automated** |
-| **CSAT & ARTA Survey Rate** | <15% (paper survey forms) | **>85%** (mandatory counter tablet trigger) | **5.6x Higher Capture** |
-| **ARTA Monthly Report Prep** | 16 – 24 staff hours (manual tallying) | **1 Click (< 3 seconds)** | **100% Automated** |
+| **CSAT & Survey Response Rate** | <15% (paper survey forms) | **>85%** (mandatory counter tablet trigger) | **5.6x Higher Capture** |
+| **Monthly Survey Report Prep** | 16 – 24 staff hours (manual tallying) | **1 Click (< 3 seconds)** | **100% Automated** |
 | **Hardware & Cloud Cost** | High recurring monthly SaaS costs | **₱0.00** (Local LAN, native SQLite) | **100% Free / Sovereign** |
 
 ---
@@ -402,9 +402,9 @@ To ensure tomorrow morning's waiting queue opens with a fresh, clean slate:
 ## 11. CONCLUSION & STRATEGIC RECOMMENDATIONS
 
 ### 11.1 Conclusion
-The **SSS Toledo Smart Queue Monitoring, Transaction Routing, and ARTA CSM Compliance System** demonstrates that public-sector digital transformation can be achieved effectively without expensive cloud infrastructure, recurring license fees, or complex external dependencies. 
+The **SSS Toledo Smart Queue Monitoring, Transaction Routing, and Member Satisfaction Survey System** demonstrates that public-sector digital transformation can be achieved effectively without expensive cloud infrastructure, recurring license fees, or complex external dependencies. 
 
-By unifying member registration, smart queue distribution, live in-session re-routing, ARTA-compliant CSAT capture, and certified report generation into a cohesive local-network ecosystem, the platform establishes a modern benchmark for social security frontline delivery in Region VII.
+By unifying member registration, smart queue distribution, live in-session re-routing, member-friendly CSAT feedback capture, and certified report generation into a cohesive local-network ecosystem, the platform establishes a modern benchmark for social security frontline delivery in Region VII.
 
 ### 11.2 Recommendations for Scaled Deployment
 1. **Branch-Wide Institutionalization:** Formally establish the E-Logbook Kiosk as the standard entry point, permanently retiring manual paper log sheets.
@@ -414,4 +414,4 @@ By unifying member registration, smart queue distribution, live in-session re-ro
 
 ---
 
-*SSS Toledo Branch — Smart Monitoring, Transaction Routing & ARTA CSM Compliance System | Official Project Analysis Paper*
+*SSS Toledo Branch — Smart Monitoring, Transaction Routing & Member Satisfaction Survey System | Official Project Analysis Paper*
