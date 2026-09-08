@@ -307,11 +307,11 @@ The Admin Panel includes an in-browser **Print Preview** formatted specifically 
 
 ---
 
-## 7. CORE ARCHITECTURAL & OPERATIONAL INNOVATIONS
+## 7. OPERATIONAL INNOVATIONS & SPECIAL CAPABILITIES
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────────┐
-│                          KEY TECHNICAL INNOVATIONS                              │
+│                        CORE OPERATIONAL INNOVATIONS                             │
 ├────────────────────────────┬────────────────────────────┬───────────────────────┤
 │ 1. Zero-Base Ticket Guard  │ 2. Smart Live Re-Routing   │ 3. Forgiving Fuzzy    │
 │    (Blocks 000/2000/4000)  │    (Zero Double Queueing)  │    Staff Name Parser  │
@@ -321,36 +321,36 @@ The Admin Panel includes an in-browser **Print Preview** formatted specifically 
 └────────────────────────────┴────────────────────────────┴───────────────────────┘
 ```
 
-### 6.1 Strict Starting-at-1 Number Series Guard
+### 7.1 Strict Starting-at-1 Number Series Guard
 All physical queue series at SSS Toledo start at 1 rather than 0. The system employs dual-layer validation on both frontend forms and backend API routes:
-* **PACD:** `001 – 099` (Blocks `0`, `00`, `000`).
-* **Main Counters:** `2001 – 2999` and `3001 – 3999` (Blocks `2000`, `3000`).
-* **E-Center:** `4001 – 4999` (Blocks `4000`).
-Invalid entries trigger descriptive toast messages in both Cebuano and English, preventing orphan queues.
+* **PACD Desk:** `001 – 099` (Blocks `0`, `00`, `000`).
+* **Main Service Counters:** `2001 – 2999` and `3001 – 3999` (Blocks `2000`, `3000`).
+* **E-Center Web Services:** `4001 – 4999` (Blocks `4000`).
+Invalid entries trigger descriptive guidance modals in both Cebuano and English, preventing orphan queues and wrong counter assignments.
 
-### 6.2 Intelligent Live Re-Routing Workflow
-When a member arrives at the wrong counter, the clerk selects **Re-Route**, chooses the target station, and submits. The system:
-1. Concludes the initial triage in the database.
-2. Changes the member's target room in real-time.
-3. Inserts the member into the destination's **"Re-Routed Members (Call by Name)"** queue.
-4. Preserves the member's original arrival timestamp for accurate total turnaround time reporting.
+### 7.2 Intelligent Live Re-Routing Workflow
+When a member arrives at the wrong counter (for example, seeking an online password reset at Counter 1), the officer simply selects **Re-Route**, chooses the destination station (e.g., E-Center), and confirms. The system:
+1. Concludes the initial triage interaction without recording a false cancellation.
+2. Dynamically transfers the member's record across WebSocket rooms in real time.
+3. Inserts the member into the receiving station's **"Re-Routed Members (Call by Name)"** queue.
+4. Preserves the member's original arrival timestamp for accurate total turnaround time reporting without requiring a new paper ticket or forcing the citizen to line up twice.
 
-### 6.3 Smart & Forgiving BAS Appointment Excel Parser
+### 7.3 Smart & Forgiving BAS Appointment Excel Parser
 The Excel import engine (`routes/appointments.js`) uses a multi-token fuzzy matching algorithm (`findClerkByName`):
-* Handles spelling variations (e.g., `"Emie Flores"` $\rightarrow$ `"Emmie Flores"`).
-* Recognizes single-word tokens (e.g., `"Tagpuno"`, `"Mamac"`, `"Boniao"`).
-* Parses hyperlinked and rich-text email/phone cells, eliminating `[object Object]` corruptions.
-* Accurately routes multi-staff schedules so clerks see only their assigned appointments.
+* Handles spelling variations and typos (e.g., `"Emie Flores"` $\rightarrow$ `"Emmie Flores"`).
+* Recognizes single-word tokens and nicknames (e.g., `"Tagpuno"`, `"Mamac"`, `"Boniao"`).
+* Extracts clean text strings from hyperlinked and formatted cells, eliminating `[object Object]` corruptions.
+* Automatically isolates multi-staff schedules so each counter officer sees strictly their assigned bookings.
 
-### 6.4 Automatic 7:00 PM Queue Purge & End-of-Day Closeout
-To prevent unserved waiting tickets from lingering into the next morning:
-* An automated Node.js cron routine runs daily at 19:00 (7:00 PM).
-* Unserved tickets are transitioned to `status = 'unserved'` and unserved appointments to `no-show`.
-* Live queue counters reset to zero for the following day while preserving historical database records for management reports.
+### 7.4 Automatic 7:00 PM Queue Purge & End-of-Day Closeout
+To ensure tomorrow morning's waiting queue opens with a fresh, clean slate:
+* An automated background routine executes daily at 19:00 (7:00 PM).
+* Unserved waiting tickets from today are marked as `status = 'unserved'` and unserved appointments as `no-show`.
+* Active queues reset to zero for the next business day while fully preserving all historical database records for management audits and quarterly reports.
 
 ---
 
-## 7. ARTA SERVICE QUALITY DIMENSIONS (SQD) COMPLIANCE MATRIX
+## 8. ARTA SERVICE QUALITY DIMENSIONS (SQD) COMPLIANCE MATRIX
 
 | SQD Code | Dimension Title | System Measurement & Reporting Method |
 |---|---|---|
@@ -366,7 +366,7 @@ To prevent unserved waiting tickets from lingering into the next morning:
 
 ---
 
-## 8. COMPARATIVE ANALYSIS: BEFORE VS. AFTER IMPLEMENTATION
+## 9. COMPARATIVE ANALYSIS: BEFORE VS. AFTER IMPLEMENTATION
 
 | Metric / Dimension | Traditional Manual System | Smart Monitoring & ARTA System | Improvement Factor |
 |---|---|---|---|
@@ -380,9 +380,9 @@ To prevent unserved waiting tickets from lingering into the next morning:
 
 ---
 
-## 9. HARDWARE, DEPLOYMENT & SUSTAINABILITY SPECIFICATIONS
+## 10. HARDWARE, DEPLOYMENT & SUSTAINABILITY SPECIFICATIONS
 
-### 9.1 Hardware Requirements
+### 10.1 Hardware Requirements
 
 | Station Role | Minimum Hardware | Recommended Specification |
 |---|---|---|
@@ -392,21 +392,21 @@ To prevent unserved waiting tickets from lingering into the next morning:
 | **Citizen Rating Tablets** | 7"–10" Android / Windows Tablet | Counter-mounted display facing citizen |
 | **Local Network** | 100/1000 Mbps Switch or Branch Wi-Fi | Local LAN Router (Zero external internet required) |
 
-### 9.2 Disaster Recovery & Maintenance Protocol
+### 10.2 Disaster Recovery & Maintenance Protocol
 1. **Zero Maintenance Engine:** SQLite in WAL mode handles thousands of concurrent transactions with zero database server configuration or indexing overhead.
 2. **Daily Snapshot Backup:** Administrators download `sss_toledo_backup_YYYY-MM-DD.db` with one click onto an external storage drive at 5:00 PM daily.
 3. **Instant Server Recovery:** If the host PC fails, the entire application folder and database can be transferred to any backup PC and restarted in under 60 seconds via `npm start`.
 
 ---
 
-## 10. CONCLUSION & STRATEGIC RECOMMENDATIONS
+## 11. CONCLUSION & STRATEGIC RECOMMENDATIONS
 
-### 10.1 Conclusion
+### 11.1 Conclusion
 The **SSS Toledo Smart Queue Monitoring, Transaction Routing, and ARTA CSM Compliance System** demonstrates that public-sector digital transformation can be achieved effectively without expensive cloud infrastructure, recurring license fees, or complex external dependencies. 
 
 By unifying member registration, smart queue distribution, live in-session re-routing, ARTA-compliant CSAT capture, and certified report generation into a cohesive local-network ecosystem, the platform establishes a modern benchmark for social security frontline delivery in Region VII.
 
-### 10.2 Recommendations for Scaled Deployment
+### 11.2 Recommendations for Scaled Deployment
 1. **Branch-Wide Institutionalization:** Formally establish the E-Logbook Kiosk as the standard entry point, permanently retiring manual paper log sheets.
 2. **Dedicated Rating Tablet Deployment:** Mount 7-inch Android tablets at each counter glass partition running `/rate` in kiosk browser pin mode.
 3. **Automated Daily USB Backups:** Schedule an automated daily copy of `database/sss_toledo.db` to the branch's secure offline backup drive.
