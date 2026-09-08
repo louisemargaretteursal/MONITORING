@@ -205,20 +205,22 @@ The platform is structured into **six (6) interconnected modules**, each enginee
 ### 5.3 Subsystem 3: Public Assistance & Complaints Desk (`/pacd`)
 *Target User: PACD Frontline Officer*
 
-* **General Triage & Preliminary Screening:** Dedicated to general member inquiries, verification, and pre-evaluation of required documentation.
-* **Priority Lane Monitoring:** Special visual badges for Senior Citizens, PWDs, and Pregnant Women (`001–099` series).
-* **Smart Idle Action Panel:** Action buttons (Outcome, CSAT Rating, Instructions, Conclude) are strictly hidden when idle and appear only when an active member is being served.
-* **Departmental Referral & Slip Printing:** Automatically formats and prints standardized SSS Referral Slips when directing members to other divisions (e.g., Medical Evaluation, Legal, Enforcement).
-* **Instant Live Re-Routing:** Directly passes verified members to Counter Queues (`counter-pool`) or E-Center (`ecenter`) without re-registering.
+* **Full Counter Service & Lifecycle Engine:** Features the same core operational workflow as Main Counters—including live queue streaming, one-click *"Call Next"*, live transaction timer against Citizen's Charter standards, transaction outcome recording, remote CSAT survey triggering, and personal **Daily Service Log & Excel Accomplishment Export**.
+* **General Triage & Preliminary Screening:** Dedicated station for first-line member inquiries, document pre-screening, and verifying required forms before queuing to main counters.
+* **Priority Lane Monitoring:** Visual highlight and badge indicators for Senior Citizens, PWDs, and Pregnant Women (`001–099` series).
+* **Smart Idle Action Panel:** Action buttons (Outcome, Rating, Instructions, Conclude) remain hidden while idle and appear dynamically only when a member is actively called and seated.
+* **Departmental Referral & Slip Printing:** Automatically formats and prints official SSS Referral Slips when endorsing members to specialized non-counter units (e.g., Medical Claims, Legal, Accounts Enforcement).
+* **Instant Live Re-Routing:** Electronically transfers verified members directly to the Main Counter Pool (`counter-pool`) or E-Center (`ecenter`) without requiring them to re-register at the entrance kiosk.
 
 ---
 
 ### 5.4 Subsystem 4: E-Center & Online Assistance (`/ecenter`)
 *Target User: E-Center Staff and Student Trainees (OJTs)*
 
-* **My.SSS Web Service Management:** Dedicated queue for online portal registrations, password/email resets, online loan applications, and contribution generation (`4001–4999` series).
-* **1-Click OJT / Fast Staff Login:** Rapid access profile designed for student interns and rotating frontline aides.
-* **Live Transaction Outcome Logging:** Full logging of web assist outcomes, common failure causes (e.g., lockouts, unposted records), and digital assistance durations.
+* **Full Counter Service & Lifecycle Engine:** Equips digital aides with the full counter workflow—live queue calling, live transaction timer, outcome recording, survey trigger, and **Daily Service Log & Excel Accomplishment Export**.
+* **My.SSS Web Service Management:** Dedicated queue specifically for digital portal assistance, My.SSS registration, password/email resets, online loan applications, and Payment Reference Number (PRN) generation (`4001–4999` series).
+* **1-Click OJT / Fast Staff Login:** Rapid access profile designed for student interns and rotating frontline aides, allowing smooth shift handovers without administrative overhead.
+* **Live Online Assistance Outcome Logging:** Full audit tracking of web assist results, common digital failure causes (e.g., locked accounts, unposted contributions), and average online assistance durations.
 
 ---
 
