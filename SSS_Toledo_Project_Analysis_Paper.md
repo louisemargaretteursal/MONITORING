@@ -33,7 +33,8 @@ Before the deployment of this monitoring system, the branch operated under tradi
 2. **Queue Misclassification & Bottlenecks:** Security guards or members often misclassified transaction categories. A member needing an online password reset would wait in the general counter queue for over an hour only to be informed that their service belonged to the E-Center, forcing them to restart their queue.
 3. **Disconnected Appointment & Walk-In Traffic:** Online booking schedules from the SSS Branch Appointment System (BAS) were printed on paper rosters. Counter clerks had no live digital visibility of which scheduled citizens had arrived in the lobby versus those who were late or no-shows.
 4. **Labor-Intensive Member Feedback Collection & Tallying:** Collecting paper customer satisfaction forms resulted in low response rates (<15%), illegible handwriting, and hundreds of staff hours spent manually tallying scores and comments across multiple service dimensions.
-5. **Lack of Live Executive Visibility:** Branch supervisors lacked a real-time monitor showing active counter statuses, current serving times against Citizen's Charter standards, staff transaction velocities, and bottleneck hotspots.
+5. **Lack of Automated Clerk Daily Output Records:** Staff members previously had to manually write down every assisted citizen on paper accomplishment sheets at the end of the day, leading to reporting discrepancies and unverified service totals.
+6. **Lack of Live Executive Visibility:** Branch supervisors lacked a real-time monitor showing active counter statuses, current serving times against Citizen's Charter standards, staff transaction velocities, and bottleneck hotspots.
 
 ---
 
@@ -50,8 +51,9 @@ To design, develop, and deploy a robust, zero-cloud, LAN-based Queue Monitoring,
    - `4001 – 4999`: E-Center & Web Services
 3. **Eliminate Double-Queueing with Live Re-Routing:** Enable counter officers to digitally transfer misclassified members across stations with a single click without issuing new paper tickets or resetting their wait times.
 4. **Digitize Member CSAT & Feedback Collection:** Connect counter terminals to dedicated citizen-facing tablets that capture 4-sentiment satisfaction ratings, 1–10 Net Promoter Scores (NPS), and root-cause feedback tags upon transaction conclusion.
-5. **Provide One-Click Management Reporting:** Automate the generation of certified Excel and printable A4 reports for SSS Service Logs, the SSS Transaction Matrix (Accepted/Rejected), Member Satisfaction Scorecards, and MSS Staff Task Ledgers.
-6. **Ensure Total Data Sovereignty & Reliability:** Run the entire system locally on the branch network with native SQLite Write-Ahead Logging (WAL) and single-file daily backup capabilities.
+5. **Automate Clerk Daily Accomplishment Output Files:** Provide each counter clerk with an automated, live-updating Service Log and instant 1-click Excel export of their daily assisted transactions.
+6. **Provide One-Click Management Reporting:** Automate the generation of certified Excel and printable A4 reports for Master SSS Service Logs, the SSS Transaction Matrix (Accepted/Rejected), Member Satisfaction Scorecards, and MSS Staff Task Ledgers.
+7. **Ensure Total Data Sovereignty & Reliability:** Run the entire system locally on the branch network with native SQLite Write-Ahead Logging (WAL) and single-file daily backup capabilities.
 
 ---
 
@@ -195,7 +197,7 @@ The platform is structured into **six (6) interconnected modules**, each enginee
 * **On-Hold & Returning Member Handling:** Puts incomplete transactions on hold for same-day return without re-queuing.
 * **Citizen CSAT Remote Trigger:** Concluding a transaction automatically awakens the paired desktop tablet (`/rate`) to capture citizen feedback.
 * **In-Session Re-Routing:** One-click transfer of misdirected members to PACD, E-Center, or another counter.
-* **Personal Service Log & Appointment Uploader:** Individual clerks can import their daily BAS schedules and export their own personal daily accomplishment report to Excel.
+* **Live Personal Service Log Modal & Excel Output:** Live audit modal where clerks review all concluded transactions and download their daily accomplishment sheet in Excel.
 
 ---
 
@@ -258,46 +260,50 @@ The **Admin Management & Analytics Hub** functions as the central mission contro
 
 ---
 
-## 6. DAILY SERVICE OUTPUT & OFFICIAL REPORTING ENGINE
+## 6. CLERK DAILY SERVICE LOG & MASTER REPORTING ENGINE
 
-A core pillar of the SSS Toledo Monitoring System is the automated **Daily Service Output Engine**, which replaces hours of manual tallying with certified, audit-ready reports formatted strictly according to SSS standards.
+A core feature of the SSS Toledo Monitoring System is the automated **Clerk Daily Service Log & Output Engine**, which completely replaces manual paper accomplishment tallying with certified, audit-ready reports.
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────────┐
 │                      OFFICIAL SSS TOLEDO SERVICE OUTPUT SUITE                   │
 ├────────────────────────────┬────────────────────────────┬───────────────────────┤
-│ 1. Master Daily SSS        │ 2. Official SSS Service    │ 3. Member Satisfaction│
-│    Service Log (.xlsx)     │    Matrix (A / R / Total)  │    Survey Report (.xlsx)│
+│ 1. Clerk Personal Daily    │ 2. Master Daily SSS        │ 3. Official SSS       │
+│    Service Ledger (.xlsx)  │    Service Log (.xlsx)     │    Transaction Matrix │
 ├────────────────────────────┼────────────────────────────┼───────────────────────┤
-│ 4. Clerk Personal Daily    │ 5. Printable A4 Executive  │ 6. Disaster Recovery  │
-│    Service Ledger (.xlsx)  │    Service Scorecard       │    DB Snapshot (.db)  │
+│ 4. Member Satisfaction &   │ 5. Printable A4 Executive  │ 6. Disaster Recovery  │
+│    Feedback Report (.xlsx) │    Service Scorecard       │    DB Snapshot (.db)  │
 └────────────────────────────┴────────────────────────────┴───────────────────────┘
 ```
 
-### 6.1 Report 1: Master Daily SSS Service Log (`/api/reports/export/excel?all=1`)
-A complete, auditable line-item ledger of every citizen served at the branch. Generated via the high-performance ExcelJS engine, the log features corporate SSS styling, auto-adjusting column widths, and certified headers:
+### 6.1 Feature Deep-Dive: The Clerk Daily Service Log (`/clerk` Modal & `.xlsx` Output)
+The **Clerk Daily Service Log** is one of the most vital frontline features for counter staff and branch supervisors:
+* **Real-Time Chronological Tracking:** Every time a clerk concludes a transaction, the record is immediately appended to their live service log.
+* **In-App Service Log Modal (2 Dedicated Tabs):**
+  * **Tab 1 — Concluded Transactions:** Displays chronological rows showing Ticket Number, Citizen Name, SSS Number, Entry Type (*Walk-in, BAS Appointment, Portal*), Confirmed Transaction Type, Check-in Time, Duration in Minutes, Outcome Badge (*Finished, For Verification, Rejected*), CSAT Rating Badge, Feedback Remarks, and Clerk Instructions.
+  * **Tab 2 — My Appointments Schedule & Attendance:** Shows all scheduled BAS appointees for that clerk today, displaying their appointment time, citizen name, phone, service requested, and real-time attendance status (*In Lobby, Served, or No-Show*).
+* **1-Click Certified Excel Export (`/api/reports/export/excel?clerk_id={id}&date={today}`):**
+  * Clerks can click **"Download Excel"** directly from their dashboard at the end of the day.
+  * Generates an official, beautifully styled `.xlsx` file containing their complete accomplishment sheet for daily submission to the Administrative Section.
+
+### 6.2 Report 2: Master Daily SSS Service Log (`/api/reports/export/excel?all=1`)
+A complete, branch-wide line-item ledger of every citizen served at all counters. Generated via the high-performance ExcelJS engine:
 * **Citizen Tracking Details:** Queue Number, Full Name, SSS / CRN Number, Customer Type, Entry Type (*Walk-In, Direct Appointment, Portal Appointment*).
 * **Service Timestamps:** Exact Check-In Time, Service Start Time, Service End Time, Wait Duration (mins), and Service Duration (mins).
 * **Operational Resolution:** Serving Officer, Counter Station, Confirmed Transaction Code, Service Outcome (*Finished, Rejected, For-Verification*).
 * **Citizen Feedback & Audit:** CSAT Sentiment Rating, Net Promoter Score (NPS), Root-Cause Feedback Category, and Clerk Instructions/Remarks.
 
-### 6.2 Report 2: Official SSS Transaction Service Matrix (`/api/transactions/matrix/export/excel`)
+### 6.3 Report 3: Official SSS Transaction Service Matrix (`/api/transactions/matrix/export/excel`)
 Automates the mandatory multi-dimensional service matrix required by SSS branch management, breaking down daily branch output into:
 * **Accepted (A):** Successfully concluded and processed transactions.
 * **Rejected (R):** Transactions turned down due to lacking requirements or disqualifications (with recorded justifications).
 * **Total Transaction Volume:** Aggregate count broken down by **Service Code** (*Member Data Updating E-4, Sickness Benefit, Maternity Claim, Funeral Claim, Retirement Claim, Salary Loan, General Inquiry*) and cross-referenced across each **Counter Officer**.
 
-### 6.3 Report 3: Member Satisfaction & Feedback Summary Report (`/api/reports/export/arta-csm/excel`)
+### 6.4 Report 4: Member Satisfaction & Feedback Summary Report (`/api/reports/export/arta-csm/excel`)
 A comprehensive customer experience scorecard summarizing:
 * **Demographic Cross-Tabulations:** Response counts broken down by Customer Type (*Citizen, Business, Government*), Sex (*Male, Female*), and Age brackets.
-* **Service Quality Dimensions (SQD0 to SQD8):** Mean scores, positive response percentages, and overall performance rating (*Outstanding, Very Satisfactory, Satisfactory, Needs Improvement*).
+* **Satisfaction Scores:** Mean scores, positive response percentages, and overall performance rating (*Outstanding, Very Satisfactory, Satisfactory, Needs Improvement*).
 * **NPS Scorecard:** Automated calculation of Net Promoter Score (`% Promoters - % Detractors`).
-
-### 6.4 Report 4: Clerk Personal Service Log & Appointment Attendance Modal
-Frontline clerks can review their daily output directly on their workstation (`/clerk`) by clicking **"Service Log"**:
-* **Tab 1 — Concluded Transactions:** Live chronological ledger of all citizens assisted by that specific officer today, complete with duration minutes, outcomes, and citizen CSAT ratings.
-* **Tab 2 — My Appointments Schedule & Attendance:** Attendance tracker for scheduled appointees showing real-time status (*In Lobby, Served, or No-Show*).
-* **1-Click Personal Excel Export:** Clerks can download their own certified daily accomplishment report at the end of their shift with a single click.
 
 ### 6.5 Report 5: Printable A4 Executive Scorecard
 The Admin Panel includes an in-browser **Print Preview** formatted specifically for standard A4 paper:
@@ -350,19 +356,18 @@ To ensure tomorrow morning's waiting queue opens with a fresh, clean slate:
 
 ---
 
-## 8. MEMBER SATISFACTION & SERVICE QUALITY DIMENSIONS (SQD) MATRIX
+## 8. MEMBER FEEDBACK & SATISFACTION FRAMEWORK
 
-| SQD Code | Service Dimension | System Measurement & Evaluation Method |
+Rather than relying on complex compliance formulas, the system employs a streamlined, member-friendly feedback framework designed for maximum citizen engagement:
+
+| Feedback Component | Method & Scale | Purpose & Business Value |
 |---|---|---|
-| **SQD0** | Overall Satisfaction | Calculated from the 4-point sentiment score on counter tablets (`/rate`). |
-| **SQD1** | Responsiveness & Speed | Stopwatch timers calculate exact minutes from arrival to conclusion against Citizen's Charter standards. |
-| **SQD2** | Reliability | Tracked through official transaction type verification checklists and outcome recording. |
-| **SQD3** | Access & Facilities | Evaluated via Kiosk accessibility, E-Center station availability, and facility root-cause tags. |
-| **SQD4** | Communication | Enforced through PACD triage clarity and automated referral slip printing. |
-| **SQD5** | Costs & Transparency | Verifies zero unauthorized fees or hidden processing costs. |
-| **SQD6** | Integrity | Digital sequential queueing prevents line jumping, corruption, or manual favoritism. |
-| **SQD7** | Assurance & Courtesy | Monitored through staff leaderboard ratings and politeness root-cause tags. |
-| **SQD8** | Service Outcome | Directly recorded as *Finished/Accepted*, *For-Verification*, or *Rejected with Explanation*. |
+| **Overall CSAT Rating** | 4-Point High-Contrast Sentiment Emoji Faces (*Very Satisfied, Satisfied, Neutral, Unsatisfied*) | Instant sentiment capture taking less than 2 seconds of citizen time. |
+| **Net Promoter Score (NPS)** | 1–10 Scale (*Likelihood to Recommend SSS Toledo*) | Calculates branch loyalty index: Promoters (9–10), Passives (7–8), Detractors (1–6). |
+| **Speed & Responsiveness Tag** | Root-cause chip: *Long Waiting Time / Fast Service* | Pinpoints whether delay was caused by queue volume or system processing. |
+| **Staff Courtesy Tag** | Root-cause chip: *Staff Politeness / Helpful Officer* | Recognizes high-performing staff and flags opportunities for customer service coaching. |
+| **Requirement Clarity Tag** | Root-cause chip: *Clear Documents / Unclear Requirements* | Helps identify forms or instructions that confuse arriving members. |
+| **Facility & System Tag** | Root-cause chip: *System Delay / Comfortable Waiting Area* | Monitors hardware, network, and branch facility conditions. |
 
 ---
 
@@ -374,6 +379,7 @@ To ensure tomorrow morning's waiting queue opens with a fresh, clean slate:
 | **Data Privacy Protection** | Low (open public paper logbook) | **100% Compliant** (R.A. 10173 consent gate) | **Zero Leakage** |
 | **Misdirected Member Handling** | Full re-queue from outside guard | **Instant Re-Route** (1-click digital transfer) | **Zero Double Queue** |
 | **Appointment Verification** | Manual paper roster cross-referencing | **Instant Kiosk Match** (by name/phone) | **Automated** |
+| **Clerk Daily Output Tallying** | 30 – 45 mins (manual hand-written logs) | **Instant (Live Modal & 1-Click Excel)** | **100% Automated** |
 | **CSAT & Survey Response Rate** | <15% (paper survey forms) | **>85%** (mandatory counter tablet trigger) | **5.6x Higher Capture** |
 | **Monthly Survey Report Prep** | 16 – 24 staff hours (manual tallying) | **1 Click (< 3 seconds)** | **100% Automated** |
 | **Hardware & Cloud Cost** | High recurring monthly SaaS costs | **₱0.00** (Local LAN, native SQLite) | **100% Free / Sovereign** |
@@ -404,7 +410,7 @@ To ensure tomorrow morning's waiting queue opens with a fresh, clean slate:
 ### 11.1 Conclusion
 The **SSS Toledo Smart Queue Monitoring, Transaction Routing, and Member Satisfaction Survey System** demonstrates that public-sector digital transformation can be achieved effectively without expensive cloud infrastructure, recurring license fees, or complex external dependencies. 
 
-By unifying member registration, smart queue distribution, live in-session re-routing, member-friendly CSAT feedback capture, and certified report generation into a cohesive local-network ecosystem, the platform establishes a modern benchmark for social security frontline delivery in Region VII.
+By unifying member registration, smart queue distribution, live in-session re-routing, member-friendly CSAT feedback capture, and automated clerk accomplishment output logging into a cohesive local-network ecosystem, the platform establishes a modern benchmark for social security frontline delivery in Region VII.
 
 ### 11.2 Recommendations for Scaled Deployment
 1. **Branch-Wide Institutionalization:** Formally establish the E-Logbook Kiosk as the standard entry point, permanently retiring manual paper log sheets.
