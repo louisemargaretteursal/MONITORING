@@ -469,7 +469,7 @@
       border-top: 1px solid rgba(255, 255, 255, 0.08);
     }
 
-    .arta-notice {
+    .survey-notice, .arta-notice {
       display: flex;
       align-items: center;
       gap: 6px;
@@ -631,7 +631,7 @@
       <div class="rating-header">
         <div class="survey-badge" style="background:#e0f2fe;color:#0369a1;">
           <svg viewBox="0 0 20 20" width="14" height="14" fill="currentColor"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
-          ARTA Client Satisfaction Measurement (CSM)
+          SSS Member Satisfaction Survey
         </div>
         <h2 class="rating-title" style="font-size:2rem;margin-bottom:4px;">Kumusta ang inyong kasinatian karon?</h2>
         <div class="rating-sub" style="font-size:1.05rem;margin-bottom:12px;">How was your service experience at <span id="prompt-counter-name" style="font-weight:700;color:var(--sss-navy);">this counter</span>?</div>
@@ -680,7 +680,7 @@
         </button>
       </div>
 
-      <!-- NPS 1 to 10 Scale Bar (ARTA Mandated) -->
+      <!-- NPS 1 to 10 Scale Bar -->
       <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:16px;padding:14px 16px;margin-bottom:18px;">
         <div style="font-size:0.88rem;font-weight:700;color:#0a2540;margin-bottom:8px;text-align:left;display:flex;justify-content:space-between;align-items:center;">
           <span>On a scale of 1-10, how likely are you to recommend SSS?</span>
@@ -709,7 +709,7 @@
       </div>
     </div>
 
-    <!-- VIEW 2.5: COMMENTS & REMARKS (Full ARTA Section 2) -->
+    <!-- VIEW 2.5: COMMENTS & REMARKS -->
     <div class="view-card" id="view-reason">
       <div class="rating-header">
         <div class="survey-badge" style="background:#fef3c7;color:#92400e;">
@@ -770,7 +770,7 @@
       <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:10px 14px;margin-bottom:14px;text-align:left;">
         <label style="display:flex;align-items:flex-start;gap:8px;font-size:0.75rem;color:#475569;cursor:pointer;line-height:1.4;">
           <input type="checkbox" id="csm-consent-check" checked style="accent-color:#0038A8;margin-top:2px;">
-          <span><strong>Consent:</strong> I agree to allow SSS to use my information for service improvements & customer satisfaction surveys.</span>
+          <span><strong>Consent:</strong> I agree to allow SSS to use my feedback for service quality improvements & customer satisfaction analysis.</span>
         </label>
       </div>
 
@@ -795,7 +795,7 @@
         </svg>
       </div>
       <h2 class="thankyou-title">Daghang Salamat!</h2>
-      <div class="thankyou-sub">THANK YOU! Nadawat na ang inyong evaluation.</div>
+      <div class="thankyou-sub">THANK YOU! Nadawat na ang inyong feedback.</div>
       <p class="thankyou-desc">Amping kanunay sa inyong pag-pauli.</p>
     </div>
 
@@ -803,9 +803,9 @@
 
   <!-- Bottom Bar -->
   <footer class="footer-bar">
-    <div class="arta-notice">
+    <div class="survey-notice">
       <svg viewBox="0 0 20 20" width="15" height="15" fill="currentColor" style="color:#10b981;"><path fill-rule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
-      Direct ARTA / CSC Citizen Feedback • Confidential & Anonymous
+      SSS Toledo Member Feedback & Satisfaction Survey • Confidential & Anonymous
     </div>
     <div id="live-clock">--:--:--</div>
   </footer>
